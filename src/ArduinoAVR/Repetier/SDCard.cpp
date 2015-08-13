@@ -53,7 +53,10 @@ void SDCard::automount()
     {
         if(sdactive)   // Card removed
         {
-            Com::printFLN(PSTR("SD card removed"));
+			if( Printer::debugInfo() )
+			{
+	            Com::printFLN(PSTR("SD card removed"));
+			}
 #if UI_DISPLAY_TYPE!=0
             uid.executeAction(UI_ACTION_TOP_MENU);
 #endif
@@ -66,7 +69,10 @@ void SDCard::automount()
         if(!sdactive)
         {
             UI_STATUS(UI_TEXT_SD_INSERTED);
-            Com::printFLN(PSTR("SD card inserted"));
+			if( Printer::debugInfo() )
+			{
+	            Com::printFLN(PSTR("SD card inserted"));
+			}
             Printer::setMenuMode(MENU_MODE_SD_MOUNTED,true);
             initsd();
 #if UI_DISPLAY_TYPE!=0
@@ -92,7 +98,10 @@ void SDCard::initsd()
         dir[0].close();*/
     if(!fat.begin(SDSS,SPI_FULL_SPEED))
     {
-        Com::printFLN(Com::tSDInitFail);
+		if( Printer::debugErrors() )
+		{
+			Com::printFLN(Com::tSDInitFail);
+		}
         return;
     }
     sdactive = true;
@@ -179,7 +188,11 @@ void SDCard::abortPrint()
 
 	Printer::setMenuMode(MENU_MODE_SD_PRINTING,false);
     Printer::setMenuMode(MENU_MODE_SD_PAUSED,false);
-    Com::printFLN(PSTR("SD print aborted."));
+    
+	if( Printer::debugInfo() )
+	{
+		Com::printFLN(PSTR("SD print aborted."));
+	}
 
 	HAL::delayMilliseconds( 250 );
 
@@ -189,13 +202,22 @@ void SDCard::abortPrint()
 	sdpos	 = 0;
 	filesize = 0;
 
-    Com::printFLN(PSTR("G-Code buffer reset"));
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(PSTR("G-Code buffer reset"));
+	}
 	GCode::resetBuffer();
 
-    Com::printFLN(PSTR("Path planner reset"));
+	if( Printer::debugInfo() )
+	{
+		Com::printFLN(PSTR("Path planner reset"));
+	}
 	PrintLine::resetPathPlanner();
 
-    Com::printFLN(PSTR("Line buffer reset"));
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(PSTR("Line buffer reset"));
+	}
 	PrintLine::resetLineBuffer();
 
 	HAL::allowInterrupts();
@@ -233,7 +255,10 @@ void SDCard::abortPrint()
 		Commands::checkForPeriodicalActions();
 	}
 
-    Com::printFLN(PSTR("Abort complete"));
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(PSTR("Abort complete"));
+	}
 
 	HAL::forbidInterrupts();
     g_nMainDirectionX = 0;
@@ -368,13 +393,19 @@ void SDCard::writeCommand(GCode *code)
     buf[p++] = sum2;
     if(params == 128)
     {
-        Com::printErrorFLN(Com::tAPIDFinished);
+		if( Printer::debugErrors() )
+		{
+	        Com::printErrorFLN(Com::tAPIDFinished);
+		}
     }
     else
         file.write(buf,p);
     if (file.writeError)
     {
-        Com::printFLN(Com::tErrorWritingToFile);
+		if( Printer::debugErrors() )
+		{
+	        Com::printFLN(Com::tErrorWritingToFile);
+		}
     }
 }
 
@@ -421,12 +452,19 @@ void SDCard::ls()
 {
     SdBaseFile file;
 
-    Com::printFLN(Com::tBeginFileList);
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(Com::tBeginFileList);
+	}
     fat.chdir();
 
     file.openRoot(fat.vol());
     file.ls(0, 0);
-    Com::printFLN(Com::tEndFileList);
+
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(Com::tEndFileList);
+	}
 }
 
 bool SDCard::selectFile(char *filename, bool silent)
@@ -450,33 +488,48 @@ bool SDCard::selectFile(char *filename, bool silent)
 
         if(!silent)
         {
-            Com::printF(Com::tFileOpened, oldP);
-            Com::printFLN(Com::tSpaceSizeColon,file.fileSize());
+			if( Printer::debugInfo() )
+			{
+				Com::printF(Com::tFileOpened, oldP);
+				Com::printFLN(Com::tSpaceSizeColon,file.fileSize());
+			}
         }
         sdpos = 0;
         filesize = file.fileSize();
-        Com::printFLN(Com::tFileSelected);
+
+		if( Printer::debugInfo() )
+		{
+			Com::printFLN(Com::tFileSelected);
+		}
         return true;
     }
     else
     {
         if(!silent)
-            Com::printFLN(Com::tFileOpenFailed);
+		{
+			if( Printer::debugInfo() )
+			{
+	            Com::printFLN(Com::tFileOpenFailed);
+			}
+		}
         return false;
     }
 }
 
 void SDCard::printStatus()
 {
-    if(sdactive)
-    {
-        Com::printF(Com::tSDPrintingByte,sdpos);
-        Com::printFLN(Com::tSlash,filesize);
-    }
-    else
-    {
-        Com::printFLN(Com::tNotSDPrinting);
-    }
+	if( Printer::debugInfo() )
+	{
+		if(sdactive)
+		{
+			Com::printF(Com::tSDPrintingByte,sdpos);
+			Com::printFLN(Com::tSlash,filesize);
+		}
+		else
+		{
+			Com::printFLN(Com::tNotSDPrinting);
+		}
+	}
 }
 
 void SDCard::startWrite(char *filename)
@@ -487,13 +540,20 @@ void SDCard::startWrite(char *filename)
     fat.chdir();
     if(!file.open(filename, O_CREAT | O_APPEND | O_WRITE | O_TRUNC))
     {
-        Com::printFLN(Com::tOpenFailedFile,filename);
+		if( Printer::debugErrors() )
+		{
+	        Com::printFLN(Com::tOpenFailedFile,filename);
+		}
     }
     else
     {
         UI_STATUS(UI_TEXT_UPLOADING);
         savetosd = true;
-        Com::printFLN(Com::tWritingToFile,filename);
+
+		if( Printer::debugInfo() )
+		{
+			Com::printFLN(Com::tWritingToFile,filename);
+		}
     }
 }
 void SDCard::finishWrite()
@@ -502,7 +562,12 @@ void SDCard::finishWrite()
     file.sync();
     file.close();
     savetosd = false;
-    Com::printFLN(Com::tDoneSavingFile);
+
+	if( Printer::debugInfo() )
+	{
+		Com::printFLN(Com::tDoneSavingFile);
+	}
+
     UI_CLEAR_STATUS;
 }
 void SDCard::deleteFile(char *filename)
@@ -512,7 +577,10 @@ void SDCard::deleteFile(char *filename)
 	if(Printer::isMenuMode(MENU_MODE_SD_PRINTING))
 	{
 		// we do not allow to delete a file while we are printing/milling from the SD card
-		Com::printFLN(PSTR("It is not possible to delete a file from the SD card until the current processing has finished."));
+		if( Printer::debugErrors() )
+		{
+			Com::printFLN(PSTR("It is not possible to delete a file from the SD card until the current processing has finished."));
+		}
 		return;
 	}
 
@@ -520,14 +588,27 @@ void SDCard::deleteFile(char *filename)
     file.close();
     if(fat.remove(filename))
     {
-        Com::printFLN(Com::tFileDeleted);
+		if( Printer::debugInfo() )
+		{
+	        Com::printFLN(Com::tFileDeleted);
+		}
     }
     else
     {
         if(fat.rmdir(filename))
-            Com::printFLN(Com::tFileDeleted);
+		{
+			if( Printer::debugInfo() )
+			{
+	            Com::printFLN(Com::tFileDeleted);
+			}
+		}
         else
-            Com::printFLN(Com::tDeletionFailed);
+		{
+			if( Printer::debugErrors() )
+			{
+	            Com::printFLN(Com::tDeletionFailed);
+			}
+		}
     }
 }
 void SDCard::makeDirectory(char *filename)
@@ -537,25 +618,35 @@ void SDCard::makeDirectory(char *filename)
     file.close();
     if(fat.mkdir(filename))
     {
-        Com::printFLN(Com::tDirectoryCreated);
+		if( Printer::debugInfo() )
+		{
+	        Com::printFLN(Com::tDirectoryCreated);
+		}
     }
     else
     {
-        Com::printFLN(Com::tCreationFailed);
+		if( Printer::debugErrors() )
+		{
+	        Com::printFLN(Com::tCreationFailed);
+		}
     }
 }
 
 #ifdef GLENN_DEBUG
 void SDCard::writeToFile()
 {
-  size_t nbyte;
-  char szName[10];
+	size_t nbyte;
+	char szName[10];
 
-  strcpy(szName, "Testing\r\n");
-  nbyte = file.write(szName, strlen(szName));
-  Com::print("L=");
-  Com::print((long)nbyte);
-  Com::println();
+	strcpy(szName, "Testing\r\n");
+	nbyte = file.write(szName, strlen(szName));
+
+	if( Printer::debugInfo() )
+	{
+		Com::print("L=");
+		Com::print((long)nbyte);
+		Com::println();
+	}
 }
 
 #endif

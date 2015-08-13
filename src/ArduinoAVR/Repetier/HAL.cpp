@@ -275,11 +275,15 @@ void HAL::showStartReason()
 {
     // Check startup - does nothing if bootloader sets MCUSR to 0
     uint8_t mcu = MCUSR;
-    if(mcu & 1) Com::printInfoFLN(Com::tPowerUp);
-    if(mcu & 2) Com::printInfoFLN(Com::tExternalReset);
-    if(mcu & 4) Com::printInfoFLN(Com::tBrownOut);
-    if(mcu & 8) Com::printInfoFLN(Com::tWatchdog);
-    if(mcu & 32) Com::printInfoFLN(Com::tSoftwareReset);
+
+	if( Printer::debugInfo() )
+	{
+		if(mcu & 1) Com::printInfoFLN(Com::tPowerUp);
+		if(mcu & 2) Com::printInfoFLN(Com::tExternalReset);
+		if(mcu & 4) Com::printInfoFLN(Com::tBrownOut);
+		if(mcu & 8) Com::printInfoFLN(Com::tWatchdog);
+		if(mcu & 32) Com::printInfoFLN(Com::tSoftwareReset);
+	}
     MCUSR=0;
 }
 int HAL::getFreeRam()
@@ -750,6 +754,12 @@ ISR(TIMER1_COMPA_vect)
 			if( Printer::currentCompensationZ == Printer::targetCompensationZ )
 			{
 				g_nMainDirectionZ = 0;
+
+#if DEBUG_HEAT_BED_Z_COMPENSATION
+				long	nDelay = micros() - g_nZCompensationUpdateTime;
+
+				if( nDelay > g_nZCompensationDelayMax )		g_nZCompensationDelayMax = nDelay;
+#endif // DEBUG_HEAT_BED_Z_COMPENSATION
 			}
 		}
 		else if( Printer::currentCompensationZ > Printer::targetCompensationZ )
@@ -778,6 +788,12 @@ ISR(TIMER1_COMPA_vect)
 			if( Printer::currentCompensationZ == Printer::targetCompensationZ )
 			{
 				g_nMainDirectionZ = 0;
+
+#if DEBUG_HEAT_BED_Z_COMPENSATION
+				long	nDelay = micros() - g_nZCompensationUpdateTime;
+
+				if( nDelay > g_nZCompensationDelayMax )		g_nZCompensationDelayMax = nDelay;
+#endif // DEBUG_HEAT_BED_Z_COMPENSATION
 			}
 		}
 	}

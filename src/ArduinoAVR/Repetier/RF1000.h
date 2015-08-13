@@ -306,6 +306,24 @@ extern	long			g_nZOriginZPosition;
 #endif // FEATURE_FIND_Z_ORIGIN
 
 
+#if DEBUG_HEAT_BED_Z_COMPENSATION
+extern	long			g_nNonCompensatedPositionSteps[3];
+extern	long			g_nTargetCompensationZ;
+extern	long			g_nZCompensationUpdates;
+extern	long			g_nDelta[2];
+extern	long			g_nStepSize[2];
+extern	long			g_nTempXFront;
+extern	long			g_nTempXBack;
+extern	long			g_nNeededZ;
+extern	unsigned char	g_uIndex[4];
+extern	short			g_nMatrix[4];
+extern	long			g_nZDeltaMin;
+extern	long			g_nZDeltaMax;
+extern	long			g_nZCompensationUpdateTime;
+extern	long			g_nZCompensationDelayMax;
+extern	long			g_nTooFast;
+#endif // DEBUG_HEAT_BED_Z_COMPENSATION
+
 // initRF1000()
 extern void initRF1000( void );
 
@@ -554,6 +572,9 @@ extern unsigned char isSupportedCommand( unsigned int currentMCode, char neededM
 
 // isMovingAllowed()
 extern unsigned char isMovingAllowed( const char* pszCommand, char outputLog = 1 );
+
+// isHomingAllowed()
+extern unsigned char isHomingAllowed( GCode* com, char outputLog = 1 );
 
 // showInvalidSyntax()
 extern void showInvalidSyntax( unsigned int currentMCode );

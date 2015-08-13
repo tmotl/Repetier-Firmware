@@ -197,6 +197,8 @@ public:
 
 #if FEATURE_CNC_MODE > 0
 	static char operatingMode;
+	static char ZEndstopType;
+	static char	ZEndstopUnknown;
 #endif // FEATURE_CNC_MODE > 0
 
 #if FEATURE_CNC_MODE == 2
@@ -602,9 +604,28 @@ public:
 
 #if FEATURE_CNC_MODE == 2
 
+		if( ZEndstopType == ENDSTOP_TYPE_SINGLE )
+		{
+			if( operatingMode == OPERATING_MODE_PRINT )
+			{
+				// in case there is only one z-endstop and we are in operating mode "print", the z-min endstop must be connected
+				return READ(Z_MIN_PIN) != ENDSTOP_Z_MIN_INVERTING;
+			}
+
+			// in case there is only one z-endstop and we are in operating mode "mill", the z-min endstop is not connected and can not be detected
+			return false;
+		}
+
+		// we end up here in case the z-min and z-max endstops are connected in a circuit
 		if( READ(Z_MIN_PIN) != ENDSTOP_Z_MIN_INVERTING )
 		{
 			// either the min or the max endstop is hit
+			if( ZEndstopUnknown )
+			{
+				// this is save as long as we do not allow any movement except the z-homing while ZEndstopUnknown is != 0
+				return false;
+			}
+
 			if( endstopZMaxHit == ENDSTOP_IS_HIT )
 			{
 				// when the z-max endstop is hit already we know that the z-min endstop is not hit
@@ -646,6 +667,7 @@ public:
 		{
 			endstopZMaxHit = ENDSTOP_WAS_HIT;
 		}
+		ZEndstopUnknown = 0;
 		return false;
 
 #else
@@ -678,9 +700,28 @@ public:
 
 #if FEATURE_CNC_MODE == 2
 
+		if( ZEndstopType == ENDSTOP_TYPE_SINGLE )
+		{
+			if( operatingMode == OPERATING_MODE_CNC )
+			{
+				// in case there is only one z-endstop and we are in operating mode "mill", the z-max endstop must be connected
+				return READ(Z_MAX_PIN) != ENDSTOP_Z_MAX_INVERTING;
+			}
+
+			// in case there is only one z-endstop and we are in operating mode "print", the z-max endstop is not connected and can not be detected
+			return false;
+		}
+
+		// we end up here in case the z-min and z-max endstops are connected in a circuit
 		if( READ(Z_MAX_PIN) != ENDSTOP_Z_MAX_INVERTING )
 		{
 			// either the min or the max endstop is hit
+			if( ZEndstopUnknown )
+			{
+				// this is save as long as we do not allow any movement except the z-homing while ZEndstopUnknown is != 0
+				return false;
+			}
+
 			if( endstopZMinHit == ENDSTOP_IS_HIT )
 			{
 				// when the z-min endstop is hit already we know that the z-max endstop is not hit
@@ -724,6 +765,7 @@ public:
 		{
 			endstopZMaxHit = ENDSTOP_WAS_HIT;
 		}
+		ZEndstopUnknown = 0;
 		return false;
 
 #else

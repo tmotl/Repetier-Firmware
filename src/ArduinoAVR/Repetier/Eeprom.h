@@ -113,6 +113,7 @@ have problems with other modules using the eeprom */
 #define EPR_X_HOMING_FEEDRATE_CNC	1003
 #define EPR_Y_HOMING_FEEDRATE_CNC	1007
 #define EPR_Z_HOMING_FEEDRATE_CNC	1011
+#define EPR_RF1000_Z_ENDSTOP_TYPE	1015
 
 #define EEPROM_EXTRUDER_OFFSET 200
 // bytes per extruder needed, leave some space for future development
@@ -159,6 +160,7 @@ public:
     static void init();
     static void initBaudrate();
     static void storeDataIntoEEPROM(uint8_t corrupted=0);
+	static void updateChecksum();
     static void readDataFromEEPROM();
     static void restoreEEPROMSettingsFromConfiguration();
 	static void initializeAllOperatingModes();
@@ -166,6 +168,7 @@ public:
     static void writeSettings();
     static void update(GCode *com);
     static void updatePrinterUsage();
+	static int getExtruderOffset(uint8_t extruder=0);
 
     static inline float zProbeSpeed() {
 #if EEPROM_MODE!=0

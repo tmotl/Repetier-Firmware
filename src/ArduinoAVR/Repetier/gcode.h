@@ -52,14 +52,29 @@ public:
     {
         return ((params & 4)!=0);
     }
+	inline void setX(char set)
+	{
+		if( set )	params |= 8;
+		else		params &= ~8;
+	}
     inline bool hasX()
     {
         return ((params & 8)!=0);
     }
+	inline void setY(char set)
+	{
+		if( set )	params |= 16;
+		else		params &= ~16;
+	}
     inline bool hasY()
     {
         return ((params & 16)!=0);
     }
+	inline void setZ(char set)
+	{
+		if( set )	params |= 32;
+		else		params &= ~32;
+	}
     inline bool hasZ()
     {
         return ((params & 32)!=0);

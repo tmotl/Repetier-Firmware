@@ -2289,6 +2289,14 @@ long PrintLine::bresenhamStep() // version for cartesian printer
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 							Printer::doHeatBedZCompensation = 1;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+#if DEBUG_HEAT_BED_Z_COMPENSATION
+							g_nNonCompensatedPositionSteps[X_AXIS] = 0;
+							g_nNonCompensatedPositionSteps[Y_AXIS] = 0;
+							g_nNonCompensatedPositionSteps[Z_AXIS] = 0;
+							g_nTargetCompensationZ				   = 0;
+							g_nZCompensationUpdates				   = 0;
+#endif // DEBUG_HEAT_BED_Z_COMPENSATION
 						}
 						else
 						{

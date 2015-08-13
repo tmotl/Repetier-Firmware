@@ -342,6 +342,7 @@ FSTRINGVALUE(Com::tEPRAdvanceL,"advance L [0=off]")
 FSTRINGVALUE(Com::tEPRBeeperMode,"beeper mode [0=off]")
 FSTRINGVALUE(Com::tEPRLightsMode,"lights mode [0=off]")
 FSTRINGVALUE(Com::tEPROperatingMode,"operating mode [1=print, 2=mill]")
+FSTRINGVALUE(Com::tEPRZEndstopType,"Z endstop type [1=single, 2=circuit]")
 
 #endif
 #if SDSUPPORT

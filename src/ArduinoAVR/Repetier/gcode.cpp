@@ -136,7 +136,8 @@ void GCode::requestResend()
         waitingForResend = 30;
     else
         waitingForResend = 14;
-    Com::println();
+
+	Com::println();
     Com::printFLN(Com::tResend,lastLineNumber+1);
     Com::printFLN(Com::tOk);
 }
@@ -359,9 +360,9 @@ void GCode::readFromSerial()
 #ifdef WAITING_IDENTIFIER
         else if(bufferLength == 0 && time-timeOfLastDataPacket>1000)   // Don't do it if buffer is not empty. It may be a slow executing command.
         {
-#if !SUPPORT_CURA
+#if ALLOW_EXTENDED_COMMUNICATION > 0
 			Com::printFLN(Com::tWait); // Unblock communication in case the last ok was not received correct.
-#endif // !SUPPORT_CURA
+#endif // ALLOW_EXTENDED_COMMUNICATION > 0
             timeOfLastDataPacket = time;
         }
 #endif
@@ -492,7 +493,10 @@ void GCode::readFromSD()
 
 		if(n==-1)
         {
-            Com::printFLN(Com::tSDReadError);
+			if( Printer::debugErrors() )
+			{
+	            Com::printFLN(Com::tSDReadError);
+			}
             UI_ERROR("SD Read Error");
 
             // Second try in case of recoverable errors
@@ -505,7 +509,10 @@ void GCode::readFromSD()
 
 			if(n==-1)
             {
-                Com::printErrorFLN(PSTR("SD error did not recover!"));
+				if( Printer::debugErrors() )
+				{
+					Com::printErrorFLN(PSTR("SD error did not recover!"));
+				}
                 sd.sdmode = false;
                 break;
             }
@@ -588,7 +595,11 @@ void GCode::readFromSD()
         }
     }
     sd.sdmode = false;
-    Com::printFLN(Com::tDonePrinting);
+
+	if( Printer::debugInfo() )
+	{
+		Com::printFLN(Com::tDonePrinting);
+	}
     commandsReceivingWritePosition = 0;
     commentDetected = false;
     Printer::setMenuMode(MENU_MODE_SD_PRINTING,false);

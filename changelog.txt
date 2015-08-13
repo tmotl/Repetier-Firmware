@@ -1,3 +1,20 @@
+V 0.91.57 (2015-08-13)
+- Changing of the precision of the xxx_STEPS_PER_MM from long to float.
+- Changing of MIN_EXTRUDER_TEMP from 160 to 120 °C (because a temperature of 120 °C can be used perfectly in order to remove/pull out the filament from the extruder).
+- Adding of the AUTOMATIC_EEPROM_UPDATE, which allows to choose whether the EEPROM shall be updated directly after each change within the menu or only after "Store to EEPROM" has been called.
+- Redefinition of SUPPORT_CURA to ALLOW_EXTENDED_COMMUNICATION.
+  - Via this new define, all non-standard communication/messages from the firmware to the USB host can be disabled. Some applications/print servers may require to disable these non-standard messages.
+- Improved configuration, recognitation and handling of the Z-endstop(s):
+  - Adding of DEFAULT_Z_ENDSTOP_TYPE, ENDSTOP_TYPE_SINGLE and ENDSTOP_TYPE_CIRCUIT - these defines can be used in order to define whether only the Z-min, only the Z-max or both Z-endstops are installed.
+  - Adding of UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS - this define can be used in order to define how many steps the RF1000 shall try to move when both Z-endstops are installed and one of them is pressed at the moment of the start of the firmware.
+    - This moving allows the RF1000 to get out of the Z-endstop even when it does not know which of them was pressed.
+  - In case the currently pressed Z-endstop is unknown, a homing in Z-direction must be performed before any other movement in Z-direction is allowed.
+  - The type of the installed Z-endstops also can be configured via the menu (see "Configuration" -> "General" -> "Z Type").
+- Homing is not allowed anymore while the RF1000 is doing a (heat bed/work part) scan and while it is searching the z-origin.
+  - In addition, a homing in x and y direction is allowed only in case the RF1000 knows which Z-endstop is pressed (if any).
+- Additional debug functionality has been added for the analysis of the heat bed scan and for the z-compensation.
+- Calling of runStandardTasks() has been removed from moveZ() because with some G-Codes this call could cause the firmware to hang.
+
 V 0.91.55 (2015-03-06)
 - While a heat bed scan, work part scan or the finding of the origin is in progress, the following commands are ignored (except of an according log entry):
   - G0

@@ -48,7 +48,10 @@ void EEPROM::update(GCode *com)
     readDataFromEEPROM();
     Extruder::selectExtruderById(Extruder::current->id);
 #else
-    Com::printErrorF(Com::tNoEEPROMSupport);
+	if( Printer::debugErrors() )
+	{
+	    Com::printErrorF(Com::tNoEEPROMSupport);
+	}
 #endif
 }
 
@@ -309,9 +312,16 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     Printer::updateDerivedParameter();
     Extruder::selectExtruderById(Extruder::current->id);
     Extruder::initHeatedBed();
-    Com::printInfoF(Com::tEPRConfigResetDefaults);
+
+	if( Printer::debugInfo() )
+	{
+		Com::printInfoF(Com::tEPRConfigResetDefaults);
+	}
 #else
-    Com::printErrorF(Com::tNoEEPROMSupport);
+	if( Printer::debugErrors() )
+	{
+	    Com::printErrorF(Com::tNoEEPROMSupport);
+	}
 #endif
 
 }
@@ -477,6 +487,7 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
 
 #if FEATURE_CNC_MODE > 0
 	HAL::eprSetByte( EPR_RF1000_OPERATING_MODE, Printer::operatingMode );
+	HAL::eprSetByte( EPR_RF1000_Z_ENDSTOP_TYPE, Printer::ZEndstopType );
 #endif // FEATURE CNC_MODE > 0
 
 	// Save version and build checksum
@@ -484,6 +495,14 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
     HAL::eprSetByte(EPR_INTEGRITY_BYTE,computeChecksum());
 #endif
 }
+
+void EEPROM::updateChecksum()
+{
+#if EEPROM_MODE!=0
+	HAL::eprSetByte(EPR_INTEGRITY_BYTE,computeChecksum());
+#endif // EEPROM_MODE!=0
+
+} // updateChecksum
 
 void EEPROM::initializeAllOperatingModes()
 {
@@ -600,7 +619,11 @@ void EEPROM::readDataFromEEPROM()
                 Printer::autolevelTransformation[i] = HAL::eprGetFloat((EPR_AUTOLEVEL_MATRIX + (int)i) << 2);
         }
         Printer::setAutolevelActive(HAL::eprGetByte(EPR_AUTOLEVEL_ACTIVE));
-        Com::printArrayFLN(Com::tInfo,Printer::autolevelTransformation,9,6);
+
+		if( Printer::debugInfo() )
+		{
+			Com::printArrayFLN(Com::tInfo,Printer::autolevelTransformation,9,6);
+		}
     }
 #endif
     // now the extruder
@@ -652,6 +675,7 @@ void EEPROM::readDataFromEEPROM()
 
 #if FEATURE_CNC_MODE > 0
 	Printer::operatingMode = HAL::eprGetByte( EPR_RF1000_OPERATING_MODE ) == OPERATING_MODE_CNC ? OPERATING_MODE_CNC : OPERATING_MODE_PRINT;
+	Printer::ZEndstopType  = HAL::eprGetByte( EPR_RF1000_Z_ENDSTOP_TYPE ) == ENDSTOP_TYPE_CIRCUIT ? ENDSTOP_TYPE_CIRCUIT : ENDSTOP_TYPE_SINGLE;
 	if( Printer::operatingMode == OPERATING_MODE_PRINT )
 	{
 		Printer::homingFeedrate[0] = HAL::eprGetFloat(EPR_X_HOMING_FEEDRATE_PRINT);
@@ -672,7 +696,10 @@ void EEPROM::readDataFromEEPROM()
 
 	if(version!=EEPROM_PROTOCOL_VERSION)
     {
-        Com::printInfoFLN(Com::tEPRProtocolChanged);
+		if( Printer::debugInfo() )
+		{
+	        Com::printInfoFLN(Com::tEPRProtocolChanged);
+		}
         if(version<3)
         {
             HAL::eprSetFloat(EPR_Z_PROBE_HEIGHT,Z_PROBE_HEIGHT);
@@ -780,6 +807,12 @@ void EEPROM::updatePrinterUsage()
     Commands::reportPrinterUsage();
 #endif
 }
+
+int EEPROM::getExtruderOffset(uint8_t extruder)
+{
+	return extruder * EEPROM_EXTRUDER_LENGTH + EEPROM_EXTRUDER_OFFSET;
+
+} // getExtruderOffset
 
 /** \brief Writes all eeprom settings to serial console.
 
@@ -966,9 +999,13 @@ void EEPROM::writeSettings()
 	writeByte(EPR_RF1000_BEEPER_MODE,Com::tEPRBeeperMode);
 	writeByte(EPR_RF1000_LIGHTS_MODE,Com::tEPRLightsMode);
 	writeByte(EPR_RF1000_OPERATING_MODE,Com::tEPROperatingMode);
+	writeByte(EPR_RF1000_Z_ENDSTOP_TYPE,Com::tEPRZEndstopType);
 
 #else
-    Com::printErrorF(Com::tNoEEPROMSupport);
+	if( Printer::debugErrors() )
+	{
+	    Com::printErrorF(Com::tNoEEPROMSupport);
+	}
 #endif
 }
 
@@ -994,7 +1031,7 @@ void EEPROM::writeExtruderPrefix(uint pos)
 {
     if(pos<EEPROM_EXTRUDER_OFFSET || pos>=800) return;
     int n = (pos-EEPROM_EXTRUDER_OFFSET)/EEPROM_EXTRUDER_LENGTH+1;
-    Com::printF(Com::tExtrDot,n);
+	Com::printF(Com::tExtrDot,n);
     Com::print(' ');
 }
 

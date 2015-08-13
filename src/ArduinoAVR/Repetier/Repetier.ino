@@ -38,6 +38,8 @@ Implemented Codes
 
 - G0  -> G1
 - G1  - Coordinated Movement X Y Z E
+- G2  - Clockwise Arc
+- G3  - Counter-clockwise Arc
 - G4  - Dwell S<seconds> or P<milliseconds>
 - G20 - Units for G0/G1 are inches.
 - G21 - Units for G0/G1 are mm.

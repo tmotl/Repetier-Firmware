@@ -54,11 +54,11 @@ long Printer::destinationSteps[4];
 float Printer::coordinateOffset[3] = {0,0,0};
 uint8_t Printer::flag0 = 0;
 uint8_t Printer::flag1 = 0;
-#if SUPPORT_CURA
+#if ALLOW_EXTENDED_COMMUNICATION < 2
 uint8_t Printer::debugLevel = 0; ///< Bitfield defining debug output. 1 = echo, 2 = info, 4 = error, 8 = dry run., 16 = Only communication, 32 = No moves
 #else
 uint8_t Printer::debugLevel = 6; ///< Bitfield defining debug output. 1 = echo, 2 = info, 4 = error, 8 = dry run., 16 = Only communication, 32 = No moves
-#endif // SUPPORT_CURA
+#endif // ALLOW_EXTENDED_COMMUNICATION < 2
 uint8_t Printer::stepsPerTimerCall = 1;
 uint8_t Printer::menuMode = 0;
 
@@ -188,6 +188,8 @@ long Printer::currentPositionStepsE;
 
 #if FEATURE_CNC_MODE > 0
 char Printer::operatingMode;
+char Printer::ZEndstopType;
+char Printer::ZEndstopUnknown;
 #endif // FEATURE_CNC_MODE > 0
 
 #if FEATURE_CNC_MODE == 2
@@ -638,7 +640,10 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
     }
     if(!Printer::isPositionAllowed(x,y,z))
 	{
-		Com::printFLN( PSTR( "We should not be here." ) );
+		if( Printer::debugErrors() )
+		{
+			Com::printFLN( PSTR( "We should not be here." ) );
+		}
         currentPositionSteps[E_AXIS] = destinationSteps[E_AXIS];
         return false; // ignore move
     }
@@ -966,7 +971,9 @@ void Printer::setup()
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
 #if FEATURE_CNC_MODE > 0
-	operatingMode  = DEFAULT_OPERATING_MODE;
+	operatingMode	= DEFAULT_OPERATING_MODE;
+	ZEndstopType	= DEFAULT_Z_ENDSTOP_TYPE;
+	ZEndstopUnknown = 0;
 #endif // FEATURE_CNC_MODE > 0
 
 #if FEATURE_CNC_MODE == 2
@@ -1001,10 +1008,16 @@ void Printer::setup()
     EEPROM::initBaudrate();
     HAL::serialSetBaudrate(baudrate);
 
-    Com::printFLN(Com::tStart);
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(Com::tStart);
+	}
 
 #if FEATURE_WATCHDOG
-    Com::printFLN(Com::tStartWatchdog);
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(Com::tStartWatchdog);
+	}
     HAL::startWatchdog();
 #endif // FEATURE_WATCHDOG
 
@@ -1379,6 +1392,47 @@ void Printer::homeZAxis()
         currentPositionStepsZ = 0;
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
+#if FEATURE_CNC_MODE > 0
+		if( ZEndstopUnknown )
+		{
+			// in case we do not know which z-endstop is currently active, we always move downwards first
+			// in case z-min was active, z-min will not be active anymore
+			// in case z-max was active, it will remain active
+
+			if( Printer::debugInfo() )
+			{
+				Com::printFLN( PSTR( "driving free downwards" ) );
+			}
+			PrintLine::moveRelativeDistanceInSteps(0,0,UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS,0,homingFeedrate[2],true,false);
+
+			if( READ(Z_MAX_PIN) != ENDSTOP_Z_MAX_INVERTING )
+			{
+				// in case z-max is still active, we move upwards in order to drive it free
+				if( Printer::debugInfo() )
+				{
+					Com::printFLN( PSTR( "driving free upwards" ) );
+				}
+				PrintLine::moveRelativeDistanceInSteps(0,0,-UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS,0,homingFeedrate[2],true,false);
+			}
+
+			if( READ(Z_MAX_PIN) == ENDSTOP_Z_MAX_INVERTING )
+			{
+				// there is no active z-endstop any more, we can continue with all movements normally
+				if( Printer::debugInfo() )
+				{
+					Com::printFLN( PSTR( "driven free" ) );
+				}
+
+				lastZDirection		   = 0;
+				endstopZMinHit		   = ENDSTOP_NOT_HIT;
+				endstopZMaxHit		   = ENDSTOP_NOT_HIT;
+				stepsSinceZMinEndstop = 0;
+				stepsSinceZMaxEndstop = 0;
+				ZEndstopUnknown		  = 0;
+			}
+		}
+#endif // FEATURE_CNC_MODE > 0
+
 		steps = (zMaxSteps - zMinSteps) * nHomeDir;
         currentPositionSteps[Z_AXIS] = -steps;
         PrintLine::moveRelativeDistanceInSteps(0,0,2*steps,0,homingFeedrate[2],true,true);
@@ -1518,6 +1572,10 @@ void Printer::homeAxis(bool xaxis,bool yaxis,bool zaxis) // home non-delta print
 
 #endif // FEATURE_CNC_MODE == 2
 		setZOriginSet(false);
+
+#if FEATURE_CNC_MODE > 0
+		ZEndstopUnknown = false;
+#endif // FEATURE_CNC_MODE > 0
     }
     updateCurrentPosition(true);
     moveToReal(startX,startY,startZ,IGNORE_COORDINATE,homingFeedrate[0]);
@@ -1576,10 +1634,14 @@ void Printer::setAutolevelActive(bool on)
 #if FEATURE_AUTOLEVEL
     if(on == isAutolevelActive()) return;
     flag0 = (on ? flag0 | PRINTER_FLAG0_AUTOLEVEL_ACTIVE : flag0 & ~PRINTER_FLAG0_AUTOLEVEL_ACTIVE);
-    if(on)
-        Com::printInfoFLN(Com::tAutolevelEnabled);
-    else
-        Com::printInfoFLN(Com::tAutolevelDisabled);
+
+	if( Printer::debugInfo() )
+	{
+		if(on)
+			Com::printInfoFLN(Com::tAutolevelEnabled);
+		else
+			Com::printInfoFLN(Com::tAutolevelDisabled);
+	}
     updateCurrentPosition(false);
 #endif // FEATURE_AUTOLEVEL    if(isAutolevelActive()==on) return;
 }
@@ -1599,7 +1661,10 @@ float Printer::runZMaxProbe()
     PrintLine::moveRelativeDistanceInSteps(0,0,probeDepth,0,EEPROM::zProbeSpeed(),true,true);
     if(stepsRemainingAtZHit<0)
     {
-        Com::printErrorFLN(Com::tZProbeFailed);
+		if( Printer::debugErrors() )
+		{
+			Com::printErrorFLN(Com::tZProbeFailed);
+		}
         return -1;
     }
     setZProbingActive(false);
@@ -1610,9 +1675,13 @@ float Printer::runZMaxProbe()
     probeDepth -= stepsRemainingAtZHit;
 #endif
     float distance = (float)probeDepth*invAxisStepsPerMM[Z_AXIS];
-    Com::printF(Com::tZProbeMax,distance);
-    Com::printF(Com::tSpaceXColon,realXPosition());
-    Com::printFLN(Com::tSpaceYColon,realYPosition());
+    
+	if( Printer::debugInfo() )
+	{
+		Com::printF(Com::tZProbeMax,distance);
+		Com::printF(Com::tSpaceXColon,realXPosition());
+		Com::printFLN(Com::tSpaceYColon,realYPosition());
+	}
     PrintLine::moveRelativeDistanceInSteps(0,0,-probeDepth,0,EEPROM::zProbeSpeed(),true,true);
     return distance;
 }
@@ -1654,7 +1723,10 @@ float Printer::runZProbe(bool first,bool last,uint8_t repeat)
 		PrintLine::moveRelativeDistanceInSteps(0,0,-probeDepth,0,EEPROM::zProbeSpeed(),true,true);
         if(stepsRemainingAtZHit<0)
         {
-            Com::printErrorFLN(Com::tZProbeFailed);
+			if( Printer::debugErrors() )
+			{
+	            Com::printErrorFLN(Com::tZProbeFailed);
+			}
             return -1;
         }
         setZProbingActive(false);
@@ -1680,9 +1752,13 @@ float Printer::runZProbe(bool first,bool last,uint8_t repeat)
             PrintLine::moveRelativeDistanceInSteps(0,0,shortMove,0,EEPROM::zProbeSpeed(),true,false);
     }
     float distance = (float)sum * invAxisStepsPerMM[Z_AXIS] / (float)repeat + EEPROM::zProbeHeight();
-    Com::printF(Com::tZProbe,distance);
-    Com::printF(Com::tSpaceXColon,realXPosition());
-    Com::printFLN(Com::tSpaceYColon,realYPosition());
+
+	if( Printer::debugInfo() )
+	{
+		Com::printF(Com::tZProbe,distance);
+		Com::printF(Com::tSpaceXColon,realXPosition());
+		Com::printFLN(Com::tSpaceYColon,realYPosition());
+	}
     // Go back to start position
     PrintLine::moveRelativeDistanceInSteps(0,0,lastCorrection-currentPositionSteps[Z_AXIS],0,EEPROM::zProbeSpeed(),true,false);
     //PrintLine::moveRelativeDistanceInSteps(offx,offy,0,0,EEPROM::zProbeXYSpeed(),true,true);
@@ -1755,7 +1831,12 @@ void Printer::resetTransformationMatrix(bool silent)
     autolevelTransformation[1] = autolevelTransformation[2] = autolevelTransformation[3] =
                                      autolevelTransformation[5] = autolevelTransformation[6] = autolevelTransformation[7] = 0;
     if(!silent)
-        Com::printInfoFLN(Com::tAutolevelReset);
+	{
+		if( Printer::debugInfo() )
+		{
+			Com::printInfoFLN(Com::tAutolevelReset);
+		}
+	}
 }
 
 void Printer::buildTransformationMatrix(float h1,float h2,float h3)
@@ -1788,7 +1869,11 @@ void Printer::buildTransformationMatrix(float h1,float h2,float h3)
     len = sqrt(autolevelTransformation[4]*autolevelTransformation[4]+autolevelTransformation[5]*autolevelTransformation[5]);
     autolevelTransformation[4] /= len;
     autolevelTransformation[5] /= len;
-    Com::printArrayFLN(Com::tInfo,autolevelTransformation,9,5);
+    
+	if( Printer::debugInfo() )
+	{
+		Com::printArrayFLN(Com::tInfo,autolevelTransformation,9,5);
+	}
 }
 #endif
 

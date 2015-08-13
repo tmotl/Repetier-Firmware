@@ -418,8 +418,12 @@ void Extruder::setTemperatureForExtruder(float temperatureInCelsius,uint8_t extr
     if(beep && temperatureInCelsius>30)
         tc->setAlarm(true);
     if(temperatureInCelsius>=EXTRUDER_FAN_COOL_TEMP) extruder[extr].coolerPWM = extruder[extr].coolerSpeed;
-    Com::printF(Com::tTargetExtr,extr,0);
-    Com::printFLN(Com::tColon,temperatureInCelsius,0);
+
+	if( Printer::debugInfo() )
+	{
+		Com::printF(Com::tTargetExtr,extr,0);
+		Com::printFLN(Com::tColon,temperatureInCelsius,0);
+	}
 
 #if CASE_FAN_PIN >= 0 && !defined CASE_FAN_ALWAYS_ON
 	if( temperatureInCelsius >= CASE_FAN_ON_TEMPERATURE )
@@ -472,7 +476,11 @@ void Extruder::setHeatedBedTemperature(float temperatureInCelsius,bool beep)
     if(heatedBedController.targetTemperatureC==temperatureInCelsius) return; // don't flood log with messages if killed
     heatedBedController.setTargetTemperature(temperatureInCelsius);
     if(beep && temperatureInCelsius>30) heatedBedController.setAlarm(true);
-    Com::printFLN(Com::tTargetBedColon,heatedBedController.targetTemperatureC,0);
+
+	if( Printer::debugInfo() )
+	{
+		Com::printFLN(Com::tTargetBedColon,heatedBedController.targetTemperatureC,0);
+	}
 #endif
 }
 
@@ -957,7 +965,10 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
     float Kp, Ki, Kd;
     float maxTemp=20, minTemp=20;
 
-    Com::printInfoFLN(Com::tPIDAutotuneStart);
+	if( Printer::debugInfo() )
+	{
+	    Com::printInfoFLN(Com::tPIDAutotuneStart);
+	}
 
     Extruder::disableAllHeater(); // switch off all heaters.
     autotuneIndex = controllerId;
@@ -1003,24 +1014,38 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
                     if(bias > pidMax/2) d = pidMax - 1 - bias;
                     else d = bias;
 
-                    Com::printF(Com::tAPIDBias,bias);
-                    Com::printF(Com::tAPIDD,d);
-                    Com::printF(Com::tAPIDMin,minTemp);
-                    Com::printFLN(Com::tAPIDMax,maxTemp);
+					if( Printer::debugInfo() )
+					{
+						Com::printF(Com::tAPIDBias,bias);
+						Com::printF(Com::tAPIDD,d);
+						Com::printF(Com::tAPIDMin,minTemp);
+						Com::printFLN(Com::tAPIDMax,maxTemp);
+					}
+
                     if(cycles > 2)
                     {
                         // Parameter according Ziegler¡§CNichols method: http://en.wikipedia.org/wiki/Ziegler%E2%80%93Nichols_method
                         Ku = (4.0*d)/(3.14159*(maxTemp-minTemp));
                         Tu = ((float)(t_low + t_high)/1000.0);
-                        Com::printF(Com::tAPIDKu,Ku);
-                        Com::printFLN(Com::tAPIDTu,Tu);
+
+						if( Printer::debugInfo() )
+						{
+							Com::printF(Com::tAPIDKu,Ku);
+							Com::printFLN(Com::tAPIDTu,Tu);
+						}
+
                         Kp = 0.6*Ku;
                         Ki = 2*Kp/Tu;
                         Kd = Kp*Tu*0.125;
-                        Com::printFLN(Com::tAPIDClassic);
-                        Com::printFLN(Com::tAPIDKp,Kp);
-                        Com::printFLN(Com::tAPIDKi,Ki);
-                        Com::printFLN(Com::tAPIDKd,Kd);
+
+						if( Printer::debugInfo() )
+						{
+							Com::printFLN(Com::tAPIDClassic);
+							Com::printFLN(Com::tAPIDKp,Kp);
+							Com::printFLN(Com::tAPIDKi,Ki);
+							Com::printFLN(Com::tAPIDKd,Kd);
+						}
+
                         /*
                         Kp = 0.33*Ku;
                         Ki = Kp/Tu;
@@ -1046,7 +1071,10 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         }
         if(currentTemp > (temp + 20))
         {
-            Com::printErrorFLN(Com::tAPIDFailedHigh);
+			if( Printer::debugErrors() )
+			{
+	            Com::printErrorFLN(Com::tAPIDFailedHigh);
+			}
             Extruder::disableAllHeater();
             return;
         }
@@ -1057,13 +1085,19 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         }
         if(((time - t1) + (time - t2)) > (10L*60L*1000L*2L))   // 20 Minutes
         {
-            Com::printErrorFLN(Com::tAPIDFailedTimeout);
+			if( Printer::debugErrors() )
+			{
+	            Com::printErrorFLN(Com::tAPIDFailedTimeout);
+			}
             Extruder::disableAllHeater();
             return;
         }
         if(cycles > 5)
         {
-            Com::printInfoFLN(Com::tAPIDFinished);
+			if( Printer::debugInfo() )
+			{
+	            Com::printInfoFLN(Com::tAPIDFinished);
+			}
             Extruder::disableAllHeater();
             if(storeValues)
             {
@@ -1088,11 +1122,14 @@ disabled, the function is not called.
 */
 void writeMonitor()
 {
-    Com::printF(Com::tMTEMPColon,(long)HAL::timeInMilliseconds());
-    TemperatureController *act = tempController[manageMonitor];
-    Com::printF(Com::tSpace,act->currentTemperatureC);
-    Com::printF(Com::tSpace,act->targetTemperatureC,0);
-    Com::printFLN(Com::tSpace,pwm_pos[act->pwmIndex]);
+	if( Printer::debugInfo() )
+	{
+		TemperatureController *act = tempController[manageMonitor];
+		Com::printF(Com::tMTEMPColon,(long)HAL::timeInMilliseconds());
+		Com::printF(Com::tSpace,act->currentTemperatureC);
+		Com::printF(Com::tSpace,act->targetTemperatureC,0);
+		Com::printFLN(Com::tSpace,pwm_pos[act->pwmIndex]);
+	}
 }
 
 bool reportTempsensorError()
@@ -1101,22 +1138,39 @@ bool reportTempsensorError()
     for(uint8_t i=0; i<NUM_TEMPERATURE_LOOPS; i++)
     {
         int temp = tempController[i]->currentTemperatureC;
-        if(i==NUM_EXTRUDER) Com::printF(Com::tHeatedBed);
-        else Com::printF(Com::tExtruderSpace,i);
+
+		if( Printer::debugInfo() )
+		{
+	        if(i==NUM_EXTRUDER) Com::printF(Com::tHeatedBed);
+		    else Com::printF(Com::tExtruderSpace,i);
+		}
+
         if(temp<MIN_DEFECT_TEMPERATURE || temp>MAX_DEFECT_TEMPERATURE)
         {
-            Com::printFLN(Com::tTempSensorDefect);
+			if( Printer::debugErrors() )
+			{
+	            Com::printFLN(Com::tTempSensorDefect);
+			}
         }
-        else Com::printFLN(Com::tTempSensorWorking);
+        else if( Printer::debugInfo() )
+		{
+			Com::printFLN(Com::tTempSensorWorking);
+		}
     }
 
 #if FEATURE_CNC_MODE > 0
 	if( Printer::operatingMode == OPERATING_MODE_PRINT )
 	{
-	    Com::printErrorFLN(Com::tDryModeUntilRestart);
+		if( Printer::debugErrors() )
+		{
+			Com::printErrorFLN(Com::tDryModeUntilRestart);
+		}
 	}
 #else
-    Com::printErrorFLN(Com::tDryModeUntilRestart);
+	if( Printer::debugErrors() )
+	{
+		Com::printErrorFLN(Com::tDryModeUntilRestart);
+	}
 #endif // FEATURE_CNC_MODE > 0
 
     return true;

@@ -42,12 +42,18 @@ To override EEPROM settings with config settings, set EEPROM_MODE 0
 
 */
 
+#define	OPERATING_MODE_PRINT	1	// the firmware works in mode "print"
+#define OPERATING_MODE_CNC		2	// the firmware works in mode "mill"
+
 #define	HOTEND_TYPE_1			1
-#define	HOTEND_TYPE_2			2
-#define	HOTEND_TYPE_3			3
+#define	HOTEND_TYPE_2			2	// hotend V1
+#define	HOTEND_TYPE_3			3	// hotend V2
 
 #define MILLER_TYPE_1			1	// one track in x- and y-direction
 #define MILLER_TYPE_2			2	// two tracks in x- and y-direction
+
+#define	ENDSTOP_TYPE_SINGLE		1	// there is only one endstop attached (either the min- or the max-endstop)
+#define	ENDSTOP_TYPE_CIRCUIT	2	// the min- and max-endstops are attached in a single circuit
 
 
 // BASIC SETTINGS: select your board type, thermistor type, axis scaling, and endstop configuration
@@ -58,7 +64,7 @@ To override EEPROM settings with config settings, set EEPROM_MODE 0
 /** Define whether the CNC functionality shall be allowed.
 0 = do not support the CNC mode
 1 = experimental, do not use this value (support the CNC mode, only the endstop at z-min is present)
-2 = support the CNC mode, the endstops at z-min and z-max are in one circuit
+2 = support the CNC mode
 */
 #define	FEATURE_CNC_MODE		0
 
@@ -173,13 +179,13 @@ If a motor turns in the wrong direction change INVERT_X_DIR or INVERT_Y_DIR.
 /** \brief Number of steps for a 1mm move in x direction.
 For xy gantry use 2*belt moved!
 Overridden if EEPROM activated. */
-#define XAXIS_STEPS_PER_MM	long(4.761875 * (float)RF1000_MICRO_STEPS)
+#define XAXIS_STEPS_PER_MM	float(4.761875 * (float)RF1000_MICRO_STEPS)
 /** \brief Number of steps for a 1mm move in y direction.
 For xy gantry use 2*belt moved!
 Overridden if EEPROM activated.*/
-#define YAXIS_STEPS_PER_MM	long(4.761875 * (float)RF1000_MICRO_STEPS)
+#define YAXIS_STEPS_PER_MM	float(4.761875 * (float)RF1000_MICRO_STEPS)
 /** \brief Number of steps for a 1mm move in z direction  Overridden if EEPROM activated.*/
-#define ZAXIS_STEPS_PER_MM	long(80 * (float)RF1000_MICRO_STEPS)
+#define ZAXIS_STEPS_PER_MM	float(80 * (float)RF1000_MICRO_STEPS)
 #endif
 
 // ##########################################################################################
@@ -1015,12 +1021,12 @@ if you are printing many very short segments at high speed. Higher delays here a
 /* \brief Minimum temperature for extruder operation
 
 This is a saftey value. If your extruder temperature is below this temperature, no
-extruder steps are executed. This is to prevent your extruder to move unless the fiament
+extruder steps are executed. This is to prevent your extruder to move unless the filament
 is at least molten. After havong some complains that the extruder does not work, I leave
 it 0 as default.
 */
 
-#define MIN_EXTRUDER_TEMP 160
+#define MIN_EXTRUDER_TEMP 120
 
 /** \brief Enable advance algorithm.
 
@@ -1110,13 +1116,17 @@ matches, the stored values are used to overwrite the settings.
 IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, as they are
            taken from the EEPROM.
 */
-#define EEPROM_MODE			53
+#define EEPROM_MODE			57
 
 /** \brief EEPROM reset mode
 
 In case FULL_EEPROM_RESET is set to 1, the complete EEPROM is reset and filled with the values from Configuration.h whenever the EEPROM becomes corruped or its EEPROM_MODE is different to the value from Configuration.h.
 */
 #define	FULL_EEPROM_RESET	1
+
+/** \brief Defines whether a change within the menu shall be stored to the EEPROM automatically or not.
+*/
+#define AUTOMATIC_EEPROM_UPDATE		1	// 1 = the EEPROM is updated automatically after each change via the menu, 0 = the EEPROM must be updated manually via the "Store to EEPROM" menu item
 
 /**************** duplicate motor driver ***************
 
@@ -1363,7 +1373,7 @@ Values must be in range 1..255
 // Extreme values
 #define UI_SET_MIN_HEATED_BED_TEMP  55
 #define UI_SET_MAX_HEATED_BED_TEMP 180
-#define UI_SET_MIN_EXTRUDER_TEMP   160
+#define UI_SET_MIN_EXTRUDER_TEMP   120
 #define UI_SET_MAX_EXTRUDER_TEMP   270
 #define UI_SET_EXTRUDER_FEEDRATE 2 // mm/sec
 #define UI_SET_EXTRUDER_RETRACT_DISTANCE 3 // mm
@@ -1481,10 +1491,10 @@ in z direction during the milling.
 
 /** \brief Allows to use this firmware together with the Cura PC application
 
-Without this special handling, the firmware may complain about checksum errors from the Cura PC application and
-the Cura PC application may fall over the debug outputs of the firmware.
+Without this special handling, the firmware may complain about checksum errors from non-Repetier PC applications (e.g. Cura, ...) and
+non-Repetier PC applications may fall over the debug outputs of the firmware.
 */
-#define	SUPPORT_CURA						0
+#define	ALLOW_EXTENDED_COMMUNICATION		2	// 0 = do not allow, 1 = allow "Wait", 2 = allow "Wait" and debug outputs
 
 /** \brief Enables/disables the set to x/y origin feature
 */
@@ -1752,9 +1762,11 @@ Enabling of the following feature can be dangerous because it allows to manually
 
 /** \brief Default operating mode
 */
-#define	OPERATING_MODE_PRINT				1
-#define OPERATING_MODE_CNC					2
 #define	DEFAULT_OPERATING_MODE				OPERATING_MODE_PRINT
+
+/** Define Default z-endstop type
+*/
+#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_SINGLE
 
 
 #if FEATURE_CNC_MODE > 0
@@ -1796,6 +1808,10 @@ Enabling of the following feature can be dangerous because it allows to manually
 #define MINIMAL_Z_ENDSTOP_MIN_TO_MAX_STEPS			long(ZAXIS_STEPS_PER_MM * 100)						// [steps]
 #define MINIMAL_Z_ENDSTOP_MAX_TO_MIN_STEPS			long(-ZAXIS_STEPS_PER_MM * 100)						// [steps]
 
+/** \brief Defines how many steps the z-axis is moved down before the z-homing in case it is unknown which of both endstops (z-min or z-max) is active at the moment.
+*/
+#define	UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS			long(ZAXIS_STEPS_PER_MM * 5)						// [steps]
+
 #define	ENDSTOP_NOT_HIT								0
 #define	ENDSTOP_IS_HIT								1
 #define	ENDSTOP_WAS_HIT								2
@@ -1810,7 +1826,7 @@ Enabling of the following feature can be dangerous because it allows to manually
 */
 #define UI_PRINTER_NAME "RF1000"
 #define UI_PRINTER_COMPANY "Conrad SE"
-#define UI_VERSION_STRING "V " REPETIER_VERSION ".55"
+#define UI_VERSION_STRING "V " REPETIER_VERSION ".57"
 
 
 #endif
