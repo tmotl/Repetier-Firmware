@@ -8048,7 +8048,7 @@ unsigned char isMovingAllowed( const char* pszCommand, char outputLog )
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 		
 #if FEATURE_FIND_Z_ORIGIN
-	if( g_nFindZOriginStatus )
+	if( g_nFindZOriginStatus && g_nFindZOriginStatus != 30 )
 	{
 		// do not allow manual movements while the z-origin is searched
 		if( Printer::debugErrors() && outputLog )

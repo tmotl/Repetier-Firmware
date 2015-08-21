@@ -1,3 +1,6 @@
+V 0.91.59 (2015-08-21)
+- There were configurations where the milling did not continue after the search of the Z-origin.
+
 V 0.91.57 (2015-08-13)
 - Changing of the precision of the xxx_STEPS_PER_MM from long to float.
 - Changing of MIN_EXTRUDER_TEMP from 160 to 120 °C (because a temperature of 120 °C can be used perfectly in order to remove/pull out the filament from the extruder).
