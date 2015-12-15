@@ -1,3 +1,63 @@
+V RF.01.10 (2015-12-14)
+- At this moment, this firmware is identical to the firmware from the master branch.
+- This firmware can be compiled for the RF1000 and for the RF2000.
+  - Switch the value for "MOTHERBOARD" within Configuration.h between "DEVICE_TYPE_RF1000" and "DEVICE_TYPE_RF2000" in order to compile the proper variant of the firmware.
+  - In case the wrong firmware is loaded (= the RF1000 firmware at the RF2000 board or the RF2000 firmware at the RF1000 board), the firmware beeps 4 times after the start and does not perform any other tasks.
+  - The following device configurations are supported:
+    - RF1000 + single extruder
+    - RF1000 + miller
+    - RF2000 + dual extruder
+- The following modifications apply to both variants of the firmware:
+  - The displayed x/y/z positions within the display of the device are the current position (according to the so-far performed steps) now (and not the last calculated position from the queue of commands).
+  - The z offset which can be configured via M3006 also can be changed via the menu now.
+  - All menu entries have been reviewed.
+  - A separate counter for the operating hours in operating mode "mill" has been added.
+  - A service interval has been added which can inform about the amount of time which is left until the next service should be performed.
+    - In case the print/mill shall be canceled via the menu, an additional question is displayed in order to avoid unintentional abortions.
+  - In case the firmware shall be restarted via the menu, an additional question is displayed in order to avoid unintentional restarts.
+  - The menu text which requests to turn on the miller could be displayed too short.
+  - The currently mounted extruder type can be configured via the menu.
+  - The currently mounted miller type can be configured via the menu.
+  - Pausing via M3070 S2 can move away from the work part also in operating mode mill now.
+  - The speed of the x/y/z movements during pause and continue operations has been improved.
+  - The speed of x/y/z movements which are performed via the hardware buttons and via the menu has been improved.
+  - In case "Unload Filament" or "Load Filament" are called via the menu and the extruder is cold at the moment, the extruder is heated up before the requested operation is performed.
+  - The minimal and maximal strain gauge digits which trigger the emergency pause can be configured via M3075 Ss Pp now.
+  - The status text could show "Heating Extruder" even in case the setpoint temperature after M109 was 0°.
+  - The "Position Extruder" menu items could allow to move the cold extruder.
+  - The two present "Position Z" menus could show a slightly different behavior when the Z position was close to the z-max endstop.
+  - In case the z-max endstop is reached through a manual movement of the z-axis (either via the hardware buttons or via the menu), the z axis moves a short distance upwards automatically in order to free the z-endstop again.
+  - The handling of invalid commands like "U1" has been improved so that the firmware can continue to process further (correct) commands.
+  - FEATURE_CASE_LIGHT can be used in order to enable support for the case light in case there is a case light attached via the CASE_LIGHT_PIN.
+  - Adding of support for M3060, which outputs the device type and the firmware version.
+  - Adding of support for G80 and G81 Xx Yy Rr Zz Ff (= drilling).
+  - FEATURE_HEAT_BED_TEMP_COMPENSATION can be used in order to compensate temperature drifts between the temperature sensor of the heating bed and the surface of the heating bed.
+- The following issues from GitHub have been resolved:
+  - #5 (after mounting of the SD card, the default menu item is "Print File"/"Mill File" now)
+  - #14 (the offset of the z-axis was not set correctly after the Z-origin has been set)
+  - #15, #16 (all pin definitions are within Pins.h now)
+- For the RF2000 variant of the firmware, the following additional features have been added:
+  - The pin definitions for the RF2000 board have been added.
+  - Adding of support for the dual extruder.
+  - Adding of support for three 24 FET outputs.
+    - M3300 Pp Ss can be used in order to switch these outputs on/off.
+  - Adding of support for three hardware PWM servo outputs.
+    - M340 Pp Ss can be used in order to set the PWM interval.
+  - Adding of support for one 230 V output.
+    - M3301 Ss can be used in order to switch this output on/off.
+  - Adding of support for RGB LEDs.
+    - M3308 Pp can be used in order to switch the RGB mode between off, white, automatic and manual.
+    - M3303 Pp Ss can be used in order to configure the RGB colors which shall be used while the RF2000 is heating up
+    - M3304 Pp Ss can be used in order to configure the RGB colors which shall be used while the RF2000 is printing/milling
+    - M3305 Pp Ss can be used in order to configure the RGB colors which shall be used while the RF2000 is cooling down
+    - M3306 Pp Ss can be used in order to configure the RGB colors which shall be used while the RF2000 is idle
+    - M3307 Pp Ss can be used in order to configure the RGB colors which shall be used for the manual RGB mode
+    - In case the main screen is displayed, the leftmost hardware button can be pressed in order to toggle the RGB LEDs between the configured RGB mode and white.
+  - Several texts and messages have been adapted in order to fit better to the bigger (20 columns instead of 16) display.
+  - The SD card is detected automatically.
+  - The always installed z-min and z-max endstops can be detected independently from each other.
+- Additional minor improvements and corrections have been achieved during the review and clean-up of the firmware.
+
 V 0.91.59 (2015-08-21)
 - There were configurations where the milling did not continue after the search of the Z-origin.
 
@@ -39,7 +99,7 @@ V 0.91.53 (2015-02-25)
   - Previous versions of the firmware might have performed a small additional move into x and/or y-direction after the output of the object.
 - In case the to-be-processed G-code from the SD card contained a non-ASCII character, the interpreter could switch from ASCII to binary - and as a result, it was not able to interpret the following G-code(s) properly.
 - All micro (µ) signs have been replaced through a standard-u in order to avoid problems which occurred at some platforms.
-- Removing of the support for M26, M42, M92 and M251.
+- Removing of the support for M26, M92 and M251.
 - M30 (delete file) can not be used anymore while the printing/milling from the SD card is in progress.
 - Pausing via the menu of the RF1000 now works in the same way as the pausing via the hardware buttons.
 - The z-compensation matrix is not loaded during the startup of the firmware anymore.
@@ -50,7 +110,7 @@ V 0.91.53 (2015-02-25)
   - In case the new end position would be left and/or in front of the current start position, the new end position is taken over and the start position is set to the same x/y position.
 - In case the current operating mode is not "print" but "mill", the firmware does not accept the commands for the configuration/reading of (heat bed and extruder) temperatures anymore.
 - Improved handling of print and mill specific M-codes.
-- Fine tunning of settings within Configuration.h:
+- Fine tuning of settings within Configuration.h:
   - The G-code script for the output of printed objects has been updated.
   - A separate G-code script has been introduced for the output of milled objects (see OUTPUT_OBJECT_SCRIPT_MILL).
 - Review of menu texts.
@@ -86,7 +146,7 @@ V 0.91.49 (2014-12-22)
 - The additional moving operations (e.g. for the z-compensation and for the hardware buttons) have been moved from ISR(PWM_TIMER_VECTOR) to ISR(TIMER1_COMPA_vect).
   - The actual calculation of the z-compensation is done with less blocking of interrupts.
   - This modification should eliminate seldom communication errors (and as a result, short stops of the printing process) which could have occurred with previous versions.
-- Fine tunning of settings within Configuration.h:
+- Fine tuning of settings within Configuration.h:
   - The default number of microsteps has been changed from 8 to 32.
   - OUTPUT_OBJECT_SCRIPT uses a slower z-axis speed now.
 
@@ -133,7 +193,7 @@ V 0.91.39 (2014-10-10)
 - Adding of the "Input Filament" menu entry to the "Quick Settings" menu.
   - This operation can be used in order to input new filament to the extruder.
   - INPUT_FILAMENT_SCRIPT can be used in order to define the exact command sequence for the input of the filament.
-- Fine tunning of various settings within Configuration.h:
+- Fine tuning of various settings within Configuration.h:
   - new PID values for the extruder
   - new motor currents
   - correction of a DRV8711 register for better support of higher feedrates
