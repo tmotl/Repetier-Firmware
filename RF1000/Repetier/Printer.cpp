@@ -163,8 +163,6 @@ char			Printer::ZEndstopUnknown;
 char			Printer::lastZDirection;
 char			Printer::endstopZMinHit;
 char			Printer::endstopZMaxHit;
-long			Printer::stepsSinceZMinEndstop;
-long			Printer::stepsSinceZMaxEndstop;
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
@@ -547,7 +545,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
     if(com->hasZ())
 	{
 		queuePositionTargetSteps[Z_AXIS] = zSteps;
-//		Com::printFLN( PSTR( "; " ), queuePositionTargetSteps[Z_AXIS] );
+//		Com::printFLN( PSTR( "qPTS=" ), queuePositionTargetSteps[Z_AXIS] );
 	}
 	else
 	{
@@ -1005,8 +1003,6 @@ void Printer::setup()
 	lastZDirection		  = 0;
 	endstopZMinHit		  = ENDSTOP_NOT_HIT;
 	endstopZMaxHit		  = ENDSTOP_NOT_HIT;
-	stepsSinceZMinEndstop = 0;
-	stepsSinceZMaxEndstop = 0;
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 #if STEPPER_ON_DELAY
@@ -1383,11 +1379,9 @@ void Printer::homeZAxis()
 					Com::printFLN( PSTR( "driven free" ) );
 				}
 
-				lastZDirection		   = 0;
-				endstopZMinHit		   = ENDSTOP_NOT_HIT;
-				endstopZMaxHit		   = ENDSTOP_NOT_HIT;
-				stepsSinceZMinEndstop = 0;
-				stepsSinceZMaxEndstop = 0;
+				lastZDirection		  = 0;
+				endstopZMinHit		  = ENDSTOP_NOT_HIT;
+				endstopZMaxHit		  = ENDSTOP_NOT_HIT;
 				ZEndstopUnknown		  = 0;
 			}
 		}
@@ -1509,7 +1503,6 @@ void Printer::homeAxis(bool xaxis,bool yaxis,bool zaxis) // home non-delta print
     if(zaxis)
     {
 #if FEATURE_MILLING_MODE
-
 		if( Printer::operatingMode == OPERATING_MODE_PRINT )
 		{
 			startZ = Printer::minMM[Z_AXIS];

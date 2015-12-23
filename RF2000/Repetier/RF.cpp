@@ -2774,6 +2774,53 @@ int moveZ( int nSteps )
 } // moveZ
 
 
+void freeZ( int nSteps )
+{
+	int		i;
+	int		nMaxLoops;
+	char	bBreak;
+	char	nRun = 1;
+	
+
+	// Warning: this function does not check any end stops
+	HAL::forbidInterrupts();
+
+	// choose the direction
+	if( nSteps >= 0 )
+	{
+		nMaxLoops = nSteps;
+
+		prepareBedDown();
+		HAL::delayMicroseconds( XYZ_DIRECTION_CHANGE_DELAY );
+	}
+	else
+	{
+		nMaxLoops = -nSteps;
+
+		prepareBedUp();
+		HAL::delayMicroseconds( XYZ_DIRECTION_CHANGE_DELAY );
+	}
+	
+	// perform the steps
+	for( i=0; i<nMaxLoops; i++ )
+	{
+#if FEATURE_WATCHDOG
+		HAL::pingWatchdog();
+#endif // FEATURE_WATCHDOG
+
+        HAL::delayMicroseconds( XYZ_STEPPER_HIGH_DELAY );
+		startZStep( g_nTempDirectionZ );
+
+        HAL::delayMicroseconds( XYZ_STEPPER_LOW_DELAY );
+		endZStep();
+	}
+
+	HAL::allowInterrupts();
+	return;
+
+} // freeZ
+
+
 int moveExtruder( int nSteps )
 {
 	int		i;
@@ -4238,6 +4285,17 @@ void loopRF( void )
 #endif // DEBUG_FIND_Z_ORIGIN
 		}
 #endif // FEATURE_FIND_Z_ORIGIN
+
+#if FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
+		Com::printF( PSTR( "Z endstop type= "), Printer::ZEndstopType );
+		Com::printF( PSTR( ", Z-Min= "), Printer::isZMinEndstopHit() );
+		Com::printF( PSTR( ", Z-Max= "), Printer::isZMaxEndstopHit() );
+		Com::printF( PSTR( ", lastZDirection= "), Printer::lastZDirection );
+		Com::printF( PSTR( ", endstopZMinHit= "), Printer::endstopZMinHit );
+		Com::printF( PSTR( ", endstopZMaxHit= "), Printer::endstopZMaxHit );
+		Com::printF( PSTR( ", ZEndstopUnknown= "), Printer::ZEndstopUnknown );
+		Com::printFLN( PSTR( "") );
+#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
 	}
 
 	if( g_debugLog )
@@ -4319,6 +4377,46 @@ void loopRF( void )
 	updateRGBLightStatus();
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
+#if FEATURE_CONFIGURABLE_Z_ENDSTOPS
+	if( !PrintLine::linesCount && !PrintLine::cur && Printer::isZMaxEndstopHit() )
+	{
+		// we are not printing anymore but the z-max-endstop is hit, so we shall drive it free
+		Com::printFLN( PSTR( "loopRF(): driving free z-max" ) );
+
+		Printer::enableZStepper();
+		freeZ( -Printer::axisStepsPerMM[Z_AXIS] );
+
+		unsigned long	startTime = HAL::timeInMilliseconds();
+		char			timeout   = 0;
+		while( Printer::isZMaxEndstopHit() )
+		{
+			// wait until z-max is free
+			Commands::checkForPeriodicalActions();
+
+			// NOTE: do not run runStandardTasks() within this loop
+			//runStandardTasks();
+
+			if( (HAL::timeInMilliseconds() - startTime) > 10000 )
+			{
+				// do not loop forever
+				timeout = 1;
+				break;
+			}
+		}
+
+		Commands::printCurrentPosition();
+
+		if( timeout )
+		{
+			Com::printFLN( PSTR( "loopRF(): timeout" ) );
+		}
+		else
+		{
+			Com::printFLN( PSTR( "loopRF(): z-max is free" ) );
+		}
+	}
+#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
+
 	nEntered --;
 	return;
 
@@ -4373,6 +4471,33 @@ void outputObject( void )
 	GCode::executeFString(Com::tOutputObjectPrint);
 #endif // FEATURE_MILLING_MODE
 
+#if FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
+	unsigned long	uStart = HAL::timeInMilliseconds();
+	while( PrintLine::hasLines() )
+	{
+		if( (HAL::timeInMilliseconds() - uStart) > 250 )
+		{
+			Com::printF( PSTR( "Z endstop type= "), Printer::ZEndstopType );
+			Com::printF( PSTR( ", Z-Min= "), Printer::isZMinEndstopHit() );
+			Com::printF( PSTR( ", Z-Max= "), Printer::isZMaxEndstopHit() );
+			Com::printF( PSTR( ", lastZDirection= "), Printer::lastZDirection );
+			Com::printF( PSTR( ", endstopZMinHit= "), Printer::endstopZMinHit );
+			Com::printF( PSTR( ", endstopZMaxHit= "), Printer::endstopZMaxHit );
+			Com::printF( PSTR( ", ZEndstopUnknown= "), Printer::ZEndstopUnknown );
+			Com::printFLN( PSTR( "") );
+
+			uStart = HAL::timeInMilliseconds();
+		}
+
+#if FEATURE_WATCHDOG
+		HAL::pingWatchdog();
+#endif // FEATURE_WATCHDOG
+
+		GCode::readFromSerial();
+        Commands::checkForPeriodicalActions();
+        UI_MEDIUM;
+	}
+#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
 
 	Commands::waitUntilEndOfAllMoves();
     Commands::printCurrentPosition();
@@ -4570,7 +4695,6 @@ void continuePrint( void )
 	const unsigned short	uMotorCurrent[] = MOTOR_CURRENT;
 	char					nPrinting		 = 0;
 
-
 	if( g_pauseStatus == PAUSE_STATUS_PAUSED )
 	{
 		BEEP_CONTINUE
@@ -4714,6 +4838,8 @@ void continuePrint( void )
 			Com::printFLN( PSTR( "continuePrint(): waiting for the next move" ) );
 		}
 
+		unsigned long	startTime = HAL::timeInMilliseconds();
+		char			timeout   = 0;
 		while( !PrintLine::cur )
 		{
 #if FEATURE_WATCHDOG
@@ -4730,11 +4856,28 @@ void continuePrint( void )
 
 			// NOTE: do not run runStandardTasks() within this loop
 			//runStandardTasks();
+
+			if( (HAL::timeInMilliseconds() - startTime) > 5000 )
+			{
+				// do not loop forever
+				timeout = 1;
+				break;
+			}
 		}
 
-		if( Printer::debugInfo() )
+		if( timeout )
 		{
-			Com::printFLN( PSTR( "continuePrint(): the printing has been continued" ) );
+			if( Printer::debugInfo() )
+			{
+				Com::printFLN( PSTR( "continuePrint(): the printing has been continued (timeout)" ) );
+			}
+		}
+		else
+		{
+			if( Printer::debugInfo() )
+			{
+				Com::printFLN( PSTR( "continuePrint(): the printing has been continued" ) );
+			}
 		}
 
 		if( nPrinting )
@@ -4935,11 +5078,8 @@ void waitUntilContinue( void )
 		// we are not paused at the moment
 		return;
 	}
-
-	UI_STATUS( UI_TEXT_START_MILL );
-	Printer::msecondsMilling = HAL::timeInMilliseconds();
-
-	while( g_pauseStatus != PAUSE_STATUS_NONE )
+	
+	while ( g_pauseStatus != PAUSE_STATUS_NONE )
 	{
 #if FEATURE_WATCHDOG
 		HAL::pingWatchdog();
@@ -6773,8 +6913,6 @@ void processCommand( GCode* pCommand )
 							Com::printF( PSTR( ", lastZDirection= "), Printer::lastZDirection );
 							Com::printF( PSTR( ", endstopZMinHit= "), Printer::endstopZMinHit );
 							Com::printF( PSTR( ", endstopZMaxHit= "), Printer::endstopZMaxHit );
-							Com::printF( PSTR( ", stepsSinceZMinEndstop= "), Printer::stepsSinceZMinEndstop );
-							Com::printF( PSTR( ", stepsSinceZMaxEndstop= "), Printer::stepsSinceZMaxEndstop );
 							Com::printF( PSTR( ", ZEndstopUnknown= "), Printer::ZEndstopUnknown );
 							Com::printFLN( PSTR( "") );
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
@@ -7882,10 +8020,6 @@ void nextPreviousZAction( int8_t next )
 		{
 			Com::printFLN( PSTR( "nextPreviousZAction(): moving z aborted (max reached)" ) );
 		}
-
-		PrintLine::moveRelativeDistanceInStepsReal(0,0,-Printer::axisStepsPerMM[Z_AXIS]*5,0,Printer::maxFeedrate[Z_AXIS],true);
-		Commands::printCurrentPosition();
-
 		return;
 	}
 

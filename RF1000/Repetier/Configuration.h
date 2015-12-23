@@ -201,6 +201,9 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 /** \brief Enables debug outputs about the heat bed temperature compensation */
 #define	DEBUG_HEAT_BED_TEMP_COMPENSATION	0													// 1 = on, 0 = off
 
+/** \brief Enables debug outputs about the configurable z endstops */
+#define DEBUG_CONFIGURABLE_Z_ENDSTOPS		0													// 1 = on, 0 = off
+
 /** \brief Allows M111 to set bit 5 (16) which disables all commands except M111. This can be used
 to test your data througput or search for communication problems. */
 #define INCLUDE_DEBUG_COMMUNICATION

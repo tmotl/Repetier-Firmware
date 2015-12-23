@@ -641,11 +641,6 @@ inline void startZStep( char nDirection )
     WRITE( Z2_STEP_PIN,HIGH );
 #endif // FEATURE_TWO_ZSTEPPER
 
-#if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-	if( Printer::endstopZMinHit )	Printer::stepsSinceZMinEndstop += nDirection;
-	if( Printer::endstopZMaxHit )	Printer::stepsSinceZMaxEndstop += nDirection;
-#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
-
 } // startZStep
 
 

@@ -3846,32 +3846,20 @@ void UIDisplay::executeAction(int action)
 					break;
 				}
 
-				Printer::lastZDirection		   = 0;
-				Printer::endstopZMinHit		   = ENDSTOP_NOT_HIT;
-				Printer::endstopZMaxHit		   = ENDSTOP_NOT_HIT;
-				Printer::stepsSinceZMinEndstop = 0;
-				Printer::stepsSinceZMaxEndstop = 0;
+				Printer::lastZDirection	= 0;
+				Printer::endstopZMinHit	= ENDSTOP_NOT_HIT;
+				Printer::endstopZMaxHit = ENDSTOP_NOT_HIT;
 
 				if( Printer::ZEndstopType == ENDSTOP_TYPE_SINGLE )
 				{
-					if( Printer::operatingMode == OPERATING_MODE_PRINT )
-					{
-						if( Printer::isZMinEndstopHit() )
-						{
-							Printer::endstopZMinHit	= ENDSTOP_IS_HIT;
-							Printer::endstopZMaxHit	= ENDSTOP_NOT_HIT;
-						}
-					}
-					else
-					{
-						if( Printer::isZMaxEndstopHit() )
-						{
-							Printer::endstopZMinHit	= ENDSTOP_NOT_HIT;
-							Printer::endstopZMaxHit	= ENDSTOP_IS_HIT;
-						}
-					}
-
 					Printer::ZEndstopType = ENDSTOP_TYPE_CIRCUIT;
+
+					if( Printer::isZMinEndstopHit() || Printer::isZMaxEndstopHit() )
+					{
+						// a z-endstop is active at the moment, but both z-endstops are within one circuit so we do not know which one is the pressed one
+						// in this situation we do not allow any moving into z-direction before a z-homing has been performed
+						Printer::ZEndstopUnknown = 1;
+					}
 				}
 				else
 				{

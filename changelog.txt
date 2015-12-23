@@ -1,3 +1,9 @@
+V RF.01.11 (2015-12-23)
+- Fixing of compiler errors in case FEATURE_MILLING_MODE was set to 0 for the RF1000 variant of the firmware.
+- Adding of a timeout so that continuePrint() can not block the further execution of G-Codes forever.
+- Improved handling of RF1000 installations where the z-min and z-max endstops are within the same circuit.
+  - After disabling of the steppers, the firmware could be unable to determine whether the z-min or the z-max endstop is pressed.
+
 V RF.01.10 (2015-12-14)
 - At this moment, this firmware is identical to the firmware from the master branch.
 - This firmware can be compiled for the RF1000 and for the RF2000.

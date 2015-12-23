@@ -717,7 +717,7 @@ can set it on for safety. */
 #define INVERT_Z_DIR						false
 
 
-#if FEATURE_MILLING_MODE
+#if FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 /** \brief We set the current "steps after endstop" to the following offset values in order to avoid to reach a "steps after endstop" value of 0 (e.g. because of the up and down moving z-compensation or because of manual z movements.
            This initial value is set to a level which is above the steps which are possible in z-direction during the distance where the z-endstop is constantly pressed. */
@@ -733,7 +733,7 @@ can set it on for safety. */
 */
 #define	UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS	long(ZAXIS_STEPS_PER_MM * 5)						// [steps]
 
-#endif // FEATURE_MILLING_MODE
+#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 
 #define XYZ_DIRECTION_CHANGE_DELAY			250													// [us]

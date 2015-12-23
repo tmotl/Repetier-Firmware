@@ -444,6 +444,9 @@ extern short moveZDownFast( void );
 // moveZ()
 extern int moveZ( int nSteps );
 
+// freeZ()
+void freeZ( int nSteps );
+
 // moveExtruder()
 extern int moveExtruder( int nSteps );
 

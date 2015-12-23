@@ -162,8 +162,6 @@ public:
 	static char				lastZDirection;
 	static char				endstopZMinHit;
 	static char				endstopZMaxHit;
-	static long				stepsSinceZMinEndstop;
-	static long				stepsSinceZMaxEndstop;
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
@@ -316,11 +314,7 @@ public:
 #endif // STEPPER_ON_DELAY
 
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-		Printer::lastZDirection		   = 0;
-		Printer::endstopZMinHit		   = ENDSTOP_NOT_HIT;
-		Printer::endstopZMaxHit		   = ENDSTOP_NOT_HIT;
-		Printer::stepsSinceZMinEndstop = 0;
-		Printer::stepsSinceZMaxEndstop = 0;
+		Printer::lastZDirection = 0;
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 		// when the stepper is disabled we loose our home position because somebody else can move our mechanical parts
@@ -649,6 +643,7 @@ public:
 
 		if( ZEndstopType == ENDSTOP_TYPE_SINGLE )
 		{
+#if FEATURE_MILLING_MODE
 			if( operatingMode == OPERATING_MODE_PRINT )
 			{
 				// in case there is only one z-endstop and we are in operating mode "print", the z-min endstop must be connected
@@ -657,6 +652,10 @@ public:
 
 			// in case there is only one z-endstop and we are in operating mode "mill", the z-min endstop is not connected and can not be detected
 			return false;
+#else
+			// in case there is only one z-endstop and we are in operating mode "print", the z-min endstop must be connected
+			return READ(Z_MIN_PIN) != ENDSTOP_Z_MIN_INVERTING;
+#endif // FEATURE_MILLING_MODE
 		}
 
 		// we end up here in case the z-min and z-max endstops are connected in a circuit
@@ -681,12 +680,6 @@ public:
 				return true;
 			}
 
-			if( stepsSinceZMaxEndstop && stepsSinceZMaxEndstop > MINIMAL_Z_ENDSTOP_MAX_TO_MIN_STEPS )
-			{
-				// the z-max endstop was hit a few steps ago, so the z-min endstop can not be hit right now
-				return false;
-			}
-				
 			if( lastZDirection > 0 )
 			{
 				// z-min was not hit and we are moving downwards, so z-min can not become hit right now
@@ -694,10 +687,12 @@ public:
 			}
 
 			// the last z-direction is unknown or the heat bed has been moved upwards, thus we have to assume that the z-min endstop is hit
-			endstopZMinHit		  = ENDSTOP_IS_HIT;
-			endstopZMaxHit		  = ENDSTOP_NOT_HIT;
-			stepsSinceZMinEndstop = Z_ENDSTOP_MIN_TO_MAX_INITIAL_STEPS;
-			stepsSinceZMaxEndstop = 0;
+#if FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
+			Com::printF( PSTR( "Z-Min hit") );
+#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
+
+			endstopZMinHit = ENDSTOP_IS_HIT;
+			endstopZMaxHit = ENDSTOP_NOT_HIT;
 			return true;
 		}
 
@@ -748,6 +743,7 @@ public:
 
 		if( ZEndstopType == ENDSTOP_TYPE_SINGLE )
 		{
+#if FEATURE_MILLING_MODE
 			if( operatingMode == OPERATING_MODE_MILL )
 			{
 				// in case there is only one z-endstop and we are in operating mode "mill", the z-max endstop must be connected
@@ -756,6 +752,10 @@ public:
 
 			// in case there is only one z-endstop and we are in operating mode "print", the z-max endstop is not connected and can not be detected
 			return false;
+#else
+			// in case there is only one z-endstop and we are in operating mode "print", the z-max endstop is not connected and can not be detected
+			return false;
+#endif // FEATURE_MILLING_MODE
 		}
 
 		// we end up here in case the z-min and z-max endstops are connected in a circuit
@@ -780,25 +780,19 @@ public:
 				return true;
 			}
 				
-			if( stepsSinceZMinEndstop && stepsSinceZMinEndstop < MINIMAL_Z_ENDSTOP_MIN_TO_MAX_STEPS )
-			{
-				// the z-min endstop was hit a few steps ago, so the z-max endstop can not be hit right now
-				return false;
-			}
-				
 			if( lastZDirection < 0 )
 			{
 				// z-max was not hit and we are moving upwards, so z-max can not become hit right now
 				return false;
 			}
 
-//			g_debugInt32 = stepsSinceZMinEndstop;
-
 			// the last z-direction is unknown or the heat bed has been moved downwards, thus we have to assume that the z-max endstop is hit
-			endstopZMinHit		  = ENDSTOP_NOT_HIT;
-			endstopZMaxHit		  = ENDSTOP_IS_HIT;
-			stepsSinceZMinEndstop = 0;
-			stepsSinceZMaxEndstop = Z_ENDSTOP_MAX_TO_MIN_INITIAL_STEPS;
+#if FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
+			Com::printF( PSTR( "Z-Max hit") );
+#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
+
+			endstopZMinHit = ENDSTOP_NOT_HIT;
+			endstopZMaxHit = ENDSTOP_IS_HIT;
 			return true;
 		}
 
