@@ -264,7 +264,12 @@ void Printer::constrainDirectDestinationCoords()
     if (queuePositionTargetSteps[Z_AXIS] + directPositionTargetSteps[Z_AXIS] > Printer::maxSteps[Z_AXIS]) Printer::directPositionTargetSteps[Z_AXIS] = Printer::maxSteps[Z_AXIS] - queuePositionTargetSteps[Z_AXIS];
 #endif // max_software_endstop_z == true
 #endif //FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
+/*
+	Com::printF(PSTR("constrainDirectDestinationCoords(): "));
+	Com::printF(PSTR("x="),Printer::directPositionTargetSteps[X_AXIS]);
+	Com::printF(PSTR(",y="),Printer::directPositionTargetSteps[Y_AXIS]);
+	Com::printFLN(PSTR(", z="),Printer::directPositionTargetSteps[Z_AXIS]);
+*/
 } // constrainDirectDestinationCoords
 
 
@@ -943,12 +948,6 @@ void Printer::setup()
 	msecondsMilling = 0;
     filamentPrinted = 0;
     flag0 = PRINTER_FLAG0_STEPPER_DISABLED;
-    lengthMM[X_AXIS] = X_MAX_LENGTH;
-    lengthMM[Y_AXIS] = Y_MAX_LENGTH;
-    lengthMM[Z_AXIS] = Z_MAX_LENGTH;
-    minMM[X_AXIS] = X_MIN_POS;
-    minMM[Y_AXIS] = Y_MIN_POS;
-    minMM[Z_AXIS] = Z_MIN_POS;
     wasLastHalfstepping = 0;
 
 #if ENABLE_BACKLASH_COMPENSATION
@@ -996,6 +995,25 @@ void Printer::setup()
 	drillFeedrate = 0.0;
 	drillZDepth	  = 0.0;
 #endif // FEATURE_MILLING_MODE
+
+#if FEATURE_MILLING_MODE
+	if( Printer::operatingMode == OPERATING_MODE_PRINT )
+	{
+	    lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
+	}
+	else
+	{
+		lengthMM[X_AXIS] = X_MAX_LENGTH_MILL;
+	}
+#else
+    lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
+#endif // FEATURE_MILLING_MODE
+
+    lengthMM[Y_AXIS] = Y_MAX_LENGTH;
+    lengthMM[Z_AXIS] = Z_MAX_LENGTH;
+    minMM[X_AXIS] = X_MIN_POS;
+    minMM[Y_AXIS] = Y_MIN_POS;
+    minMM[Z_AXIS] = Z_MIN_POS;
 
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
 	ZEndstopType		  = DEFAULT_Z_ENDSTOP_TYPE;
@@ -1214,12 +1232,20 @@ void Printer::homeXAxis()
 #endif // X_HOME_DIR < 0
 #endif // NUM_EXTRUDER>1
 
+#if FEATURE_MILLING_MODE
+		if( Printer::operatingMode == OPERATING_MODE_MILL )
+		{
+			// in operating mode mill, there is no extruder offset
+			offX = 0;
+		}
+#endif // FEATURE_MILLING_MODE
+
 		UI_STATUS_UPD(UI_TEXT_HOME_X);
 
 		steps = (Printer::maxSteps[X_AXIS]-Printer::minSteps[X_AXIS]) * X_HOME_DIR;
         queuePositionLastSteps[X_AXIS] = -steps;
         PrintLine::moveRelativeDistanceInSteps(2*steps,0,0,0,homingFeedrate[X_AXIS],true,true);
-        queuePositionLastSteps[X_AXIS] = (X_HOME_DIR == -1) ? minSteps[X_AXIS]-offX : maxSteps[X_AXIS] + offX;
+        queuePositionLastSteps[X_AXIS] = (X_HOME_DIR == -1) ? minSteps[X_AXIS]- offX : maxSteps[X_AXIS] + offX;
         PrintLine::moveRelativeDistanceInSteps(axisStepsPerMM[X_AXIS] * -ENDSTOP_X_BACK_MOVE * X_HOME_DIR,0,0,0,homingFeedrate[X_AXIS] / ENDSTOP_X_RETEST_REDUCTION_FACTOR,true,false);
         PrintLine::moveRelativeDistanceInSteps(axisStepsPerMM[X_AXIS] * 2 * ENDSTOP_X_BACK_MOVE * X_HOME_DIR,0,0,0,homingFeedrate[X_AXIS] / ENDSTOP_X_RETEST_REDUCTION_FACTOR,true,true);
 
@@ -1238,7 +1264,10 @@ void Printer::homeXAxis()
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
 #if NUM_EXTRUDER>1
-        PrintLine::moveRelativeDistanceInSteps((Extruder::current->xOffset-offX) * X_HOME_DIR,0,0,0,homingFeedrate[X_AXIS],true,false);
+		if( offX )
+		{
+	        PrintLine::moveRelativeDistanceInSteps((Extruder::current->xOffset-offX) * X_HOME_DIR,0,0,0,homingFeedrate[X_AXIS],true,false);
+		}
 #endif // NUM_EXTRUDER>1
 
 		// show that we are active
@@ -1267,6 +1296,14 @@ void Printer::homeYAxis()
 #endif // Y_HOME_DIR<0
 #endif // NUM_EXTRUDER>1
 
+#if FEATURE_MILLING_MODE
+		if( Printer::operatingMode == OPERATING_MODE_MILL )
+		{
+			// in operating mode mill, there is no extruder offset
+			offY = 0;
+		}
+#endif // FEATURE_MILLING_MODE
+
         UI_STATUS_UPD(UI_TEXT_HOME_Y);
 
 		steps = (maxSteps[Y_AXIS]-Printer::minSteps[Y_AXIS]) * Y_HOME_DIR;
@@ -1291,7 +1328,10 @@ void Printer::homeYAxis()
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
 #if NUM_EXTRUDER>1
-        PrintLine::moveRelativeDistanceInSteps(0,(Extruder::current->yOffset-offY) * Y_HOME_DIR,0,0,homingFeedrate[Y_AXIS],true,false);
+		if( offY )
+		{
+	        PrintLine::moveRelativeDistanceInSteps(0,(Extruder::current->yOffset-offY) * Y_HOME_DIR,0,0,homingFeedrate[Y_AXIS],true,false);
+		}
 #endif // NUM_EXTRUDER>1
 
 		// show that we are active

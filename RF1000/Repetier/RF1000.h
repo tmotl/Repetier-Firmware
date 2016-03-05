@@ -115,16 +115,17 @@ For delta robot Z_MAX_LENGTH is the maximum travel of the towers and should be s
 and the platform when the printer is at its home position.
 If EEPROM is enabled these values will be overidden with the values in the EEPROM */
 #if NUM_EXTRUDER == 2
-#define X_MAX_LENGTH						(long)180
+#define X_MAX_LENGTH_PRINT					(long)180
 #else
-#define X_MAX_LENGTH						(long)245
+#define X_MAX_LENGTH_PRINT					(long)245
 #endif // NUM_EXTRUDER == 2
 
+#define X_MAX_LENGTH_MILL					(long)245
 #define Y_MAX_LENGTH						(long)245
 #define Z_MAX_LENGTH						(long)200
 
 /** \brief Coordinates for the minimum axis. Can also be negative if you want to have the bed start at 0 and the printer can go to the left side
-of the bed. Maximum coordinate is given by adding the above X_MAX_LENGTH values. */
+of the bed. Maximum coordinate is given by adding the above MAX_LENGTH values. */
 #define X_MIN_POS							0
 #define Y_MIN_POS							0
 #define Z_MIN_POS							0
@@ -786,9 +787,9 @@ can set it on for safety. */
 #define HOMING_FEEDRATE_Y_PRINT				165
 #define HOMING_FEEDRATE_Z_PRINT				10
 
-#define HOMING_FEEDRATE_X_MILL				50
-#define HOMING_FEEDRATE_Y_MILL				50
-#define HOMING_FEEDRATE_Z_MILL				5
+#define HOMING_FEEDRATE_X_MILL				70
+#define HOMING_FEEDRATE_Y_MILL				70
+#define HOMING_FEEDRATE_Z_MILL				7
 
 /** \brief Speed for direct movements in mm/s. Overridden if EEPROM activated. */
 #define DIRECT_FEEDRATE_XY					100
@@ -956,6 +957,8 @@ Above this value the z compensation will distribute the roughness of the surface
 #define	HEAT_BED_SCAN_Y_CALIBRATION_POINT_MM	100																		// [mm] from the front border of the heat bed
 #define HEAT_BED_SCAN_Y_CALIBRATION_POINT_STEPS	long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_CALIBRATION_POINT_MM)			// [steps]
 
+#define HEAT_BED_SCAN_Z_START_uM				500																		// [um]
+
 #define HEAT_BED_SCAN_CONTACT_PRESSURE_DELTA	10																		// [digits]
 #define HEAT_BED_SCAN_RETRY_PRESSURE_DELTA		5																		// [digits]
 #define HEAT_BED_SCAN_IDLE_PRESSURE_DELTA		0																		// [digits]
@@ -972,6 +975,8 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MM			20																		// [mm]
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MIN_MM		10																		// [mm]
 
+#define HEAT_BED_SCAN_Z_START_uM				500																		// [um]
+
 #define HEAT_BED_SCAN_CONTACT_PRESSURE_DELTA	10																		// [digits]
 #define HEAT_BED_SCAN_RETRY_PRESSURE_DELTA		5																		// [digits]
 #define HEAT_BED_SCAN_IDLE_PRESSURE_DELTA		0																		// [digits]
@@ -979,17 +984,19 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_IDLE_PRESSURE_MAX			7500																	// [digits]
 #endif // NUM_EXTRUDER == 2
 
-#define HEAT_BED_SCAN_X_START_STEPS				long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_START_MM)						// [steps]
-#define HEAT_BED_SCAN_X_END_STEPS				long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_END_MM)						// [steps]
-#define HEAT_BED_SCAN_X_STEP_SIZE_STEPS			long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_STEP_SIZE_MM)					// [steps]
-#define HEAT_BED_SCAN_X_STEP_SIZE_MIN_STEPS		long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_STEP_SIZE_MIN_MM)				// [steps]
-#define HEAT_BED_SCAN_X_MAX_POSITION_STEPS		long(X_MAX_LENGTH * XAXIS_STEPS_PER_MM - HEAT_BED_SCAN_X_END_STEPS)		// [steps]
+#define HEAT_BED_SCAN_X_START_STEPS				long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_START_MM)							// [steps]
+#define HEAT_BED_SCAN_X_END_STEPS				long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_END_MM)							// [steps]
+#define HEAT_BED_SCAN_X_STEP_SIZE_STEPS			long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_STEP_SIZE_MM)						// [steps]
+#define HEAT_BED_SCAN_X_STEP_SIZE_MIN_STEPS		long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_STEP_SIZE_MIN_MM)					// [steps]
+#define HEAT_BED_SCAN_X_MAX_POSITION_STEPS		long(X_MAX_LENGTH_PRINT * XAXIS_STEPS_PER_MM - HEAT_BED_SCAN_X_END_STEPS)	// [steps]
 
 #define	HEAT_BED_SCAN_Y_START_STEPS				long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_START_MM)						// [steps]
 #define	HEAT_BED_SCAN_Y_END_STEPS				long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_END_MM)						// [steps]
 #define	HEAT_BED_SCAN_Y_STEP_SIZE_STEPS			long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_STEP_SIZE_MM)					// [steps]
 #define	HEAT_BED_SCAN_Y_STEP_SIZE_MIN_STEPS		long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_STEP_SIZE_MIN_MM)				// [steps]
 #define HEAT_BED_SCAN_Y_MAX_POSITION_STEPS		long(Y_MAX_LENGTH * YAXIS_STEPS_PER_MM - HEAT_BED_SCAN_Y_END_STEPS)		// [steps]
+
+#define	HEAT_BED_SCAN_Z_START_STEPS				long(ZAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Z_START_uM / 1000)				// [steps]
 
 #define HEAT_BED_SCAN_UP_FAST_STEPS				long(-ZAXIS_STEPS_PER_MM / 40)											// [steps]
 #define HEAT_BED_SCAN_UP_SLOW_STEPS				long(-ZAXIS_STEPS_PER_MM / 200)											// [steps]
@@ -1024,15 +1031,15 @@ Above this value the z compensation will distribute the roughness of the surface
 #define WORK_PART_MAX_STATIC_Z_OFFSET_MM		10																		// [mm]
 
 /** \brief Configuration of the work part scan */
-#define WORK_PART_SCAN_X_START_MM				5																		// [mm] from the left border of the work bed
-#define WORK_PART_SCAN_X_START_STEPS			long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_START_MM)					// [steps]
-#define WORK_PART_SCAN_X_END_MM					220																		// [mm]
-#define WORK_PART_SCAN_X_END_STEPS				long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_END_MM)						// [steps]
-#define WORK_PART_SCAN_X_STEP_SIZE_MM			20																		// [mm]
-#define WORK_PART_SCAN_X_STEP_SIZE_STEPS		long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_STEP_SIZE_MM)				// [steps]
-#define WORK_PART_SCAN_X_STEP_SIZE_MIN_MM		10																		// [mm]
-#define WORK_PART_SCAN_X_STEP_SIZE_MIN_STEPS	long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_STEP_SIZE_MIN_MM)			// [steps]
-#define WORK_PART_SCAN_X_MAX_POSITION_STEPS		long(X_MAX_LENGTH * XAXIS_STEPS_PER_MM - WORK_PART_SCAN_X_END_STEPS)	// [steps]
+#define WORK_PART_SCAN_X_START_MM				5																			// [mm] from the left border of the work bed
+#define WORK_PART_SCAN_X_START_STEPS			long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_START_MM)						// [steps]
+#define WORK_PART_SCAN_X_END_MM					220																			// [mm]
+#define WORK_PART_SCAN_X_END_STEPS				long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_END_MM)							// [steps]
+#define WORK_PART_SCAN_X_STEP_SIZE_MM			20																			// [mm]
+#define WORK_PART_SCAN_X_STEP_SIZE_STEPS		long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_STEP_SIZE_MM)					// [steps]
+#define WORK_PART_SCAN_X_STEP_SIZE_MIN_MM		10																			// [mm]
+#define WORK_PART_SCAN_X_STEP_SIZE_MIN_STEPS	long(XAXIS_STEPS_PER_MM * WORK_PART_SCAN_X_STEP_SIZE_MIN_MM)				// [steps]
+#define WORK_PART_SCAN_X_MAX_POSITION_STEPS		long(X_MAX_LENGTH_MILL * XAXIS_STEPS_PER_MM - WORK_PART_SCAN_X_END_STEPS)	// [steps]
 
 #define	WORK_PART_SCAN_Y_START_MM				55																		// [mm] from the front border of the work bed
 #define	WORK_PART_SCAN_Y_START_STEPS			long(YAXIS_STEPS_PER_MM * WORK_PART_SCAN_Y_START_MM)					// [steps]
@@ -1091,9 +1098,6 @@ Above this value the z compensation will distribute the roughness of the surface
 #define	PAUSE_X_MIN							(XAXIS_STEPS_PER_MM *5)
 #define	PAUSE_Y_MIN							(YAXIS_STEPS_PER_MM *5)
 #define	PAUSE_Z_MIN							(ZAXIS_STEPS_PER_MM *2)
-#define	PAUSE_X_MAX							((X_MAX_LENGTH -5) * XAXIS_STEPS_PER_MM)
-#define	PAUSE_Y_MAX							((Y_MAX_LENGTH -5) * YAXIS_STEPS_PER_MM)
-#define	PAUSE_Z_MAX							((Z_MAX_LENGTH -2) * ZAXIS_STEPS_PER_MM)
 
 #endif // FEATURE_PAUSE_PRINTING
 

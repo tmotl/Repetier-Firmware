@@ -2544,8 +2544,8 @@ void UIDisplay::nextPreviousAction(int8_t next)
 			}
 #endif // !FEATURE_ALLOW_UNKNOWN_POSITIONS
 
-			if( increment < 0 )	steps = -(long)((X_MAX_LENGTH + 5) * XAXIS_STEPS_PER_MM);
-			else				steps =  (long)((X_MAX_LENGTH + 5) * XAXIS_STEPS_PER_MM);
+			if( increment < 0 )	steps = -(long)((Printer::lengthMM[X_AXIS] + 5) * XAXIS_STEPS_PER_MM);
+			else				steps =  (long)((Printer::lengthMM[X_AXIS] + 5) * XAXIS_STEPS_PER_MM);
 
 			if(steps<0 && Printer::isXMinEndstopHit())
 			{
@@ -2558,7 +2558,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
 #endif // DEBUG_SHOW_DEVELOPMENT_LOGS
 				return;
 			}
-			if(steps>0 && Printer::targetXPosition() >= X_MAX_LENGTH)
+			if(steps>0 && Printer::targetXPosition() >= Printer::lengthMM[X_AXIS])
 			{
 				// we shall move to the right but the end of the x-axis has been reached already, so we do nothing
 #if DEBUG_SHOW_DEVELOPMENT_LOGS
@@ -2575,6 +2575,8 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
 			HAL::forbidInterrupts();
 			Printer::directPositionTargetSteps[X_AXIS] = Printer::directPositionCurrentSteps[X_AXIS] + steps;
+			Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS];
+			Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 			if( Printer::processAsDirectSteps() )
 			{
 				// we are printing at the moment - use direct steps
@@ -2661,7 +2663,9 @@ void UIDisplay::nextPreviousAction(int8_t next)
 			previousMillisCmd = HAL::timeInMilliseconds();
 
 			HAL::forbidInterrupts();
+			Printer::directPositionTargetSteps[X_AXIS] = Printer::directPositionCurrentSteps[X_AXIS];
 			Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS] + steps;
+			Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 			if( Printer::processAsDirectSteps() )
 			{
 				// we are printing at the moment - use direct steps
@@ -2777,6 +2781,8 @@ void UIDisplay::nextPreviousAction(int8_t next)
 			// PrintLine::moveRelativeDistanceInStepsReal(0,0,steps,0,Printer::maxFeedrate[Z_AXIS],true);
 
 			HAL::forbidInterrupts();
+			Printer::directPositionTargetSteps[X_AXIS] = Printer::directPositionCurrentSteps[X_AXIS];
+			Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS];
 			Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS] + steps;
 			if( Printer::processAsDirectSteps() )
 			{
@@ -3814,6 +3820,9 @@ void UIDisplay::executeAction(int action)
 					}
 					break;
 				}
+
+				// disable and turn off everything before we switch the operating mode
+				Printer::kill( false );
 
 				if( Printer::operatingMode == OPERATING_MODE_PRINT )
 				{

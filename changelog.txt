@@ -1,3 +1,15 @@
+V RF.01.15 (2016-03-05)
+- Adding of support for the following device configuration:
+  - RF2000 + miller
+- Direct steps into the y and z direction could cause small, unwanted steps into the x direction.
+  - These small steps could cause the x stepper to buzz.
+- The menu items "Set XY Start" and "Set XY End" did not set the start/end position properly in case direct movements where used to move to the start/end position.
+- The driving free of Z-Max has been improved for RF1000 configurations where Z-Min and Z-Max are within one circuit.
+- readIdlePressure() cancels the heat bed scan in case the idle pressure is not constant.
+- After the start of the heat bed scan, the firmware waits until all temperatures are reached before it starts with the homing.
+  - After the homing, the z-axis is moved down HEAT_BED_SCAN_Z_START_STEPS steps (default = 0.5 mm).
+- The default homing speeds for the milling mode have been increased by about 50 %.
+
 V RF.01.11 (2015-12-23)
 - Fixing of compiler errors in case FEATURE_MILLING_MODE was set to 0 for the RF1000 variant of the firmware.
 - Adding of a timeout so that continuePrint() can not block the further execution of G-Codes forever.

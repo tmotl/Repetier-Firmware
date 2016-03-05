@@ -357,7 +357,14 @@ void PrintLine::prepareDirectMove(void)
 
 void PrintLine::stopDirectMove( void )
 {
-	PrintLine::direct.task = TASK_END_MOVE;
+	HAL::forbidInterrupts();
+	if( PrintLine::direct.isXYZMove() )
+	{
+		// decelerate and stop
+		PrintLine::direct.stepsRemaining = RF_MICRO_STEPS;
+		PrintLine::direct.task			 = TASK_NO_TASK;
+	}
+	HAL::allowInterrupts();
 
 #if DEBUG_DIRECT_MOVE
 	Com::printFLN( PSTR( "stopDirectMove()" ) );
@@ -1923,7 +1930,7 @@ void PrintLine::performDirectSteps( void )
 						bDone		= true;
 					}
 				}
-				else if( Printer::directPositionCurrentSteps[X_AXIS] > Printer::directPositionTargetSteps[E_AXIS] )
+				else if( Printer::directPositionCurrentSteps[X_AXIS] > Printer::directPositionTargetSteps[X_AXIS] )
 				{
 					if( Printer::stepperDirection[X_AXIS] <= 0 )
 					{
@@ -2175,6 +2182,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 				{
 					// as soon as the z-axis is blocked, we must finish all z-axis moves
 					move->stepsRemaining = 0;
+					move->setZMoveFinished();
 				}
 				else
 				{
@@ -2234,16 +2242,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 
 #ifdef RAMP_ACCELERATION
             //If acceleration is enabled on this move and we are in the acceleration segment, calculate the current interval
-            if (move->moveAccelerating())   // we are accelerating
-            {
-                Printer::vMaxReached = HAL::ComputeV(Printer::timer,move->fAcceleration)+move->vStart;
-                if(Printer::vMaxReached>move->vMax) Printer::vMaxReached = move->vMax;
-                unsigned int v = Printer::updateStepsPerTimerCall(Printer::vMaxReached);
-                Printer::interval = HAL::CPUDivU2(v);
-                Printer::timer+=Printer::interval;
-                move->updateAdvanceSteps(Printer::vMaxReached,max_loops,true);
-            }
-            else if (move->moveDecelerating())     // time to slow down
+            if (move->moveDecelerating())     // time to slow down
             {
                 unsigned int v = HAL::ComputeV(Printer::timer,move->fAcceleration);
                 if (v > Printer::vMaxReached)   // if deceleration goes too far it can become too large
@@ -2251,12 +2250,21 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
                 else
                 {
                     v=Printer::vMaxReached - v;
-                    if (v<move->vEnd) v = move->vEnd; // extra steps at the end of desceleration due to rounding erros
+                    if (v<move->vEnd) v = move->vEnd; // extra steps at the end of desceleration due to rounding errors
                 }
                 move->updateAdvanceSteps(v,max_loops,false); // needs original v
                 v = Printer::updateStepsPerTimerCall(v);
                 Printer::interval = HAL::CPUDivU2(v);
                 Printer::timer += Printer::interval;
+            }
+            else if (move->moveAccelerating())   // we are accelerating
+            {
+                Printer::vMaxReached = HAL::ComputeV(Printer::timer,move->fAcceleration)+move->vStart;
+                if(Printer::vMaxReached>move->vMax) Printer::vMaxReached = move->vMax;
+                unsigned int v = Printer::updateStepsPerTimerCall(Printer::vMaxReached);
+                Printer::interval = HAL::CPUDivU2(v);
+                Printer::timer+=Printer::interval;
+                move->updateAdvanceSteps(Printer::vMaxReached,max_loops,true);
             }
             else // full speed reached
             {
@@ -2309,7 +2317,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
     if(!move->isFullstepping()) interval = (Printer::interval>>1); // time to come back
     else interval = Printer::interval;
 
-    if(doEven && (move->stepsRemaining <= 0 || move->isNoMove() || move->task == TASK_END_MOVE))   // line finished
+    if(doEven && (move->stepsRemaining <= 0 || move->isNoMove()) )// || move->task == TASK_END_MOVE))   // line finished
     {
 #ifdef DEBUG_STEPCOUNT
 		if(move->totalStepsRemaining)
@@ -2325,6 +2333,23 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 		}
 		else
 		{
+/*			if( move->task == TASK_END_MOVE )
+			{
+	            Printer::insertStepperHighDelay();
+				if( move->isXMove() )
+				{
+					WRITE(X_STEP_PIN,LOW);
+				}
+				if( move->isYMove() )
+				{
+					WRITE(Y_STEP_PIN,LOW);
+				}
+				if( move->isZMove() )
+				{
+					WRITE(Z_STEP_PIN,LOW);
+				}
+			}
+*/
 			move->stepsRemaining = 0;
 			move->task			 = TASK_NO_TASK;
 

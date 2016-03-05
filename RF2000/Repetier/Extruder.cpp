@@ -357,7 +357,15 @@ This function changes and initalizes a new extruder. This is also called, after 
 */
 void Extruder::selectExtruderById(uint8_t extruderId)
 {
-    if(extruderId>=NUM_EXTRUDER)
+#if FEATURE_MILLING_MODE
+	if( Printer::operatingMode == OPERATING_MODE_MILL )
+	{
+		// in operating mode mill, the extruders are not used
+		return;
+	}
+#endif // FEATURE_MILLING_MODE
+
+	if(extruderId>=NUM_EXTRUDER)
         extruderId = 0;
 
 #if NUM_EXTRUDER>1

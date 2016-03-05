@@ -97,10 +97,10 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
 #if MOTHERBOARD == DEVICE_TYPE_RF1000
-		Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
+	Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
-		Printer::HotendType = HOTEND_TYPE_V2_DUAL;
+	Printer::HotendType = HOTEND_TYPE_V2_DUAL;
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
 
@@ -129,7 +129,19 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 #endif // TEMP_PID
 #endif // HAVE_HEATED_BED
 
-    Printer::lengthMM[X_AXIS] = X_MAX_LENGTH;
+#if FEATURE_MILLING_MODE
+	if( Printer::operatingMode == OPERATING_MODE_PRINT )
+	{
+		Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
+	}
+	else
+	{
+		Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_MILL;
+	}
+#else
+	Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
+#endif // FEATURE_MILLING_MODE
+
     Printer::lengthMM[Y_AXIS] = Y_MAX_LENGTH;
     Printer::lengthMM[Z_AXIS] = Z_MAX_LENGTH;
     Printer::minMM[X_AXIS] = X_MIN_POS;
