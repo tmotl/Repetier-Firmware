@@ -1,3 +1,9 @@
+V RF.01.19 (2016-04-04)
+- Improved handling of RF1000 installations where the z-min and z-max endstops are within the same circuit.
+  - The previous firmware could attempt to drive z-max free during the heat bed scan.
+- The z offset from the menu was not taken over during the startup of the firmware.
+- The z offset from the menu was not updated properly after the switch of the operating mode.
+
 V RF.01.15 (2016-03-05)
 - Adding of support for the following device configuration:
   - RF2000 + miller

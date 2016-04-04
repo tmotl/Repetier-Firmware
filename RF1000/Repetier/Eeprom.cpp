@@ -663,6 +663,7 @@ void EEPROM::readDataFromEEPROM()
     Printer::maxFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_MAX_FEEDRATE);
     Printer::maxFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_MAX_FEEDRATE);
 	Printer::ZOffset = HAL::eprGetInt32(EPR_RF_Z_OFFSET);
+	g_staticZSteps = (Printer::ZOffset * ZAXIS_STEPS_PER_MM) / 1000;
 
     Printer::maxJerk = HAL::eprGetFloat(EPR_MAX_JERK);
     Printer::maxZJerk = HAL::eprGetFloat(EPR_MAX_ZJERK);

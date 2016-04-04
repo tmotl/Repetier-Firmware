@@ -612,6 +612,12 @@ void scanHeatBed( void )
 			}
 			case 45:
 			{
+				while( Printer::isZMinEndstopHit() || Printer::isZMaxEndstopHit() )
+				{
+					// ensure that there is no z endstop hit before we perform the z-axis homing
+					moveZ( ZAXIS_STEPS_PER_MM *2 );
+				}
+
 				// home the z-axis in order to find the starting point again
 				Printer::homeAxis( false, false, true );
 
@@ -4425,39 +4431,61 @@ void loopRF( void )
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
 	if( !PrintLine::linesCount && !PrintLine::cur && Printer::isZMaxEndstopHit() )
 	{
-		// we are not printing anymore but the z-max-endstop is hit, so we shall drive it free
-		Com::printFLN( PSTR( "loopRF(): driving free z-max" ) );
+		char	driveFree = 1;
 
-		Printer::enableZStepper();
-		freeZ( -Printer::axisStepsPerMM[Z_AXIS] );
 
-		unsigned long	startTime = HAL::timeInMilliseconds();
-		char			timeout   = 0;
-		while( Printer::isZMaxEndstopHit() )
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+		if( g_nHeatBedScanStatus )		driveFree = 0;	// do not drive z-max free while a heat bed scan is in progress
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+#if FEATURE_WORK_PART_Z_COMPENSATION
+		if( g_nWorkPartScanStatus )		driveFree = 0;	// do not drive z-max free while a work part scan is in progress
+#endif // FEATURE_WORK_PART_Z_COMPENSATION
+
+#if FEATURE_FIND_Z_ORIGIN
+		if( g_nFindZOriginStatus )		driveFree = 0;	// do not drive z-max free while the z-origin is searched
+#endif // FEATURE_FIND_Z_ORIGIN
+
+#if FEATURE_TEST_STRAIN_GAUGE
+		if( g_nTestStrainGaugeStatus )	driveFree = 0;	// do not drive z-max free while the strain gauge is tested
+#endif // FEATURE_TEST_STRAIN_GAUGE
+
+		if( driveFree )
 		{
-			// wait until z-max is free
-			Commands::checkForPeriodicalActions();
+			// we are not printing anymore but the z-max-endstop is hit, so we shall drive it free
+			Com::printFLN( PSTR( "loopRF(): driving free z-max" ) );
 
-			// NOTE: do not run runStandardTasks() within this loop
-			//runStandardTasks();
+			Printer::enableZStepper();
+			freeZ( -Printer::axisStepsPerMM[Z_AXIS] );
 
-			if( (HAL::timeInMilliseconds() - startTime) > 10000 )
+			unsigned long	startTime = HAL::timeInMilliseconds();
+			char			timeout   = 0;
+			while( Printer::isZMaxEndstopHit() )
 			{
-				// do not loop forever
-				timeout = 1;
-				break;
+				// wait until z-max is free
+				Commands::checkForPeriodicalActions();
+
+				// NOTE: do not run runStandardTasks() within this loop
+				//runStandardTasks();
+
+				if( (HAL::timeInMilliseconds() - startTime) > 10000 )
+				{
+					// do not loop forever
+					timeout = 1;
+					break;
+				}
 			}
-		}
 
-		Commands::printCurrentPosition();
+			Commands::printCurrentPosition();
 
-		if( timeout )
-		{
-			Com::printFLN( PSTR( "loopRF(): timeout" ) );
-		}
-		else
-		{
-			Com::printFLN( PSTR( "loopRF(): z-max is free" ) );
+			if( timeout )
+			{
+				Com::printFLN( PSTR( "loopRF(): timeout" ) );
+			}
+			else
+			{
+				Com::printFLN( PSTR( "loopRF(): z-max is free" ) );
+			}
 		}
 	}
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
@@ -8867,7 +8895,6 @@ void switchOperatingMode( char newOperatingMode )
 		setupForMilling();
 	}
 
-	g_staticZSteps = 0;
 	return;
 
 } // switchOperatingMode
@@ -9348,6 +9375,8 @@ void setupForPrinting( void )
 	Printer::updateDerivedParameter();
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 
+	g_staticZSteps = (Printer::ZOffset * ZAXIS_STEPS_PER_MM) / 1000;
+
 	Printer::setMenuMode( MENU_MODE_MILLER, false );
 	Printer::setMenuMode( MENU_MODE_PRINTER, true );
 	UI_STATUS( UI_TEXT_PRINTER_READY );
@@ -9413,6 +9442,8 @@ void setupForMilling( void )
 	EEPROM::updateChecksum();
 	Printer::updateDerivedParameter();
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
+
+	g_staticZSteps = 0;
 
 	Printer::setMenuMode( MENU_MODE_PRINTER, false );
 	Printer::setMenuMode( MENU_MODE_MILLER, true );
