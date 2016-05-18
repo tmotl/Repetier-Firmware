@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -33,38 +33,37 @@ void Commands::commandLoop()
 #ifdef DEBUG_PRINT
         debugWaitLoop = 1;
 #endif
-
-        GCode::readFromSerial();
+		GCode::readFromSerial();
 		GCode *code = GCode::peekCurrentCommand();
-        UI_MEDIUM; // do check encoder
+		UI_MEDIUM; // do check encoder
 
 		if(code)
-        {
+		{
 #if DEBUG_COMMAND_PEEK
 			Com::printFLN( PSTR( "commandLoop(): peek" ) );
 #endif // DEBUG_COMMAND_PEEK
 
 #if SDSUPPORT
-            if(sd.savetosd)
-            {
-                if(!(code->hasM() && code->M == 29))   // still writing to file
-                {
-                    sd.writeCommand(code);
-                }
-                else
-                {
-                    sd.finishWrite();
-                }
+			if(sd.savetosd)
+			{
+				if(!(code->hasM() && code->M == 29))   // still writing to file
+				{
+					sd.writeCommand(code);
+				}
+				else
+				{
+					sd.finishWrite();
+				}
 #ifdef ECHO_ON_EXECUTE
-                code->echoCommand();
+				code->echoCommand();
 #endif
-            }
-            else
+			}
+			else
 #endif
-                Commands::executeGCode(code);
-            code->popCurrentCommand();
-        }
-        Printer::defaultLoopActions();
+				Commands::executeGCode(code);
+			code->popCurrentCommand();
+		}
+		Printer::defaultLoopActions();
     }
 
 } // commandLoop
@@ -108,6 +107,10 @@ void Commands::waitUntilEndOfAllMoves()
 	if( g_nFindZOriginStatus )		bWait = 1;
 #endif // FEATURE_FIND_Z_ORIGIN
 
+#if FEATURE_TEST_STRAIN_GAUGE
+	if( g_nTestStrainGaugeStatus )	bWait = 1;
+#endif // FEATURE_TEST_STRAIN_GAUGE
+
 	while( bWait )
 	{
 #if FEATURE_WATCHDOG
@@ -116,6 +119,7 @@ void Commands::waitUntilEndOfAllMoves()
 
 		GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
+		GCode::keepAlive( Processing );
         UI_MEDIUM;
 
 		bWait = 0;
@@ -124,6 +128,10 @@ void Commands::waitUntilEndOfAllMoves()
 #if FEATURE_FIND_Z_ORIGIN
 		if( g_nFindZOriginStatus )		bWait = 1;
 #endif // FEATURE_FIND_Z_ORIGIN
+
+#if FEATURE_TEST_STRAIN_GAUGE
+		if( g_nTestStrainGaugeStatus )	bWait = 1;
+#endif // FEATURE_TEST_STRAIN_GAUGE
 	}
 
 } // waitUntilEndOfAllMoves
@@ -221,6 +229,7 @@ void Commands::printCurrentPosition()
 	Com::printFLN(PSTR(";z="),(float)Printer::directPositionTargetSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS],2);
 	Com::printFLN(PSTR("*"));
 */
+
 } // printCurrentPosition
 
 
@@ -672,9 +681,9 @@ void Commands::executeGCode(GCode *com)
 #if FEATURE_WATCHDOG
 				HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
-
                 GCode::readFromSerial();
                 Commands::checkForPeriodicalActions();
+				GCode::keepAlive( Processing );
             }
             break;
 		}
@@ -688,7 +697,7 @@ void Commands::executeGCode(GCode *com)
             Printer::unitIsInches = 0;
             break;
 		}
-        case 28:  //G28 - Home all Axis one at a time
+        case 28:  // G28 - Home all axes one at a time
         {
 			if(!isHomingAllowed(com))
 			{
@@ -1089,6 +1098,7 @@ void Commands::executeGCode(GCode *com)
 							printedTime = currentTime;
 						}
 						Commands::checkForPeriodicalActions();
+						GCode::keepAlive( WaitHeater );
 #if RETRACT_DURING_HEATUP
 						if (actExtruder == Extruder::current && actExtruder->waitRetractUnits > 0 && !retracted && dirRising && actExtruder->tempControl.currentTemperatureC > actExtruder->waitRetractTemperature)
 						{
@@ -1122,7 +1132,7 @@ void Commands::executeGCode(GCode *com)
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 				}
 
-				UI_CLEAR_STATUS;
+				showIdle();
 				previousMillisCmd = HAL::timeInMilliseconds();
 				break;
 			}
@@ -1176,6 +1186,7 @@ void Commands::executeGCode(GCode *com)
 							codenum = HAL::timeInMilliseconds();
 						}
 						Commands::checkForPeriodicalActions();
+						GCode::keepAlive( WaitHeater );
 					}
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -1184,7 +1195,7 @@ void Commands::executeGCode(GCode *com)
 #endif // HAVE_HEATED_BED
 				}
 
-				UI_CLEAR_STATUS;
+				showIdle();
 				previousMillisCmd = HAL::timeInMilliseconds();
 				break;
 			}
@@ -1209,10 +1220,15 @@ void Commands::executeGCode(GCode *com)
 								codenum = HAL::timeInMilliseconds();
 							}
 							Commands::checkForPeriodicalActions();
-							for(uint8_t h=0;h<NUM_TEMPERATURE_LOOPS;h++) {
+							GCode::keepAlive( WaitHeater );
+
+							for( uint8_t h=0; h<NUM_TEMPERATURE_LOOPS; h++ )
+							{
 								TemperatureController *act = tempController[h];
-								if(act->targetTemperatureC>30 && fabs(act->targetTemperatureC-act->currentTemperatureC)>1)
+								if( act->targetTemperatureC > 30 && fabs( act->targetTemperatureC-act->currentTemperatureC ) > 1 )
+								{
 									allReached = false;
+								}
 							}
 						}
 					}
@@ -1518,19 +1534,19 @@ void Commands::executeGCode(GCode *com)
 #ifdef RAMP_ACCELERATION
 			case 201:	// M201
 			{
-				if(com->hasX()) Printer::maxAccelerationMMPerSquareSecond[0] = com->X;
-				if(com->hasY()) Printer::maxAccelerationMMPerSquareSecond[1] = com->Y;
-				if(com->hasZ()) Printer::maxAccelerationMMPerSquareSecond[2] = com->Z;
-				if(com->hasE()) Printer::maxAccelerationMMPerSquareSecond[3] = com->E;
+				if(com->hasX()) Printer::maxAccelerationMMPerSquareSecond[X_AXIS] = com->X;
+				if(com->hasY()) Printer::maxAccelerationMMPerSquareSecond[Y_AXIS] = com->Y;
+				if(com->hasZ()) Printer::maxAccelerationMMPerSquareSecond[Z_AXIS] = com->Z;
+				if(com->hasE()) Printer::maxAccelerationMMPerSquareSecond[E_AXIS] = com->E;
 				Printer::updateDerivedParameter();
 				break;
 			}
 			case 202:	// M202
 			{
-				if(com->hasX()) Printer::maxTravelAccelerationMMPerSquareSecond[0] = com->X;
-				if(com->hasY()) Printer::maxTravelAccelerationMMPerSquareSecond[1] = com->Y;
-				if(com->hasZ()) Printer::maxTravelAccelerationMMPerSquareSecond[2] = com->Z;
-				if(com->hasE()) Printer::maxTravelAccelerationMMPerSquareSecond[3] = com->E;
+				if(com->hasX()) Printer::maxTravelAccelerationMMPerSquareSecond[X_AXIS] = com->X;
+				if(com->hasY()) Printer::maxTravelAccelerationMMPerSquareSecond[Y_AXIS] = com->Y;
+				if(com->hasZ()) Printer::maxTravelAccelerationMMPerSquareSecond[Z_AXIS] = com->Z;
+				if(com->hasE()) Printer::maxTravelAccelerationMMPerSquareSecond[E_AXIS] = com->E;
 				Printer::updateDerivedParameter();
 				break;
 			}
@@ -1776,12 +1792,12 @@ void Commands::executeGCode(GCode *com)
 								int S = com->S;
 								if ( S >= 800 && S <= 2200 )
 								{
-									Com::printFLN( PSTR( " 1. Servo Value [uS] =  "), S );
+									Com::printFLN( PSTR( " 1. servo value [uS] =  "), S );
 									OCR5A = 2*S;
 								}
 								else
 								{
-									Com::printFLN( PSTR( " 1. Servo Value out of range ") );
+									Com::printFLN( PSTR( " 1. servo value out of range ") );
 								}
 							}
 							break;
@@ -1793,12 +1809,12 @@ void Commands::executeGCode(GCode *com)
 								int S = com->S;
 								if ( S >= 800 && S <= 2200 )
 								{
-									Com::printFLN( PSTR( " 2. Servo Value [uS] =  "), S );
+									Com::printFLN( PSTR( " 2. servo value [uS] =  "), S );
 									OCR5B = 2*S;
 								}
 								else
 								{
-									Com::printFLN( PSTR( " 2. Servo Value out of range ") );
+									Com::printFLN( PSTR( " 2. servo value out of range ") );
 								}
 							}
 							break;
@@ -1810,12 +1826,12 @@ void Commands::executeGCode(GCode *com)
 								int S = com->S;
 								if ( S >= 800 && S <= 2200 )
 								{
-									Com::printFLN( PSTR( " 3. Servo Value [uS] =  "), S );
+									Com::printFLN( PSTR( " 3. servo value [uS] =  "), S );
 									OCR5C = 2*S;
 								}
 								else
 								{
-									Com::printFLN( PSTR( " 3. Servo Value out of range ") );
+									Com::printFLN( PSTR( " 3. servo value out of range ") );
 								}
 							}
 							break;

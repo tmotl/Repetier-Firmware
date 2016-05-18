@@ -214,14 +214,22 @@ public:
 		// Test Z-Axis every step if necessary, otherwise it could easyly ruin your printer!
         if(isZNegativeMove() && Printer::isZMinEndstopHit())
 		{
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE && FEATURE_ENABLE_Z_SAFETY
+			if( Printer::isHomed() )
+			{
+				// the following checks shall not allow to continue the z-move in case the z home position is unknoqn
+				if( Printer::currentZPositionSteps() > -Z_OVERRIDE_MAX )
+				{
+					// we allow to overdrive Z-min a little bit so that also G-Codes are able to move to a smaller z-position even when Z-min has fired already
+					return;
+				}
+			}
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE && FEATURE_ENABLE_Z_SAFETY
+
 			setZMoveFinished();
 		}
         if(isZPositiveMove() && Printer::isZMaxEndstopHit())
         {
-#if MAX_HARDWARE_ENDSTOP_Z
-            Printer::stepsRemainingAtZHit = stepsRemaining;
-#endif // MAX_HARDWARE_ENDSTOP_Z
-
             setZMoveFinished();
         }
     } // checkEndstops

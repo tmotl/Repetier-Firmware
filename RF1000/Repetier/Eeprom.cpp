@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -395,13 +395,14 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 void EEPROM::clearEEPROM()
 {
     unsigned int i;
-    for(i=0; i<2048; i++)
+
+    for( i=0; i<2048; i++ )
     {
 #if FEATURE_WATCHDOG
 		HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
-        HAL::eprSetByte(i,0);
+        HAL::eprSetByte( i, 0 );
     }
 
 } // clearEEPROM
@@ -421,6 +422,10 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
     HAL::eprSetFloat(EPR_Y_MAX_FEEDRATE,Printer::maxFeedrate[Y_AXIS]);
     HAL::eprSetFloat(EPR_Z_MAX_FEEDRATE,Printer::maxFeedrate[Z_AXIS]);
 	HAL::eprSetInt32(EPR_RF_Z_OFFSET,Printer::ZOffset);
+	HAL::eprSetByte(EPR_RF_Z_MODE,Printer::ZMode);
+	HAL::eprSetByte(EPR_RF_MOVE_MODE_X,Printer::moveMode[X_AXIS]);
+	HAL::eprSetByte(EPR_RF_MOVE_MODE_Y,Printer::moveMode[Y_AXIS]);
+	HAL::eprSetByte(EPR_RF_MOVE_MODE_Z,Printer::moveMode[Z_AXIS]);
 
 #if FEATURE_MILLING_MODE
 	if( Printer::operatingMode == OPERATING_MODE_PRINT )
@@ -663,7 +668,11 @@ void EEPROM::readDataFromEEPROM()
     Printer::maxFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_MAX_FEEDRATE);
     Printer::maxFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_MAX_FEEDRATE);
 	Printer::ZOffset = HAL::eprGetInt32(EPR_RF_Z_OFFSET);
-	g_staticZSteps = (Printer::ZOffset * ZAXIS_STEPS_PER_MM) / 1000;
+	Printer::ZMode = HAL::eprGetByte(EPR_RF_Z_MODE);
+	g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+	Printer::moveMode[X_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_X);
+	Printer::moveMode[Y_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_Y);
+	Printer::moveMode[Z_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_Z);
 
     Printer::maxJerk = HAL::eprGetFloat(EPR_MAX_JERK);
     Printer::maxZJerk = HAL::eprGetFloat(EPR_MAX_ZJERK);
@@ -727,8 +736,8 @@ void EEPROM::readDataFromEEPROM()
         e->tempControl.pidMax	   = HAL::eprGetByte(o+EPR_EXTRUDER_PID_MAX);
 #endif // TEMP_PID
 
-        e->xOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_X_OFFSET)*XAXIS_STEPS_PER_MM);
-        e->yOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_Y_OFFSET)*YAXIS_STEPS_PER_MM);
+        e->xOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_X_OFFSET)*Printer::axisStepsPerMM[X_AXIS]);
+        e->yOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_Y_OFFSET)*Printer::axisStepsPerMM[Y_AXIS]);
         e->watchPeriod = HAL::eprGetInt16(o+EPR_EXTRUDER_WATCH_PERIOD);
 
 #if RETRACT_DURING_HEATUP
@@ -980,6 +989,7 @@ void EEPROM::writeSettings()
     writeFloat(EPR_Y_MAX_FEEDRATE,Com::tEPRYMaxFeedrate);
     writeFloat(EPR_Z_MAX_FEEDRATE,Com::tEPRZMaxFeedrate);
 	writeLong(EPR_RF_Z_OFFSET,Com::tEPRZOffset);
+	writeByte(EPR_RF_Z_MODE,Com::tEPRZMode);
 
 #if FEATURE_MILLING_MODE
 	if( Printer::operatingMode == OPERATING_MODE_PRINT )

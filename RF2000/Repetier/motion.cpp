@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -100,6 +100,7 @@ void PrintLine::moveRelativeDistanceInSteps(long x,long y,long z,long e,float fe
     Printer::queuePositionTargetSteps[Y_AXIS] = Printer::queuePositionLastSteps[Y_AXIS] + y;
     Printer::queuePositionTargetSteps[Z_AXIS] = Printer::queuePositionLastSteps[Z_AXIS] + z;
     Printer::queuePositionTargetSteps[E_AXIS] = Printer::queuePositionLastSteps[E_AXIS] + e;
+
     Printer::feedrate = feedrate;
     prepareQueueMove(checkEndstop,false);
     Printer::feedrate = savedFeedrate;
@@ -148,12 +149,6 @@ void PrintLine::prepareQueueMove(uint8_t check_endstops,uint8_t pathOptimize)
 {
 	Printer::unsetAllSteppersDisabled();
     waitForXFreeLines(1);
-
-	if( g_uBlockCommands )
-	{
-		// the print has been aborted
-		return;
-	}
 
     uint8_t newPath=insertWaitMovesIfNeeded(pathOptimize, 0);
     PrintLine *p = getNextWriteLine();
@@ -273,12 +268,6 @@ void PrintLine::prepareDirectMove(void)
 {
 	Printer::unsetAllSteppersDisabled();
 
-	if( g_uBlockCommands )
-	{
-		// the print has been aborted
-		return;
-	}
-
 	PrintLine *p = &PrintLine::direct;
 
     p->task = 0;
@@ -357,17 +346,32 @@ void PrintLine::prepareDirectMove(void)
 
 void PrintLine::stopDirectMove( void )
 {
+#if DEBUG_DIRECT_MOVE
+	char	path = 0;
+#endif // DEBUG_DIRECT_MOVE
+
+
 	HAL::forbidInterrupts();
 	if( PrintLine::direct.isXYZMove() )
 	{
 		// decelerate and stop
-		PrintLine::direct.stepsRemaining = RF_MICRO_STEPS;
-		PrintLine::direct.task			 = TASK_NO_TASK;
+#if DEBUG_DIRECT_MOVE
+		path = 1;
+#endif // DEBUG_DIRECT_MOVE
+
+		if( PrintLine::direct.stepsRemaining > RF_MICRO_STEPS )
+		{
+			PrintLine::direct.stepsRemaining = RF_MICRO_STEPS;
+
+#if DEBUG_DIRECT_MOVE
+			path = 2;
+#endif // DEBUG_DIRECT_MOVE
+		}
 	}
 	HAL::allowInterrupts();
 
 #if DEBUG_DIRECT_MOVE
-	Com::printFLN( PSTR( "stopDirectMove()" ) );
+	Com::printFLN( PSTR( "stopDirectMove(): " ), path );
 #endif // DEBUG_DIRECT_MOVE
 	return;
 
@@ -595,6 +599,7 @@ void PrintLine::calculateQueueMove(float axis_diff[],uint8_t pathOptimize)
     // Make result permanent
     if (pathOptimize) waitRelax = 70;
 	pushLine();
+
     DEBUG_MEMORY;
 
 } // calculateQueueMove
@@ -1405,10 +1410,12 @@ void PrintLine::arc(float *position, float *target, float *offset, float radius,
         arc_target[1] = center_axis1 + r_axis1;
         //arc_target[axis_linear] += linear_per_segment;
         arc_target[3] += extruder_per_segment;
-        Printer::moveToReal(arc_target[0],arc_target[1],IGNORE_COORDINATE,arc_target[3],IGNORE_COORDINATE);
+        
+		Printer::moveToReal(arc_target[0],arc_target[1],IGNORE_COORDINATE,arc_target[3],IGNORE_COORDINATE);
     }
     // Ensure last segment arrives at target location.
-    Printer::moveToReal(target[0],target[1],IGNORE_COORDINATE,target[3],IGNORE_COORDINATE);
+    
+	Printer::moveToReal(target[0],target[1],IGNORE_COORDINATE,target[3],IGNORE_COORDINATE);
 
 } // arc
 #endif // FEATURE_ARC_SUPPORT
@@ -1426,10 +1433,22 @@ long PrintLine::performQueueMove()
 		{
 			// pause the print now
 			g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+			Printer::stepperDirection[X_AXIS]	= 0;
+			Printer::stepperDirection[Y_AXIS]	= 0;
+			Printer::stepperDirection[Z_AXIS]	= 0;
+			Extruder::current->stepperDirection = 0;
+
 			HAL::forbidInterrupts();
 			return 1000;
 		}
-		
+
+		if( !linesCount )
+		{
+			HAL::forbidInterrupts();
+			return 1000;
+		}
+
 		ANALYZER_ON(ANALYZER_CH0);
         setCurrentLine();
 
@@ -1444,6 +1463,7 @@ long PrintLine::performQueueMove()
 					{
 						// this operation can not be performed in case we are paused already
 						nextPlannerIndex(linesPos);
+						cur->task = 0;
 						cur = 0;
 						HAL::forbidInterrupts();
 						--linesCount;
@@ -1485,6 +1505,7 @@ long PrintLine::performQueueMove()
 					}
                 
 					nextPlannerIndex(linesPos);
+					cur->task = 0;
 					cur = 0;
 					HAL::forbidInterrupts();
 					--linesCount;
@@ -1497,6 +1518,7 @@ long PrintLine::performQueueMove()
 					{
 						// this operation can not be performed in case we are in pause position 2 already
 						nextPlannerIndex(linesPos);
+						cur->task = 0;
 						cur = 0;
 						HAL::forbidInterrupts();
 						--linesCount;
@@ -1544,6 +1566,7 @@ long PrintLine::performQueueMove()
 					}
                 
 					nextPlannerIndex(linesPos);
+					cur->task = 0;
 					cur = 0;
 					HAL::forbidInterrupts();
 					--linesCount;
@@ -1563,7 +1586,7 @@ long PrintLine::performQueueMove()
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 						if( Printer::doHeatBedZCompensation )
 						{
-								Exit = 1;
+							Exit = 1;
 						}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 					}
@@ -1618,8 +1641,16 @@ long PrintLine::performQueueMove()
 #if FEATURE_WORK_PART_Z_COMPENSATION
 							Printer::doWorkPartZCompensation = 1;
 
+#if DEBUG_WORK_PART_Z_COMPENSATION
+							g_nLastZCompensationPositionSteps[X_AXIS] = 0;
+							g_nLastZCompensationPositionSteps[Y_AXIS] = 0;
+							g_nLastZCompensationPositionSteps[Z_AXIS] = 0;
+							g_nLastZCompensationTargetStepsZ		  = 0;
+							g_nZCompensationUpdates					  = 0;
+#endif // DEBUG_WORK_PART_Z_COMPENSATION
+
 #if FEATURE_FIND_Z_ORIGIN
-							if( g_nZOriginPosition[X_AXIS] && g_nZOriginPosition[Y_AXIS] )
+							if( g_nZOriginPosition[X_AXIS] || g_nZOriginPosition[Y_AXIS] )
 							{
 								determineStaticCompensationZ();
 							}
@@ -1852,7 +1883,6 @@ void PrintLine::performDirectSteps( void )
 	{
 		bool	bDone = 0;
 
-		
 		g_uLastDirectStepTime = HAL::timeInMilliseconds();
 		
 		if( Printer::directPositionCurrentSteps[E_AXIS] > Printer::directPositionTargetSteps[E_AXIS] )
@@ -2183,6 +2213,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 					// as soon as the z-axis is blocked, we must finish all z-axis moves
 					move->stepsRemaining = 0;
 					move->setZMoveFinished();
+					Printer::stepperDirection[Z_AXIS] = 0;
 				}
 				else
 				{
@@ -2314,10 +2345,10 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
     } // stepsRemaining
 
     long interval;
-    if(!move->isFullstepping()) interval = (Printer::interval>>1); // time to come back
+    if(!move->isFullstepping()) interval = (Printer::interval>>1);	// time to come back
     else interval = Printer::interval;
 
-    if(doEven && (move->stepsRemaining <= 0 || move->isNoMove()) )// || move->task == TASK_END_MOVE))   // line finished
+    if(doEven && (move->stepsRemaining <= 0 || move->isNoMove()) )	// line finished
     {
 #ifdef DEBUG_STEPCOUNT
 		if(move->totalStepsRemaining)
@@ -2330,26 +2361,13 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 		if( forQueue )
 		{
 			removeCurrentLineForbidInterrupt();
+
+			Printer::stepperDirection[X_AXIS] = 0;
+			Printer::stepperDirection[Y_AXIS] = 0;
+			Printer::stepperDirection[Z_AXIS] = 0;
 		}
 		else
 		{
-/*			if( move->task == TASK_END_MOVE )
-			{
-	            Printer::insertStepperHighDelay();
-				if( move->isXMove() )
-				{
-					WRITE(X_STEP_PIN,LOW);
-				}
-				if( move->isYMove() )
-				{
-					WRITE(Y_STEP_PIN,LOW);
-				}
-				if( move->isZMove() )
-				{
-					WRITE(Z_STEP_PIN,LOW);
-				}
-			}
-*/
 			move->stepsRemaining = 0;
 			move->task			 = TASK_NO_TASK;
 
@@ -2357,6 +2375,10 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 			Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionLastSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS];
 			Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionLastSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 			Printer::directPositionTargetSteps[E_AXIS] = Printer::directPositionLastSteps[E_AXIS] = Printer::directPositionCurrentSteps[E_AXIS];
+
+			Printer::stepperDirection[X_AXIS] = 0;
+			Printer::stepperDirection[Y_AXIS] = 0;
+			Printer::stepperDirection[Z_AXIS] = 0;
 
 			Commands::printCurrentPosition();
 		}
@@ -2397,7 +2419,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 
 		if(linesCount == 0 && nIdle)
 		{
-			UI_STATUS(UI_TEXT_IDLE);
+			showIdle();
 		}
 
 		interval = Printer::interval = interval >> 1; // 50% of time to next call to do cur=0

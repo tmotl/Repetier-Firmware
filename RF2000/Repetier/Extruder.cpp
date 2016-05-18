@@ -105,6 +105,8 @@ void Extruder::manageTemperatures()
             {
                 Printer::flag0 |= PRINTER_FLAG0_TEMPSENSOR_DEFECT;
                 reportTempsensorError();
+
+				showError( (void*)ui_text_temperature_manager, (void*)ui_text_sensor_error );
             }
         }
         if(Printer::isAnyTempsensorDefect()) continue;
@@ -420,7 +422,9 @@ void Extruder::selectExtruderById(uint8_t extruderId)
     Printer::extruderOffset[X_AXIS] = -Extruder::current->xOffset*Printer::invAxisStepsPerMM[X_AXIS];
     Printer::extruderOffset[Y_AXIS] = -Extruder::current->yOffset*Printer::invAxisStepsPerMM[Y_AXIS];
     if(Printer::isHomed())
-        Printer::moveToReal(cx,cy,cz,IGNORE_COORDINATE,Printer::homingFeedrate[X_AXIS]);
+	{
+		Printer::moveToReal(cx,cy,cz,IGNORE_COORDINATE,Printer::homingFeedrate[X_AXIS]);
+	}
     Printer::feedrate = oldfeedrate;
     Printer::updateCurrentPosition();
 
@@ -525,7 +529,6 @@ void Extruder::setHeatedBedTemperature(float temperatureInCelsius,bool beep)
 {
 #if HAVE_HEATED_BED
 	float	offset = 0.0;
-
 
     if(temperatureInCelsius>HEATED_BED_MAX_TEMP) temperatureInCelsius = HEATED_BED_MAX_TEMP;
     if(temperatureInCelsius<0) temperatureInCelsius = 0;
@@ -1247,14 +1250,17 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         extruder[controllerId].coolerPWM = extruder[controllerId].coolerSpeed;
         extruder[0].coolerPWM = extruder[0].coolerSpeed;
     }
+
     for(;;)
     {
 #if FEATURE_WATCHDOG
         HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
+		GCode::keepAlive( WaitHeater );
         updateCurrentTemperature();
         currentTemp = currentTemperatureC;
+
         unsigned long time = HAL::timeInMilliseconds();
         maxTemp=RMath::max(maxTemp,currentTemp);
         minTemp=RMath::min(minTemp,currentTemp);
@@ -1327,6 +1333,8 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
 			{
 	            Com::printErrorFLN(Com::tAPIDFailedHigh);
 			}
+
+			showError( (void*)ui_text_autodetect_pid, (void*)ui_text_temperature_wrong );
             Extruder::disableAllHeater();
             return;
         }
@@ -1342,6 +1350,8 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
 	            Com::printErrorFLN(Com::tAPIDFailedTimeout);
 			}
             Extruder::disableAllHeater();
+
+			showError( (void*)ui_text_autodetect_pid, (void*)ui_text_timeout );
             return;
         }
         if(cycles > 5)
@@ -1350,6 +1360,9 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
 			{
 	            Com::printInfoFLN(Com::tAPIDFinished);
 			}
+
+			UI_STATUS_UPD( UI_TEXT_AUTODETECT_PID_DONE );
+
             Extruder::disableAllHeater();
             if(storeValues)
             {

@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -78,10 +78,6 @@ public:
     static float			queuePositionLastMM[3];				// Position in mm from origin.
     static float			queuePositionCommandMM[3];			// Last coordinates send by gcodes
 
-#if MAX_HARDWARE_ENDSTOP_Z
-    static long				stepsRemainingAtZHit;
-#endif // MAX_HARDWARE_ENDSTOP_Z
-
     static float			minimumSpeed;						// lowest allowed speed to keep integration error small
     static float			minimumZSpeed;						// lowest allowed speed to keep integration error small
     static long				maxSteps[3];						// For software endstops, limit of move in positive direction.
@@ -100,6 +96,8 @@ public:
     static float			filamentPrinted;					// mm of filament printed since counting started
     static uint8_t			wasLastHalfstepping;				// Indicates if last move had halfstepping enabled
 	static long				ZOffset;							// Z Offset in um
+	static char				ZMode;								// Z Scale
+	static char				moveMode[3];						// move mode which is applied within the Position X/Y/Z menus
 
 #if ENABLE_BACKLASH_COMPENSATION
     static float			backlash[3];
@@ -1029,26 +1027,53 @@ public:
 
     } // currentYPosition
 
-    static inline float currentZPosition()
+    static inline long currentZPositionSteps()
     {
-		// return all values in [mm]
-		float	fvalue = (float)queuePositionCurrentSteps[Z_AXIS];
+		// return all values in [steps]
+		long	value = queuePositionCurrentSteps[Z_AXIS];
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 		// add the current z-compensation
-		fvalue += (float)Printer::compensatedPositionCurrentStepsZ;
-		fvalue += (float)g_nZScanZPosition;
+		value += Printer::compensatedPositionCurrentStepsZ;
+		value += g_nZScanZPosition;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_FIND_Z_ORIGIN
-		fvalue += (float)g_nZOriginPosition[Z_AXIS];
+		value += g_nZOriginPosition[Z_AXIS];
 #endif // FEATURE_FIND_Z_ORIGIN
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 		// add the current manual z-steps
-		fvalue += (float)Printer::directPositionCurrentSteps[Z_AXIS];
+		value += Printer::directPositionCurrentSteps[Z_AXIS];
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
+
+		return value;
+
+    } // currentZPositionSteps
+
+    static inline float currentZPosition()
+    {
+		// return all values in [mm]
+		float	fvalue = (float)currentZPositionSteps();
+
+		if (Printer::ZMode <= Z_VALUE_MODE_Z_MIN)
+		{
+			// show the z-distance to z-min (print) or to the z-origin (mill)
+			
+		}
+
+		else if (Printer::ZMode == Z_VALUE_MODE_SURFACE)
+		{
+			// show the z-distance to the surface of the heat bed (print) or work part (mill)
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+			fvalue -= (float)getHeatBedOffset();
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+#if FEATURE_WORK_PART_Z_COMPENSATION
+			fvalue -= (float)getWorkPartOffset();
+#endif // FEATURE_WORK_PART_Z_COMPENSATION
+		}
 
 		fvalue *= Printer::invAxisStepsPerMM[Z_AXIS];
 		return fvalue;
@@ -1081,6 +1106,7 @@ public:
     static void setup();
     static void defaultLoopActions();
     static uint8_t setDestinationStepsFromGCode(GCode *com);
+	static uint8_t setDestinationStepsFromMenu( float relativeX, float relativeY, float relativeZ );
     static void moveTo(float x,float y,float z,float e,float f);
     static void moveToReal(float x,float y,float z,float e,float f);
     static void homeAxis(bool xaxis,bool yaxis,bool zaxis); /// Home axis

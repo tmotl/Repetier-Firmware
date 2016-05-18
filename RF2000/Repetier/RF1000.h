@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -47,6 +47,10 @@
 #if FEATURE_WORK_PART_Z_COMPENSATION && !FEATURE_FIND_Z_ORIGIN
 	#error It does not make sense to enable the work part z-compensation without enabling of the automatic detection of the z-origin
 #endif // FEATURE_WORK_PART_Z_COMPENSATION && !FEATURE_FIND_Z_ORIGIN
+
+/** \brief Experimental, do not use */
+#define FEATURE_TEST_STRAIN_GAUGE			0													// 1 = on, 0 = off
+
 
 #endif // FEATURE_MILLING_MODE
 
@@ -120,7 +124,7 @@ If EEPROM is enabled these values will be overidden with the values in the EEPRO
 #define X_MAX_LENGTH_PRINT					(long)245
 #endif // NUM_EXTRUDER == 2
 
-#define X_MAX_LENGTH_MILL					(long)245
+#define X_MAX_LENGTH_MILL					(long)230
 #define Y_MAX_LENGTH						(long)245
 #define Z_MAX_LENGTH						(long)200
 
@@ -969,11 +973,15 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_X_END_MM					5																		// [mm] from the right border of the heat bed
 #define HEAT_BED_SCAN_X_STEP_SIZE_MM			20																		// [mm]
 #define HEAT_BED_SCAN_X_STEP_SIZE_MIN_MM		10																		// [mm]
+#define HEAT_BED_SCAN_X_CALIBRATION_POINT_MM	100																		// [mm] from the left border of the heat bed
+#define HEAT_BED_SCAN_X_CALIBRATION_POINT_STEPS	long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_CALIBRATION_POINT_MM)			// [steps]
 
 #define	HEAT_BED_SCAN_Y_START_MM				30																		// [mm] from the front border of the heat bed
 #define	HEAT_BED_SCAN_Y_END_MM					5																		// [mm] from the back border of the heat bed
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MM			20																		// [mm]
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MIN_MM		10																		// [mm]
+#define	HEAT_BED_SCAN_Y_CALIBRATION_POINT_MM	100																		// [mm] from the front border of the heat bed
+#define HEAT_BED_SCAN_Y_CALIBRATION_POINT_STEPS	long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_CALIBRATION_POINT_MM)			// [steps]
 
 #define HEAT_BED_SCAN_Z_START_uM				500																		// [um]
 
@@ -1011,6 +1019,18 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_PRESSURE_TOLERANCE		15																		// [digits]
 #define HEAT_BED_SCAN_PRESSURE_READ_DELAY_MS	15																		// [ms]
 #define	HEAT_BED_SCAN_DELAY						1000																	// [ms]
+
+#if FEATURE_PRECISE_HEAT_BED_SCAN
+
+#define PRECISE_HEAT_BED_SCAN_WARMUP_DELAY			600																	// [s]
+#define PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY		600																	// [s]
+#define PRECISE_HEAT_BED_SCAN_BED_TEMP_PLA			60																	// [°C]
+#define PRECISE_HEAT_BED_SCAN_BED_TEMP_ABS			130																	// [°C]
+#define	PRECISE_HEAT_BED_SCAN_EXTRUDER_TEMP_SCAN	100																	// [°C]
+#define PRECISE_HEAT_BED_SCAN_EXTRUDER_TEMP_PLA		230																	// [°C]
+#define PRECISE_HEAT_BED_SCAN_EXTRUDER_TEMP_ABS		260																	// [°C]
+
+#endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -1103,20 +1123,6 @@ Above this value the z compensation will distribute the roughness of the surface
 
 
 // ##########################################################################################
-// ##	configuration of the manual steps
-// ##########################################################################################
-
-#if FEATURE_EXTENDED_BUTTONS
-
-/** \brief Configuration of the manual steps */
-#define DEFAULT_MANUAL_Z_STEPS				(RF_MICRO_STEPS *2)
-#define MAXIMAL_MANUAL_Z_STEPS				(ZAXIS_STEPS_PER_MM *10)
-#define DEFAULT_MANUAL_EXTRUDER_STEPS		(EXT0_STEPS_PER_MM /5)
-
-#endif // FEATURE_EXTENDED_BUTTONS
-
-
-// ##########################################################################################
 // ##	configuration of the z origin search
 // ##########################################################################################
 
@@ -1131,6 +1137,25 @@ Above this value the z compensation will distribute the roughness of the surface
 #define	FIND_Z_ORIGIN_SCRIPT					"G91\nG1 Z15 F5000"
 
 #endif // FEATURE_FIND_Z_ORIGIN
+
+
+// ##########################################################################################
+// ##	configuration of the strain gauge test
+// ##########################################################################################
+
+#if FEATURE_TEST_STRAIN_GAUGE
+
+#define	TEST_STRAIN_GAUGE_CONTACT_PRESSURE_DELTA	500												// [digits]
+#define TEST_STRAIN_GAUGE_POSITION_DELAY			100												// [ms]
+#define TEST_STRAIN_GAUGE_BREAKOUT_DELAY			100												// [ms]
+#define	TEST_STRAIN_GAUGE_BED_UP_STEPS				long(-ZAXIS_STEPS_PER_MM / 20)					// [steps]
+#define TEST_STRAIN_GAUGE_BED_DOWN_STEPS			long(ZAXIS_STEPS_PER_MM / 40)					// [steps]
+#define	TEST_STRAIN_GAUGE_TEST_STEPS				long(-ZAXIS_STEPS_PER_MM / 128)					// [steps]
+
+/** \brief The following commands are executed before the test is ended. */
+#define	TEST_STRAIN_GAUGE_SCRIPT					"G91\nG1 Z15 F5000"
+
+#endif // FEATURE_TEST_STRAIN_GAUGE
 
 
 // ##########################################################################################
@@ -1151,6 +1176,13 @@ Above this value the z compensation will distribute the roughness of the surface
 #define DEBUG_FIND_Z_ORIGIN					0													// 1 = on, 0 = off
 
 #endif // FEATURE_FIND_Z_ORIGIN
+
+#if FEATURE_TEST_STRAIN_GAUGE
+
+/** \brief Enables debug outputs from the test of the strain gauge */
+#define DEBUG_TEST_STRAIN_GAUGE				0													// 1 = on, 0 = off
+
+#endif // FEATURE_TEST_STRAIN_GAUGE
 #endif // FEATURE_MILLING_MODE
 
 

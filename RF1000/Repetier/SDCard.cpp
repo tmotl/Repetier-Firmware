@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -63,14 +63,14 @@ void SDCard::automount()
 #endif // UI_DISPLAY_TYPE!=0
 
             unmount();
-            UI_STATUS(UI_TEXT_SD_REMOVED);
+            UI_STATUS( UI_TEXT_SD_REMOVED );
         }
     }
     else
     {
         if(!sdactive)
         {
-            UI_STATUS(UI_TEXT_SD_INSERTED);
+            UI_STATUS( UI_TEXT_SD_INSERTED );
 			if( Printer::debugInfo() )
 			{
 	            Com::printFLN(PSTR("SD card inserted"));
@@ -174,8 +174,6 @@ void SDCard::abortPrint()
 	HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
-	g_uStopTime = millis();
-
 	Printer::setMenuMode(MENU_MODE_SD_PRINTING,false);
     Printer::setMenuMode(MENU_MODE_SD_PAUSED,false);
     
@@ -183,6 +181,8 @@ void SDCard::abortPrint()
 	{
 		Com::printFLN(PSTR("SD print aborted."));
 	}
+
+	g_uBlockSDCommands = 1;
 
 	HAL::delayMilliseconds( 250 );
 
@@ -192,25 +192,42 @@ void SDCard::abortPrint()
 	sdpos	 = 0;
 	filesize = 0;
 
-	if( Printer::debugInfo() )
-	{
-	    Com::printFLN(PSTR("G-Code buffer reset"));
-	}
+#if DEBUG_SHOW_DEVELOPMENT_LOGS
+    Com::printFLN(PSTR("G-Code buffer reset"));
+#endif // DEBUG_SHOW_DEVELOPMENT_LOGS
+
 	GCode::resetBuffer();
 
-	if( Printer::debugInfo() )
-	{
-		Com::printFLN(PSTR("Path planner reset"));
-	}
+#if DEBUG_SHOW_DEVELOPMENT_LOGS
+	Com::printFLN(PSTR("Path planner reset"));
+#endif // DEBUG_SHOW_DEVELOPMENT_LOGS
+
 	PrintLine::resetPathPlanner();
 
-	if( Printer::debugInfo() )
-	{
-	    Com::printFLN(PSTR("Line buffer reset"));
-	}
+#if DEBUG_SHOW_DEVELOPMENT_LOGS
+    Com::printFLN(PSTR("Line buffer reset"));
+#endif // DEBUG_SHOW_DEVELOPMENT_LOGS
+
 	PrintLine::resetLineBuffer();
 
-	HAL::allowInterrupts();
+    Printer::stepperDirection[X_AXIS]	= 0;
+    Printer::stepperDirection[Y_AXIS]	= 0;
+    Printer::stepperDirection[Z_AXIS]	= 0;
+    Extruder::current->stepperDirection = 0;
+
+	// we have to tell the firmware about its real current position
+    Printer::queuePositionLastSteps[X_AXIS] = Printer::queuePositionCurrentSteps[X_AXIS];
+    Printer::queuePositionLastSteps[Y_AXIS] = Printer::queuePositionCurrentSteps[Y_AXIS];
+    Printer::queuePositionLastSteps[Z_AXIS] = Printer::queuePositionCurrentSteps[Z_AXIS];
+	Printer::updateCurrentPosition( true );
+
+//	g_debugInt32 = 0;
+/*	g_debugCounter[0] = 0;
+	g_debugCounter[1] = 0;
+	g_debugCounter[2] = 0;
+	g_debugCounter[3] = 0;
+	g_debugCounter[4] = 0;
+*/	HAL::allowInterrupts();
 
 	BEEP_ABORT_PRINTING
 
@@ -249,19 +266,7 @@ void SDCard::abortPrint()
 	    Com::printFLN(PSTR("Abort complete"));
 	}
 
-	HAL::forbidInterrupts();
-    Printer::stepperDirection[X_AXIS]	 = 0;
-    Printer::stepperDirection[Y_AXIS]	 = 0;
-    Printer::stepperDirection[Z_AXIS]	 = 0;
-    Extruder::current->stepperDirection = 0;
-
-	// we have to tell the firmware about its real current position
-    Printer::queuePositionLastSteps[X_AXIS] = Printer::queuePositionCurrentSteps[X_AXIS];
-    Printer::queuePositionLastSteps[Y_AXIS] = Printer::queuePositionCurrentSteps[Y_AXIS];
-    Printer::queuePositionLastSteps[Z_AXIS] = Printer::queuePositionCurrentSteps[Z_AXIS];
-	Printer::updateCurrentPosition();
-
-	HAL::allowInterrupts();
+	g_uStopTime = millis();
 
 } // abortPrint
 
@@ -386,11 +391,11 @@ void SDCard::writeCommand(GCode *code)
     buf[p++] = sum2;
     if(params == 128)
     {
-		if( Printer::debugErrors() )
+/*		if( Printer::debugErrors() )
 		{
 	        Com::printErrorFLN(Com::tAPIDFinished);
 		}
-    }
+*/    }
     else
         file.write(buf,p);
 
@@ -561,7 +566,7 @@ void SDCard::startWrite(char *filename)
     }
     else
     {
-        UI_STATUS(UI_TEXT_UPLOADING);
+        UI_STATUS( UI_TEXT_UPLOADING );
         savetosd = true;
 
 		if( Printer::debugInfo() )
@@ -585,7 +590,7 @@ void SDCard::finishWrite()
 		Com::printFLN(Com::tDoneSavingFile);
 	}
 
-    UI_CLEAR_STATUS;
+    showIdle();
 
 } // finishWrite
 
@@ -601,6 +606,8 @@ void SDCard::deleteFile(char *filename)
 		{
 			Com::printFLN(PSTR("It is not possible to delete a file from the SD card until the current processing has finished."));
 		}
+
+		showError( (void*)ui_text_delete_file, (void*)ui_text_operation_denied );
 		return;
 	}
 

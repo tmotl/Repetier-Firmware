@@ -38,7 +38,7 @@ Implemented Codes
 - G4   - Dwell S<seconds> or P<milliseconds>
 - G20  - Units for G0/G1 are inches.
 - G21  - Units for G0/G1 are mm.
-- G28  - Home all axis or named axis.
+- G28  - Home all axes or named axis.
 - G80  - abort drilling cycle
 - G81  - drill X Y R Z F (supports drilling but does not support drilling cycles)
 - G90  - Use absolute coordinates
