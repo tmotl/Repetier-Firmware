@@ -1,3 +1,6 @@
+V RF.01.23 (2016-05-19)
+- The amount of time for which the precise heat bed scan waits for the heating up has been increased.
+
 V RF.01.21 (2016-05-18)
 - The last column and row of the heat bed/work part scan did not find their way into the heat bed/work part compensation matrix.
   - Improved rounding of the x/y positions within the first row/column of the compensation matrix.

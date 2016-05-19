@@ -1005,8 +1005,8 @@ Above this value the z compensation will distribute the roughness of the surface
 
 #if FEATURE_PRECISE_HEAT_BED_SCAN
 
-#define PRECISE_HEAT_BED_SCAN_WARMUP_DELAY			30																		// [s]
-#define PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY		30																		// [s]
+#define PRECISE_HEAT_BED_SCAN_WARMUP_DELAY			(unsigned long)600														// [s]
+#define PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY		(unsigned long)600														// [s]
 #define PRECISE_HEAT_BED_SCAN_BED_TEMP_PLA			60																		// [°C]
 #define PRECISE_HEAT_BED_SCAN_BED_TEMP_ABS			120																		// [°C]
 #define	PRECISE_HEAT_BED_SCAN_EXTRUDER_TEMP_SCAN	100																		// [°C]
