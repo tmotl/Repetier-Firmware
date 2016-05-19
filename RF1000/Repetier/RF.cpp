@@ -2026,7 +2026,7 @@ long getHeatBedOffset( void )
 	long			i;
 
 
-	if( !Printer::doHeatBedZCompensation )
+	if( !Printer::doHeatBedZCompensation && !g_nHeatBedScanStatus )
 	{
 		// we determine the offset to the scanned heat bed only in case the heat bed z compensation is active
 		return 0;

@@ -1,3 +1,6 @@
+V RF.01.25 (2016-05-19)
+- The precise heat bed scan did not determine the z offset of the heated up extruder correctly.
+
 V RF.01.23 (2016-05-19)
 - The amount of time for which the precise heat bed scan waits for the heating up has been increased.
 
