@@ -813,7 +813,7 @@ void EEPROM::readDataFromEEPROM()
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
 	Printer::HotendType = HAL::eprGetByte( EPR_RF_HOTEND_TYPE );
-	if( Printer::HotendType < HOTEND_TYPE_1 || HOTEND_TYPE_V2_DUAL )
+	if( Printer::HotendType < HOTEND_TYPE_1 || Printer::HotendType == HOTEND_TYPE_V2_DUAL )
 	{
 #if MOTHERBOARD == DEVICE_TYPE_RF1000
 		Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
@@ -840,6 +840,7 @@ void EEPROM::readDataFromEEPROM()
     }
     Printer::updateDerivedParameter();
     Extruder::initHeatedBed();
+
 #endif // EEPROM_MODE!=0
 
 } // readDataFromEEPROM

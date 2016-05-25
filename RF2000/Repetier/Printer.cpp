@@ -1190,6 +1190,9 @@ void Printer::setup()
     sd.initsd();
 #endif // SDSUPPORT
 
+	g_nActiveHeatBed = (char)readWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, EEPROM_OFFSET_ACTIVE_HEAT_BED_Z_MATRIX );
+	g_nActiveWorkPart = (char)readWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, EEPROM_OFFSET_ACTIVE_WORK_PART_Z_MATRIX );
+
 	if (Printer::ZMode == Z_VALUE_MODE_SURFACE)
 	{
 		if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )

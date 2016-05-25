@@ -1,3 +1,8 @@
+V RF.01.27 (2016-05-25)
+- Some unnecessary blocking of manual movements into the x, y and z-directions has been removed.
+- The "Hotend Type" setting from the menu was reset during each restart of the firmware.
+- There were situations where the wrong heat bed matrix could be loaded.
+
 V RF.01.25 (2016-05-19)
 - The precise heat bed scan did not determine the z offset of the heated up extruder correctly.
 

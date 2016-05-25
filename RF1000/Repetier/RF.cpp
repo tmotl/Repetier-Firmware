@@ -9852,7 +9852,7 @@ void nextPreviousXAction( int8_t increment )
 			Temp += Printer::queuePositionCurrentSteps[X_AXIS];
 
 			HAL::allowInterrupts();
-			if( Temp < 0 )
+			if( increment < 0 && Temp < 0 )
 			{
 				// do not allow to drive the head against the left border
 				if( Printer::debugErrors() )
@@ -10010,7 +10010,7 @@ void nextPreviousYAction( int8_t increment )
 			Temp += Printer::queuePositionCurrentSteps[Y_AXIS];
 
 			HAL::allowInterrupts();
-			if( Temp < 0 )
+			if( increment < 0 && Temp < 0 )
 			{
 				// do not allow to drive the bed against the back border
 				if( Printer::debugErrors() )
@@ -10184,7 +10184,7 @@ void nextPreviousZAction( int8_t increment )
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 			HAL::allowInterrupts();
-			if( Temp < -Z_OVERRIDE_MAX )
+			if( increment < 0 && Temp < -Z_OVERRIDE_MAX )
 			{
 				// do not allow to drive the bed into the extruder
 				if( Printer::debugErrors() )
@@ -10213,9 +10213,9 @@ void nextPreviousZAction( int8_t increment )
 
 				HAL::forbidInterrupts();
 				Printer::directPositionTargetSteps[Z_AXIS] += steps;
-				if( Printer::directPositionTargetSteps[Z_AXIS] < EXTENDED_BUTTONS_Z_MIN )
+				if( increment < 0 && Printer::directPositionTargetSteps[Z_AXIS] < EXTENDED_BUTTONS_Z_MIN )
 				{
-					Printer::directPositionTargetSteps[Z_AXIS] = EXTENDED_BUTTONS_Z_MIN;
+					Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 
 					if( Printer::debugErrors() )
 					{
@@ -10223,9 +10223,9 @@ void nextPreviousZAction( int8_t increment )
 					}
 					showError( (void*)ui_text_z_axis, (void*)ui_text_min_reached );
 				}
-				if( Printer::directPositionTargetSteps[Z_AXIS] > EXTENDED_BUTTONS_Z_MAX )
+				if( increment > 0 && Printer::directPositionTargetSteps[Z_AXIS] > EXTENDED_BUTTONS_Z_MAX )
 				{
-					Printer::directPositionTargetSteps[Z_AXIS] = EXTENDED_BUTTONS_Z_MAX;
+					Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 
 					if( Printer::debugErrors() )
 					{
@@ -12018,7 +12018,7 @@ void prepareZCompensation( void )
 	
 		// restore the last known compensation matrix
 		// this operation must be performed after restoring of the default scan parameters because the values from the EEPROM can overwrite some scan parameters
-		if( loadCompensationMatrix( EEPROM_SECTOR_SIZE ) )
+		if( loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed ) ) )
 		{
 			// there is no valid compensation matrix available
 			initCompensationMatrix();
@@ -12039,7 +12039,7 @@ void prepareZCompensation( void )
 
 		// we must restore the work part z-compensation matrix
 		// this operation must be performed after restoring of the default scan parameters because the values from the EEPROM can overwrite some scan parameters
-		if( loadCompensationMatrix( 0 ) )
+		if( loadCompensationMatrix( (EEPROM_SECTOR_SIZE *9) + (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveWorkPart) ) )
 		{
 			// there is no valid compensation matrix available
 			initCompensationMatrix();
