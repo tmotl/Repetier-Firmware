@@ -140,6 +140,7 @@ char			Printer::blockZ;
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 long			Printer::compensatedPositionTargetStepsZ;
 long			Printer::compensatedPositionCurrentStepsZ;
+char			Printer::endZCompensationStep;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -1043,6 +1044,7 @@ void Printer::setup()
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 	compensatedPositionTargetStepsZ	 =
     compensatedPositionCurrentStepsZ = 0;
+	endZCompensationStep			 = 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -1765,110 +1767,102 @@ void Printer::resetDirectPosition( void )
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 void Printer::performZCompensation( void )
 {
-	char	doZCompensation = 0;
-
-
 	// the order of the following checks shall not be changed
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-	if( doHeatBedZCompensation )
+#if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
+	if( !doHeatBedZCompensation && !doWorkPartZCompensation )
 	{
-		doZCompensation = 1;
+		return;
 	}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#if FEATURE_WORK_PART_Z_COMPENSATION
-	if( doWorkPartZCompensation )
+#elif FEATURE_HEAT_BED_Z_COMPENSATION
+	if( !doHeatBedZCompensation )
 	{
-		doZCompensation = 1;
+		return;
 	}
-#endif // FEATURE_WORK_PART_Z_COMPENSATION
+#elif FEATURE_WORK_PART_Z_COMPENSATION
+	if( !doWorkPartZCompensation )
+	{
+		return;
+	}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
 
 	if( blockZ )
 	{
 		// do not perform any compensation in case the moving into z-direction is blocked
-		doZCompensation = 0;
+		return;
 	}
+
 	if( PrintLine::cur )
 	{
 		if( PrintLine::cur->isZMove() )
 		{
 			// do not peform any compensation while there is a "real" move into z-direction
-			doZCompensation = 0;
+			return;
 		}
 	}
 
-	if( doZCompensation )
+	if( endZCompensationStep )
 	{
-		if( compensatedPositionCurrentStepsZ < compensatedPositionTargetStepsZ )
-		{
-			// we must move the heat bed do the bottom
-			if( stepperDirection[Z_AXIS] >= 0 )
-			{
-				// here we shall move the z-axis only in case performQueueMove() is not moving into the other direction at the moment
-				if( stepperDirection[Z_AXIS] == 0 )
-				{
-					// set the direction only in case it is not set already
-					prepareBedDown();
-					stepperDirection[Z_AXIS] = 1;
-					HAL::delayMicroseconds( 1 );
-				}
-				startZStep( 1 );
-
 #if STEPPER_HIGH_DELAY>0
-				HAL::delayMicroseconds( STEPPER_HIGH_DELAY );
+		HAL::delayMicroseconds( STEPPER_HIGH_DELAY );
 #endif // STEPPER_HIGH_DELAY>0
 
-				endZStep();
+		endZStep();
 				
-				compensatedPositionCurrentStepsZ ++;
-			}
+		compensatedPositionCurrentStepsZ += endZCompensationStep;
 
-			if( compensatedPositionCurrentStepsZ == compensatedPositionTargetStepsZ )
-			{
-				stepperDirection[Z_AXIS] = 0;
-
-#if DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
-				long	nDelay = micros() - g_nZCompensationUpdateTime;
-
-				if( nDelay > g_nZCompensationDelayMax )		g_nZCompensationDelayMax = nDelay;
-#endif // DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
-			}
-		}
-		else if( compensatedPositionCurrentStepsZ > compensatedPositionTargetStepsZ )
+		if( compensatedPositionCurrentStepsZ == compensatedPositionTargetStepsZ )
 		{
-			// we must move the heat bed to the top
-			if( stepperDirection[Z_AXIS] <= 0 )
-			{
-				// here we shall move the z-axis only in case performQueueMove() is not moving into the other direction at the moment
-				if( stepperDirection[Z_AXIS] == 0 )
-				{
-					// set the direction only in case it is not set already
-					prepareBedUp();
-					stepperDirection[Z_AXIS] = -1;
-					HAL::delayMicroseconds( 1 );
-				}
-				startZStep( -1 );
-
-#if STEPPER_HIGH_DELAY>0
-				HAL::delayMicroseconds( STEPPER_HIGH_DELAY );
-#endif // STEPPER_HIGH_DELAY>0
-
-				endZStep();
-				
-				compensatedPositionCurrentStepsZ --;
-			}
-
-			if( compensatedPositionCurrentStepsZ == compensatedPositionTargetStepsZ )
-			{
-				stepperDirection[Z_AXIS] = 0;
+			stepperDirection[Z_AXIS] = 0;
 
 #if DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
-				long	nDelay = micros() - g_nZCompensationUpdateTime;
+			long	nDelay = micros() - g_nZCompensationUpdateTime;
 
-				if( nDelay > g_nZCompensationDelayMax )		g_nZCompensationDelayMax = nDelay;
+			if( nDelay > g_nZCompensationDelayMax )		g_nZCompensationDelayMax = nDelay;
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
-			}
 		}
+
+		endZCompensationStep = 0;
+		return;
+	}
+
+	if( compensatedPositionCurrentStepsZ < compensatedPositionTargetStepsZ )
+	{
+		// we must move the heat bed do the bottom
+		if( stepperDirection[Z_AXIS] >= 0 )
+		{
+			// here we shall move the z-axis only in case performQueueMove() is not moving into the other direction at the moment
+			if( stepperDirection[Z_AXIS] == 0 )
+			{
+				// set the direction only in case it is not set already
+				prepareBedDown();
+				stepperDirection[Z_AXIS] = 1;
+				//HAL::delayMicroseconds( 1 );
+			}
+			startZStep( 1 );
+			endZCompensationStep = 1;
+		}
+
+		return;
+	}
+
+	if( compensatedPositionCurrentStepsZ > compensatedPositionTargetStepsZ )
+	{
+		// we must move the heat bed to the top
+		if( stepperDirection[Z_AXIS] <= 0 )
+		{
+			// here we shall move the z-axis only in case performQueueMove() is not moving into the other direction at the moment
+			if( stepperDirection[Z_AXIS] == 0 )
+			{
+				// set the direction only in case it is not set already
+				prepareBedUp();
+				stepperDirection[Z_AXIS] = -1;
+				//HAL::delayMicroseconds( 1 );
+			}
+			startZStep( -1 );
+			endZCompensationStep = -1;
+		}
+
+		return;
 	}
 
 } // performZCompensation
@@ -1888,6 +1882,7 @@ void Printer::resetCompensatedPosition( void )
 
 	compensatedPositionTargetStepsZ  = 0;
 	compensatedPositionCurrentStepsZ = 0;
+	endZCompensationStep			 = 0;
 
 } // resetCompensatedPosition
 

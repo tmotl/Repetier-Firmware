@@ -1366,7 +1366,7 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
             Extruder::disableAllHeater();
             if(storeValues)
             {
-                pidDGain = Kp;
+                pidPGain = Kp;
                 pidIGain = Ki;
                 pidDGain = Kd;
                 heatManager = 1;

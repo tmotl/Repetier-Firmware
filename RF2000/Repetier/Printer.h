@@ -139,6 +139,7 @@ public:
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
     static long				compensatedPositionTargetStepsZ;
     static long				compensatedPositionCurrentStepsZ;
+	static char				endZCompensationStep;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -781,6 +782,16 @@ public:
 			if( lastZDirection < 0 )
 			{
 				// z-max was not hit and we are moving upwards, so z-max can not become hit right now
+				return false;
+			}
+
+			if( isHomed() && currentZPosition() < 5 )
+			{
+				// we are close to z-min, so z-max can not become hit right now
+#if DEBUG_CONFIGURABLE_Z_ENDSTOPS
+				Com::printF( PSTR( "Z-Max not hit") );
+#endif // DEBUG_CONFIGURABLE_Z_ENDSTOPS
+
 				return false;
 			}
 

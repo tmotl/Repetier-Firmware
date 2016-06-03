@@ -85,9 +85,6 @@ List of placeholder:
 %fZ : Homing feedrate z direction
 %Fs : Fan speed
 %PN : Printer name
-%Sx : Steps per mm x direction
-%Sy : Steps per mm y direction
-%Sz : Steps per mm z direction
 %Se : Steps per mm current extruder
 %is : Stepper inactive time in seconds
 %ip : Max. inactive time in seconds

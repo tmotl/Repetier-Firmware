@@ -1,3 +1,9 @@
+V RF.01.29 (2016-06-03)
+- M303 did not update the P-value (only the I- and D-values were written to the EEPROM).
+- In case the "Z Type" of the RF1000 was configured to "Circuit", the firmware could detect Z-max as hit instead of Z-min during the processing of the first layers.
+- The firmware could hang or reset in case it had to process a lot of G-codes of rather short execution length (e.g. the single linear segments of a circle).
+- Minor clean-ups.
+
 V RF.01.27 (2016-05-25)
 - Some unnecessary blocking of manual movements into the x, y and z-directions has been removed.
 - The "Hotend Type" setting from the menu was reset during each restart of the firmware.

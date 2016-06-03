@@ -1457,9 +1457,6 @@ void UIDisplay::parse(char *txt,bool ram)
 			}
 			case 'S':
 			{
-				if(c2=='x') addFloat(Printer::axisStepsPerMM[X_AXIS],3,1);								// %Sx : Steps per mm x direction
-				if(c2=='y') addFloat(Printer::axisStepsPerMM[Y_AXIS],3,1);								// %Sy : Steps per mm y direction
-				if(c2=='z') addFloat(Printer::axisStepsPerMM[Z_AXIS],3,1);								// %Sz : Steps per mm z direction
 				if(c2=='e') addFloat(Extruder::current->stepsPerMM,3,1);								// %Se : Steps per mm current extruder
 				break;
 			}
@@ -3143,42 +3140,6 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
 			break;
 		}
-		case UI_ACTION_STEPS_X:
-		{
-			INCREMENT_MIN_MAX(Printer::axisStepsPerMM[X_AXIS],0.1,0,999);
-			Printer::updateDerivedParameter();
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EPR_XAXIS_STEPS_PER_MM,Printer::axisStepsPerMM[X_AXIS]);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_STEPS_Y:
-		{
-			INCREMENT_MIN_MAX(Printer::axisStepsPerMM[Y_AXIS],0.1,0,999);
-			Printer::updateDerivedParameter();
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EPR_YAXIS_STEPS_PER_MM,Printer::axisStepsPerMM[Y_AXIS]);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_STEPS_Z:
-		{
-			INCREMENT_MIN_MAX(Printer::axisStepsPerMM[Z_AXIS],0.1,0,999);
-			Printer::updateDerivedParameter();
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EPR_ZAXIS_STEPS_PER_MM,Printer::axisStepsPerMM[Z_AXIS]);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
 		case UI_ACTION_BAUDRATE:
 		{
 #if EEPROM_MODE!=0
@@ -3207,76 +3168,6 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
 		    break;
 		}
-
-#ifdef TEMP_PID
-		case UI_ACTION_PID_PGAIN:
-		{
-			INCREMENT_MIN_MAX(Extruder::current->tempControl.pidPGain,0.1,0,200);
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EEPROM::getExtruderOffset(Extruder::current->id)+EPR_EXTRUDER_PID_PGAIN,Extruder::current->tempControl.pidPGain);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_PID_IGAIN:
-		{
-			INCREMENT_MIN_MAX(Extruder::current->tempControl.pidIGain,0.01,0,100);
-			Extruder::selectExtruderById(Extruder::current->id);
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EEPROM::getExtruderOffset(Extruder::current->id)+EPR_EXTRUDER_PID_IGAIN,Extruder::current->tempControl.pidIGain);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_PID_DGAIN:
-		{
-			INCREMENT_MIN_MAX(Extruder::current->tempControl.pidDGain,0.1,0,200);
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EEPROM::getExtruderOffset(Extruder::current->id)+EPR_EXTRUDER_PID_DGAIN,Extruder::current->tempControl.pidDGain);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_DRIVE_MIN:
-		{
-			INCREMENT_MIN_MAX(Extruder::current->tempControl.pidDriveMin,1,1,255);
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EEPROM::getExtruderOffset(Extruder::current->id)+EPR_EXTRUDER_DRIVE_MIN,Extruder::current->tempControl.pidDriveMin);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_DRIVE_MAX:
-		{
-			INCREMENT_MIN_MAX(Extruder::current->tempControl.pidDriveMax,1,1,255);
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EEPROM::getExtruderOffset(Extruder::current->id)+EPR_EXTRUDER_DRIVE_MAX,Extruder::current->tempControl.pidDriveMax);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-		case UI_ACTION_PID_MAX:
-		{
-			INCREMENT_MIN_MAX(Extruder::current->tempControl.pidMax,1,1,255);
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-			HAL::eprSetFloat(EEPROM::getExtruderOffset(Extruder::current->id)+EPR_EXTRUDER_PID_MAX,Extruder::current->tempControl.pidMax);
-			EEPROM::updateChecksum();
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-
-			break;
-		}
-#endif // TEMP_PID
 
 #if FEATURE_RGB_LIGHT_EFFECTS
 		case UI_ACTION_RGB_LIGHT_MODE:

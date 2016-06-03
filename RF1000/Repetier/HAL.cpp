@@ -792,19 +792,15 @@ ISR(TIMER1_COMPA_vect)
         :[ex]"=&d"(doExit):[ocr]"i" (_SFR_MEM_ADDR(OCR1A)):"r22","r23" );
     if(doExit) return;
 
-    insideTimer1				= 1;
-	unsigned short	uTimerValue = 65000;
-    OCR1A						= 61000;
+    insideTimer1 = 1;
+	OCR1A		 = 61000;
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-	uTimerValue = 1000;
 	Printer::performZCompensation();
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-	uTimerValue = 1000;
-
 	if( Printer::allowDirectSteps() )
 	{
 		PrintLine::performDirectSteps();
@@ -844,7 +840,7 @@ ISR(TIMER1_COMPA_vect)
         }
         else waitRelax--;
         stepperWait = 0;		// Important because of optimization in asm at begin
-        OCR1A = uTimerValue;	// Wait for next move
+        OCR1A = 1000;	// Wait for next move
     }
 
 #if FEATURE_PAUSE_PRINTING

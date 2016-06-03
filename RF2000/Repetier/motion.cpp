@@ -1581,16 +1581,7 @@ long PrintLine::performQueueMove()
 
 
 #if FEATURE_MILLING_MODE
-					if( Printer::operatingMode == OPERATING_MODE_PRINT )
-					{
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-						if( Printer::doHeatBedZCompensation )
-						{
-							Exit = 1;
-						}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-					}
-					else
+					if( Printer::operatingMode == OPERATING_MODE_MILL)
 					{
 #if FEATURE_WORK_PART_Z_COMPENSATION
 						if( Printer::doWorkPartZCompensation )
@@ -1599,12 +1590,17 @@ long PrintLine::performQueueMove()
 						}
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 					}
-#else
-					if( Printer::doHeatBedZCompensation )
-					{
-						Exit = 1;
-					}
+					else
 #endif // FEATURE_MILLING_MODE
+
+					{
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+						if( Printer::doHeatBedZCompensation )
+						{
+							Exit = 1;
+						}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+					}
 
 					if( Exit )
 					{
@@ -1622,21 +1618,7 @@ long PrintLine::performQueueMove()
 					{
 						// enable the z compensation only in case we have valid compensation values
 #if FEATURE_MILLING_MODE
-						if( Printer::operatingMode == OPERATING_MODE_PRINT )
-						{
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-							Printer::doHeatBedZCompensation = 1;
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#if DEBUG_HEAT_BED_Z_COMPENSATION
-							g_nLastZCompensationPositionSteps[X_AXIS] = 0;
-							g_nLastZCompensationPositionSteps[Y_AXIS] = 0;
-							g_nLastZCompensationPositionSteps[Z_AXIS] = 0;
-							g_nLastZCompensationTargetStepsZ		  = 0;
-							g_nZCompensationUpdates					  = 0;
-#endif // DEBUG_HEAT_BED_Z_COMPENSATION
-						}
-						else
+						if( Printer::operatingMode == OPERATING_MODE_MILL )
 						{
 #if FEATURE_WORK_PART_Z_COMPENSATION
 							Printer::doWorkPartZCompensation = 1;
@@ -1666,9 +1648,23 @@ long PrintLine::performQueueMove()
 
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 						}
-#else
-						Printer::doHeatBedZCompensation = 1;
+						else
 #endif // FEATURE_MILLING_MODE
+
+						{
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+							Printer::doHeatBedZCompensation = 1;
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+#if DEBUG_HEAT_BED_Z_COMPENSATION
+							g_nLastZCompensationPositionSteps[X_AXIS] = 0;
+							g_nLastZCompensationPositionSteps[Y_AXIS] = 0;
+							g_nLastZCompensationPositionSteps[Z_AXIS] = 0;
+							g_nLastZCompensationTargetStepsZ		  = 0;
+							g_nZCompensationUpdates					  = 0;
+#endif // DEBUG_HEAT_BED_Z_COMPENSATION
+
+						}
 
 						Printer::resetCompensatedPosition();
 						

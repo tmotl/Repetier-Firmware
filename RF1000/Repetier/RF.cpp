@@ -4948,26 +4948,21 @@ void doZCompensation( void )
 {
 #if FEATURE_MILLING_MODE
 
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-		doHeatBedZCompensation();
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-	}
-	else
+	if( Printer::operatingMode == OPERATING_MODE_MILL )
 	{
 #if FEATURE_WORK_PART_Z_COMPENSATION
 		doWorkPartZCompensation();
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 	}
-
-#else
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-	doHeatBedZCompensation();
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+	else
 
 #endif // FEATURE_MILLING_MODE
+
+	{
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+		doHeatBedZCompensation();
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+	}
 
 } // doZCompensation
 
@@ -10667,6 +10662,7 @@ void cleanupZPositions( void )
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
     Printer::compensatedPositionTargetStepsZ  =
     Printer::compensatedPositionCurrentStepsZ =
+	Printer::endZCompensationStep			  = 
 	g_nZScanZPosition						  = 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
@@ -12075,6 +12071,7 @@ void resetZCompensation( void )
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 	Printer::compensatedPositionTargetStepsZ  = 0;
 	Printer::compensatedPositionCurrentStepsZ = 0;
+	Printer::endZCompensationStep			  = 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 	HAL::allowInterrupts();
