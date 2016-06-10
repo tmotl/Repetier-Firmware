@@ -804,6 +804,9 @@ we use blocks of 2 kByte size for the structure of our EEPROM
 
 #endif // FEATURE_ENABLE_Z_SAFETY
 
+/** \brief Specifies the minimal distance from z-min which must be reached before it is plausible that z-max is hit */
+#define	Z_MIN_DISTANCE						(ZAXIS_STEPS_PER_MM * 5)
+
 /** \brief Defines the Z-Offset stepsize in um */
 #define	Z_OFFSET_STEP						25
 

@@ -136,6 +136,10 @@ public:
 	static char				stepperDirection[3];				// this is the current x/y/z-direction from the processing of G-Codes
 	static char				blockZ;
 
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+	static long				currentZSteps;
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
     static long				compensatedPositionTargetStepsZ;
     static long				compensatedPositionCurrentStepsZ;
@@ -785,14 +789,21 @@ public:
 				return false;
 			}
 
-			if( isHomed() && currentZPosition() < 5 )
+			if( isHomed() )
 			{
-				// we are close to z-min, so z-max can not become hit right now
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+				if( currentZSteps < Z_MIN_DISTANCE )
+#else
+				if( currentZPositionSteps() < Z_MIN_DISTANCE )
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+				{
+					// we are close to z-min, so z-max can not become hit right now
 #if DEBUG_CONFIGURABLE_Z_ENDSTOPS
-				Com::printF( PSTR( "Z-Max not hit") );
+					Com::printF( PSTR( "Z-Max not hit") );
 #endif // DEBUG_CONFIGURABLE_Z_ENDSTOPS
 
-				return false;
+					return false;
+				}
 			}
 
 			// the last z-direction is unknown or the heat bed has been moved downwards, thus we have to assume that the z-max endstop is hit

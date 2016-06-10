@@ -137,6 +137,10 @@ long			Printer::queuePositionCurrentSteps[3];
 char			Printer::stepperDirection[3];
 char			Printer::blockZ;
 
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+long			Printer::currentZSteps;
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 long			Printer::compensatedPositionTargetStepsZ;
 long			Printer::compensatedPositionCurrentStepsZ;
@@ -1041,6 +1045,10 @@ void Printer::setup()
 	stepperDirection[Z_AXIS]		  = 0;
 	blockZ							  = 0;
 
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+	currentZSteps					  = 0;
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 	compensatedPositionTargetStepsZ	 =
     compensatedPositionCurrentStepsZ = 0;
@@ -1537,6 +1545,10 @@ void Printer::homeZAxis()
 		queuePositionLastSteps[Z_AXIS]	  = (nHomeDir == -1) ? minSteps[Z_AXIS] : maxSteps[Z_AXIS];
         queuePositionCurrentSteps[Z_AXIS] = queuePositionLastSteps[Z_AXIS];
 
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+		currentZSteps					  = queuePositionLastSteps[Z_AXIS];
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
         g_nZScanZPosition = 0;
         queueTask( TASK_INIT_Z_COMPENSATION );
@@ -1875,6 +1887,10 @@ void Printer::resetCompensatedPosition( void )
 		queuePositionCurrentSteps[Z_AXIS] += compensatedPositionCurrentStepsZ;
 		queuePositionLastSteps[Z_AXIS]	  += compensatedPositionCurrentStepsZ;
 		queuePositionTargetSteps[Z_AXIS]  += compensatedPositionCurrentStepsZ;
+
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+		currentZSteps					  += compensatedPositionCurrentStepsZ;
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 
 		queuePositionCommandMM[Z_AXIS]	= 
 		queuePositionLastMM[Z_AXIS]		= (float)(queuePositionLastSteps[Z_AXIS])*invAxisStepsPerMM[Z_AXIS];

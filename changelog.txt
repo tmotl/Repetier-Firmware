@@ -1,3 +1,7 @@
+V RF.01.31 (2016-06-10)
+- Another hang of the firmware in combination with a very specific G-code has been removed.
+- Minor clean-ups.
+
 V RF.01.29 (2016-06-03)
 - M303 did not update the P-value (only the I- and D-values were written to the EEPROM).
 - In case the "Z Type" of the RF1000 was configured to "Circuit", the firmware could detect Z-max as hit instead of Z-min during the processing of the first layers.

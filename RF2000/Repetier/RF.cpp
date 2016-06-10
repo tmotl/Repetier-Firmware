@@ -1865,6 +1865,7 @@ void doHeatBedZCompensation( void )
 	nCurrentPositionSteps[Y_AXIS] += Printer::directPositionCurrentSteps[Y_AXIS];
 	nCurrentPositionSteps[Z_AXIS] += Printer::directPositionCurrentSteps[Z_AXIS];
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
+
 	HAL::allowInterrupts();
 
 #if DEBUG_HEAT_BED_Z_COMPENSATION
@@ -7802,7 +7803,7 @@ void processCommand( GCode* pCommand )
 					{
 						// test and take over the specified value
 						nTemp = pCommand->X;
-						if( nTemp < -(Printer::axisStepsPerMM[X_AXIS] * Printer::lengthMM[X_AXIS]) )		nTemp = -(Printer::axisStepsPerMM[X_AXIS] * Printer::lengthMM[X_AXIS]);
+						if( nTemp < -(Printer::axisStepsPerMM[X_AXIS] * Printer::lengthMM[X_AXIS]) )	nTemp = -(Printer::axisStepsPerMM[X_AXIS] * Printer::lengthMM[X_AXIS]);
 						if( nTemp > (Printer::axisStepsPerMM[X_AXIS] * Printer::lengthMM[X_AXIS]) )		nTemp = (Printer::axisStepsPerMM[X_AXIS] * Printer::lengthMM[X_AXIS]);
 
 						g_nPauseSteps[X_AXIS] = nTemp;
@@ -7816,8 +7817,8 @@ void processCommand( GCode* pCommand )
 					{
 						// test and take over the specified value
 						nTemp = pCommand->Y;
-						if( nTemp < -(Printer::axisStepsPerMM[Y_AXIS] * Y_MAX_LENGTH) )		nTemp = -(Printer::axisStepsPerMM[Y_AXIS] * Y_MAX_LENGTH);
-						if( nTemp > (Printer::axisStepsPerMM[Y_AXIS] * Y_MAX_LENGTH) )		nTemp = (Printer::axisStepsPerMM[Y_AXIS] * Y_MAX_LENGTH);
+						if( nTemp < -(Printer::axisStepsPerMM[Y_AXIS] * Printer::lengthMM[Y_AXIS]) )	nTemp = -(Printer::axisStepsPerMM[Y_AXIS] * Printer::lengthMM[Y_AXIS]);
+						if( nTemp > (Printer::axisStepsPerMM[Y_AXIS] * Printer::lengthMM[Y_AXIS]) )		nTemp = (Printer::axisStepsPerMM[Y_AXIS] * Printer::lengthMM[Y_AXIS]);
 
 						g_nPauseSteps[Y_AXIS] = nTemp;
 						if( Printer::debugInfo() )
@@ -7830,8 +7831,8 @@ void processCommand( GCode* pCommand )
 					{
 						// test and take over the specified value
 						nTemp = pCommand->Z;
-						if( nTemp < 0 )														nTemp = 0;
-						if( nTemp > (Printer::axisStepsPerMM[Z_AXIS] * Z_MAX_LENGTH) )		nTemp = (Printer::axisStepsPerMM[Z_AXIS] * Z_MAX_LENGTH);
+						if( nTemp < 0 )																	nTemp = 0;
+						if( nTemp > (Printer::axisStepsPerMM[Z_AXIS] * Printer::lengthMM[Z_AXIS]) )		nTemp = (Printer::axisStepsPerMM[Z_AXIS] * Printer::lengthMM[Z_AXIS]);
 
 						g_nPauseSteps[Z_AXIS] = nTemp;
 						if( Printer::debugInfo() )
@@ -8818,6 +8819,15 @@ void processCommand( GCode* pCommand )
 									Com::printFLN( PSTR( "" ) );
 								}
 							}
+							break;
+						}
+						case 18:
+						{
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+							Com::printF( PSTR( "Z;" ), Printer::currentZSteps );
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+
+							Com::printFLN( PSTR( ";" ), Printer::currentZPositionSteps() );
 							break;
 						}
 					}
@@ -10657,7 +10667,11 @@ void cleanupZPositions( void )
 	Printer::queuePositionLastSteps[Z_AXIS]	   =
     Printer::queuePositionTargetSteps[Z_AXIS]  =
 	Printer::queuePositionLastMM[Z_AXIS]	   =
-	Printer::queuePositionCommandMM[Z_AXIS]	   = 0;
+	Printer::queuePositionCommandMM[Z_AXIS]	   = 
+
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+	Printer::currentZSteps					   = 0;
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
     Printer::compensatedPositionTargetStepsZ  =
@@ -10740,6 +10754,10 @@ void setZOrigin( void )
 	Printer::directPositionCurrentSteps[Z_AXIS] = 
 	Printer::directPositionLastSteps[Z_AXIS]	= 0;
 	Printer::originOffsetMM[Z_AXIS]				= 0;
+
+#if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
+	Printer::currentZSteps						= 0;
+#endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 
     Printer::updateDerivedParameter();
     Printer::updateCurrentPosition(true);

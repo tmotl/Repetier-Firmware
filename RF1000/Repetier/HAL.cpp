@@ -697,7 +697,7 @@ SIGNAL (TIMER3_COMPA_vect)
 
 // ================== Interrupt handling ======================
 /** \brief Sets the timer 1 compare value to delay ticks.
-This function sets the OCR1A compare counter  to get the next interrupt
+This function sets the OCR1A compare counter to get the next interrupt
 at delay ticks measured from the last interrupt. delay must be << 2^24 */
 inline void setTimer(uint32_t delay)
 {
@@ -810,116 +810,49 @@ ISR(TIMER1_COMPA_vect)
 	if(Printer::allowQueueMove())
     {
         setTimer(PrintLine::performQueueMove());
+
+		DEBUG_MEMORY;
+	    insideTimer1 = 0;
+		return;
     }
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-	else if(Printer::allowDirectMove())
+	if(Printer::allowDirectMove())
 	{
         setTimer(PrintLine::performDirectMove());
+		
+		DEBUG_MEMORY;
+	    insideTimer1 = 0;
+		return;
 	}
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
-	else
+    if(waitRelax == 0)
     {
-        if(waitRelax == 0)
-        {
 #ifdef USE_ADVANCE
-            if(Printer::advanceStepsSet)
-            {
-                Printer::extruderStepsNeeded -= Printer::advanceStepsSet;
+        if(Printer::advanceStepsSet)
+        {
+            Printer::extruderStepsNeeded -= Printer::advanceStepsSet;
 #ifdef ENABLE_QUADRATIC_ADVANCE
-                Printer::advanceExecuted = 0;
+            Printer::advanceExecuted = 0;
 #endif // ENABLE_QUADRATIC_ADVANCE
-                Printer::advanceStepsSet = 0;
-            }
-
-			if(!Printer::extruderStepsNeeded) if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
-#else
-            if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
-#endif // USE_ADVANCE
+            Printer::advanceStepsSet = 0;
         }
-        else waitRelax--;
-        stepperWait = 0;		// Important because of optimization in asm at begin
-        OCR1A = 1000;	// Wait for next move
-    }
 
-#if FEATURE_PAUSE_PRINTING
-    switch( g_pauseStatus )
-	{
-		case PAUSE_STATUS_PREPARE_PAUSE_1:
-		{
-			if( (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
-			{
-				// we have reached the pause position - nothing except the extruder can have been moved
-				g_pauseStatus = PAUSE_STATUS_PAUSED;
-
-				Printer::stepperDirection[X_AXIS]	= 0;
-				Printer::stepperDirection[Y_AXIS]	= 0;
-				Printer::stepperDirection[Z_AXIS]	= 0;
-				Extruder::current->stepperDirection = 0;
-			}
-			break;
-		}
-		case PAUSE_STATUS_PREPARE_PAUSE_2:
-		{
-			if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
-				(Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
-				(Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
-				(Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
-			{
-				// we have reached the pause position 1
-#if FEATURE_MILLING_MODE
-				if( Printer::operatingMode == OPERATING_MODE_MILL )
-				{
-					// in operating mode mill, we have 2 pause positions because we have to leave the work part before we shall move into x/y direction
-					g_pauseStatus = PAUSE_STATUS_PREPARE_PAUSE_3;
-
-					determinePausePosition();
-					PrintLine::prepareDirectMove();
-				}
-				else
-				{
-					// in operating mode print, there is no need for a second pause position
-					g_pauseStatus = PAUSE_STATUS_PAUSED;
-
-					Printer::stepperDirection[X_AXIS]	= 0;
-					Printer::stepperDirection[Y_AXIS]	= 0;
-					Printer::stepperDirection[Z_AXIS]	= 0;
-					Extruder::current->stepperDirection = 0;
-				}
+		if(!Printer::extruderStepsNeeded) if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
 #else
-				// in operating mode print, there is no need for a second pause position
-				g_pauseStatus = PAUSE_STATUS_PAUSED;
-
-				Printer::stepperDirection[X_AXIS]	= 0;
-				Printer::stepperDirection[Y_AXIS]	= 0;
-				Printer::stepperDirection[Z_AXIS]	= 0;
-				Extruder::current->stepperDirection = 0;
-#endif // FEATURE_MILLING_MODE
-			}
-			break;
-		}
-		case PAUSE_STATUS_PREPARE_PAUSE_3:
-		{
-			if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
-				(Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
-				(Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
-				(Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
-			{
-				// we have reached the pause position 2
-				g_pauseStatus = PAUSE_STATUS_PAUSED;
-
-				Printer::stepperDirection[X_AXIS]	= 0;
-				Printer::stepperDirection[Y_AXIS]	= 0;
-				Printer::stepperDirection[Z_AXIS]	= 0;
-				Extruder::current->stepperDirection = 0;
-			}
-			break;
-		}
+        if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
+#endif // USE_ADVANCE
+    }
+    else
+	{
+		waitRelax--;
 	}
-#endif // FEATURE_PAUSE_PRINTING
 
-    DEBUG_MEMORY;
+    stepperWait = 0;		// Important because of optimization in asm at begin
+    OCR1A = 1000;			// Wait for next move
+
+	DEBUG_MEMORY;
     insideTimer1 = 0;
 
 } // ISR(TIMER1_COMPA_vect)

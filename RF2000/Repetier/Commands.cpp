@@ -85,6 +85,74 @@ void Commands::checkForPeriodicalActions()
     UI_SLOW;
 	loopRF();
 
+#if FEATURE_PAUSE_PRINTING
+    switch( g_pauseStatus )
+	{
+		case PAUSE_STATUS_PREPARE_PAUSE_1:
+		{
+			if( (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
+			{
+				// we have reached the pause position - nothing except the extruder can have been moved
+				g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+				Printer::stepperDirection[X_AXIS]	= 0;
+				Printer::stepperDirection[Y_AXIS]	= 0;
+				Printer::stepperDirection[Z_AXIS]	= 0;
+				Extruder::current->stepperDirection = 0;
+			}
+			break;
+		}
+		case PAUSE_STATUS_PREPARE_PAUSE_2:
+		{
+			if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
+				(Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
+				(Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
+				(Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
+			{
+				// we have reached the pause position 1
+#if FEATURE_MILLING_MODE
+				if( Printer::operatingMode == OPERATING_MODE_MILL )
+				{
+					// in operating mode mill, we have 2 pause positions because we have to leave the work part before we shall move into x/y direction
+					g_pauseStatus = PAUSE_STATUS_PREPARE_PAUSE_3;
+
+					determinePausePosition();
+					PrintLine::prepareDirectMove();
+				}
+				else
+#endif // FEATURE_MILLING_MODE
+				{
+					// in operating mode print, there is no need for a second pause position
+					g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+					Printer::stepperDirection[X_AXIS]	= 0;
+					Printer::stepperDirection[Y_AXIS]	= 0;
+					Printer::stepperDirection[Z_AXIS]	= 0;
+					Extruder::current->stepperDirection = 0;
+				}
+			}
+			break;
+		}
+		case PAUSE_STATUS_PREPARE_PAUSE_3:
+		{
+			if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
+				(Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
+				(Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
+				(Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
+			{
+				// we have reached the pause position 2
+				g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+				Printer::stepperDirection[X_AXIS]	= 0;
+				Printer::stepperDirection[Y_AXIS]	= 0;
+				Printer::stepperDirection[Z_AXIS]	= 0;
+				Extruder::current->stepperDirection = 0;
+			}
+			break;
+		}
+	}
+#endif // FEATURE_PAUSE_PRINTING
+
 } // checkForPeriodicalActions
 
 
