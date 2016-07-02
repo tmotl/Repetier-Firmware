@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -944,6 +944,11 @@ Below this value the z compensation will only change the z axis so that a consta
 Above this value the z compensation will distribute the roughness of the surface over the layers until HEAT_BED_Z_COMPENSATION_MAX_STEPS is reached. */
 #define	HEAT_BED_Z_COMPENSATION_MIN_MM			float(0.2)																// [mm]
 #define HEAT_BED_Z_COMPENSATION_MIN_STEPS		long(HEAT_BED_Z_COMPENSATION_MIN_MM * ZAXIS_STEPS_PER_MM)				// [steps]
+
+/* Maximum number of steps to scan after the Z-min switch has been reached. If within these steps the surface has not
+   been reached, the scan is retried HEAT_BED_SCAN_RETRIES times and then (if still not found) aborted.
+   Note that the head bed scan matrix consists of 16 bit signed values, thus more then 32767 steps will lead to an overflow! */
+#define HEAT_BED_SCAN_Z_SCAN_MAX_STEPS          long(3 * ZAXIS_STEPS_PER_MM)                                            // [steps]
 
 /** \brief Configuration of the heat bed scan */
 #if NUM_EXTRUDER == 2

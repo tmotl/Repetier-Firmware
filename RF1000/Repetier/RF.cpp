@@ -3993,7 +3993,7 @@ void restoreDefaultScanParameters( void )
 		g_nScanHeatBedUpSlowSteps	 = HEAT_BED_SCAN_UP_SLOW_STEPS;
 		g_nScanHeatBedDownFastSteps	 = HEAT_BED_SCAN_DOWN_FAST_STEPS;
 		g_nScanHeatBedDownSlowSteps	 = HEAT_BED_SCAN_DOWN_SLOW_STEPS;
-		g_nScanZMaxCompensationSteps = HEAT_BED_Z_COMPENSATION_MAX_STEPS;
+		g_nScanZMaxCompensationSteps = HEAT_BED_SCAN_Z_SCAN_MAX_STEPS;
 		g_nScanFastStepDelay		 = HEAT_BED_SCAN_FAST_STEP_DELAY_MS;
 		g_nScanSlowStepDelay		 = HEAT_BED_SCAN_SLOW_STEP_DELAY_MS;
 		g_nScanIdleDelay			 = HEAT_BED_SCAN_IDLE_DELAY_MS;
@@ -4078,7 +4078,7 @@ void restoreDefaultScanParameters( void )
 	g_nScanHeatBedUpSlowSteps	 = HEAT_BED_SCAN_UP_SLOW_STEPS;
 	g_nScanHeatBedDownFastSteps	 = HEAT_BED_SCAN_DOWN_FAST_STEPS;
 	g_nScanHeatBedDownSlowSteps	 = HEAT_BED_SCAN_DOWN_SLOW_STEPS;
-	g_nScanZMaxCompensationSteps = HEAT_BED_Z_COMPENSATION_MAX_STEPS;
+	g_nScanZMaxCompensationSteps = HEAT_BED_SCAN_Z_SCAN_MAX_STEPS;
 	g_nScanFastStepDelay		 = HEAT_BED_SCAN_FAST_STEP_DELAY_MS;
 	g_nScanSlowStepDelay		 = HEAT_BED_SCAN_SLOW_STEP_DELAY_MS;
 	g_nScanIdleDelay			 = HEAT_BED_SCAN_IDLE_DELAY_MS;
