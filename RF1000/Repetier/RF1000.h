@@ -91,7 +91,7 @@ WARNING: Do not enable the case fan feature in case you have a second extruder a
 #if FEATURE_MILLING_MODE
 
 /** \brief Define the type of the present miller hardware */
-#define MILLER_TYPE							MILLER_TYPE_ONE_TRACK
+#define MILLER_TYPE							MILLER_TYPE_TWO_TRACKS
 
 /** \brief Default operating mode */
 #define	DEFAULT_OPERATING_MODE				OPERATING_MODE_PRINT
@@ -101,7 +101,7 @@ WARNING: Do not enable the case fan feature in case you have a second extruder a
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 /** \brief Define Default z-endstop type */
-#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_SINGLE
+#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_CIRCUIT
 
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
@@ -218,8 +218,8 @@ Overridden if EEPROM activated.*/
 // ##	Miller type 2 (= two tracks)
 // ##########################################################################################
 
-#define MT2_WORK_PART_SCAN_CONTACT_PRESSURE_DELTA		500																// [digits]
-#define MT2_WORK_PART_SCAN_RETRY_PRESSURE_DELTA			250																// [digits]
+#define MT2_WORK_PART_SCAN_CONTACT_PRESSURE_DELTA		30																// [digits]
+#define MT2_WORK_PART_SCAN_RETRY_PRESSURE_DELTA			20																// [digits]
 
 
 // ##########################################################################################
@@ -942,13 +942,13 @@ This value should be roughly the double amount of mm which is detected as error 
 /** \brief Specifies from which height on the z compensation shall be performed
 Below this value the z compensation will only change the z axis so that a constant distance to the heat bed is hold (this is good for the first layer).
 Above this value the z compensation will distribute the roughness of the surface over the layers until HEAT_BED_Z_COMPENSATION_MAX_STEPS is reached. */
-#define	HEAT_BED_Z_COMPENSATION_MIN_MM			float(0.2)																// [mm]
+#define	HEAT_BED_Z_COMPENSATION_MIN_MM			float(0.5)																// [mm]
 #define HEAT_BED_Z_COMPENSATION_MIN_STEPS		long(HEAT_BED_Z_COMPENSATION_MIN_MM * ZAXIS_STEPS_PER_MM)				// [steps]
 
 /* Maximum number of steps to scan after the Z-min switch has been reached. If within these steps the surface has not
    been reached, the scan is retried HEAT_BED_SCAN_RETRIES times and then (if still not found) aborted.
    Note that the head bed scan matrix consists of 16 bit signed values, thus more then 32767 steps will lead to an overflow! */
-#define HEAT_BED_SCAN_Z_SCAN_MAX_STEPS          long(3 * ZAXIS_STEPS_PER_MM)                                            // [steps]
+#define HEAT_BED_SCAN_Z_SCAN_MAX_STEPS          long(1 * ZAXIS_STEPS_PER_MM)                                            // [steps]
 
 /** \brief Configuration of the heat bed scan */
 #if NUM_EXTRUDER == 2
@@ -973,7 +973,9 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_IDLE_PRESSURE_DELTA		0																		// [digits]
 #define HEAT_BED_SCAN_IDLE_PRESSURE_MIN			-7500																	// [digits]
 #define HEAT_BED_SCAN_IDLE_PRESSURE_MAX			7500																	// [digits]
-#else
+
+#else /* NUM_EXTRUDER != 2 -> */
+
 #define HEAT_BED_SCAN_X_START_MM				15																		// [mm] from the left border of the heat bed
 #define HEAT_BED_SCAN_X_END_MM					5																		// [mm] from the right border of the heat bed
 #define HEAT_BED_SCAN_X_STEP_SIZE_MM			20																		// [mm]
