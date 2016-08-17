@@ -702,6 +702,12 @@ extern void startHeatBedScan( void );
 // scanHeatBed()
 extern void scanHeatBed( void );
 
+// startSearchHeatBedZOffset()
+extern void startSearchHeatBedZOffset( void );
+
+// scanHeatBed()
+extern void scanHeatBed( void );
+
 // testExtruderTemperature()
 extern short testExtruderTemperature( void );
 

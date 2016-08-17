@@ -177,7 +177,7 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 // ##########################################################################################
 
 /** \brief Enables debug outputs which are used mainly for the development */
-#define DEBUG_SHOW_DEVELOPMENT_LOGS			0													// 1 = on, 0 = off
+#define DEBUG_SHOW_DEVELOPMENT_LOGS			1													// 1 = on, 0 = off
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION 
@@ -186,7 +186,7 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 #define DEBUG_HEAT_BED_Z_COMPENSATION		0													// 1 = on, 0 = off
 
 /** \brief Enables debug outputs from the heat bed scan */
-#define DEBUG_HEAT_BED_SCAN					0													// 0 = off, 1 = on, 2 = on with more debug outputs
+#define DEBUG_HEAT_BED_SCAN					2													// 0 = off, 1 = on, 2 = on with more debug outputs
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
