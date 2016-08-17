@@ -223,6 +223,9 @@ public:
 					// we allow to overdrive Z-min a little bit so that also G-Codes are able to move to a smaller z-position even when Z-min has fired already
 					return;
 				}
+
+				// during normal operation, we never should end up here ... typically, the Z-min hardware switch must be reconfigured when you end up here
+				doEmergencyStop( STOP_BECAUSE_OF_Z_MIN );
 			}
 
 #endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE && FEATURE_ENABLE_Z_SAFETY
@@ -583,6 +586,12 @@ public:
 
 	inline void enableSteppers( void )
 	{
+		if( Printer::blockAll )
+		{
+			// do not enable anything in case everything is blocked
+			return;
+		}
+
 	    // Only enable axis that are moving. If the axis doesn't need to move then it can stay disabled depending on configuration.
 		if(isXMove())
 		{
@@ -594,7 +603,7 @@ public:
 			Printer::enableYStepper();
 			Printer::setYDirection(isYPositiveMove());
 		}
-        if(isZMove() && !Printer::blockZ)
+        if(isZMove())
         {
             Printer::enableZStepper();
 			Printer::unsetAllSteppersDisabled();

@@ -340,7 +340,7 @@
 #define UI_TEXT_SAVING_FAILED			"Saving failed"
 #define UI_TEXT_OPERATION_DENIED		"Operat. denied"
 #define	UI_TEXT_EMERGENCY_PAUSE			"Emergency Pause"
-#define UI_TEXT_EMERGENCY_Z_STOP		"Emergency Z Blk"
+#define UI_TEXT_EMERGENCY_STOP			"Emergency Block"
 #define UI_TEXT_INVALID_MATRIX			"Invalid Matrix"
 #define	UI_TEXT_MIN_REACHED				"Min reached"
 #define	UI_TEXT_MAX_REACHED				"Max reached"
@@ -397,7 +397,6 @@
 
 #define UI_TEXT_TEMPERATURE_MANAGER		"Temperatur Manager"
 #define UI_TEXT_OPERATION_DENIED		"Operation denied"
-#define UI_TEXT_EMERGENCY_Z_STOP		"Emergency Z Block"
 #define	UI_TEXT_TEMPERATURE_WRONG		"Temperature wrong"
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 
@@ -646,7 +645,7 @@
 #define UI_TEXT_SAVING_FAILED			"Speichern n.m."		// n.m. = nicht moeglich
 #define UI_TEXT_OPERATION_DENIED		"Operation verw."		// verw. = verweigert
 #define	UI_TEXT_EMERGENCY_PAUSE			"Notfall Pause"
-#define UI_TEXT_EMERGENCY_Z_STOP		"Notfall Z Blk"
+#define UI_TEXT_EMERGENCY_STOP			"Notfall Block"
 #define UI_TEXT_INVALID_MATRIX			"Ung. Matrix"			// Ung. = ungueltig
 #define	UI_TEXT_MIN_REACHED				"Min erreicht"
 #define	UI_TEXT_MAX_REACHED				"Max erreicht"
@@ -729,7 +728,6 @@
 #define UI_TEXT_STOP_MILL_ACK			"Fr" STR_auml "sen abbrechen?","","%mYJa","%mNNein"
 #define UI_TEXT_Z_MODE_Z_ORIGIN			"Z Urspr."
 
-#define UI_TEXT_EMERGENCY_Z_STOP		"Notfall Z Block"
 #define UI_TEXT_TEMPERATURE_MANAGER		"Temperatur Manager"
 #define UI_TEXT_INVALID_MATRIX			"Ung" STR_uuml" ltige Matrix"
 #define	UI_TEXT_TEMPERATURE_WRONG		"Temperatur falsch"

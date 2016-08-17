@@ -135,7 +135,7 @@ long			Printer::staticCompensationZ;
 
 long			Printer::queuePositionCurrentSteps[3];
 char			Printer::stepperDirection[3];
-char			Printer::blockZ;
+char			Printer::blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 long			Printer::currentZSteps;
@@ -1043,7 +1043,7 @@ void Printer::setup()
 	stepperDirection[X_AXIS]		  = 
 	stepperDirection[Y_AXIS]		  = 
 	stepperDirection[Z_AXIS]		  = 0;
-	blockZ							  = 0;
+	blockAll						  = 0;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 	currentZSteps					  = 0;
@@ -1521,6 +1521,11 @@ void Printer::homeZAxis()
 		}
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
+#if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
+        g_nZScanZPosition = 0;
+		queueTask( TASK_DISABLE_Z_COMPENSATION );
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
+
 		steps = (maxSteps[Z_AXIS] - minSteps[Z_AXIS]) * nHomeDir;
         queuePositionLastSteps[Z_AXIS] = -steps;
         PrintLine::moveRelativeDistanceInSteps(0,0,2*steps,0,homingFeedrate[Z_AXIS],true,true);
@@ -1548,11 +1553,6 @@ void Printer::homeZAxis()
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 		currentZSteps					  = queuePositionLastSteps[Z_AXIS];
 #endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-        g_nZScanZPosition = 0;
-        queueTask( TASK_INIT_Z_COMPENSATION );
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 		// show that we are active
 		previousMillisCmd = HAL::timeInMilliseconds();
@@ -1797,9 +1797,9 @@ void Printer::performZCompensation( void )
 	}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
 
-	if( blockZ )
+	if( blockAll )
 	{
-		// do not perform any compensation in case the moving into z-direction is blocked
+		// do not perform any compensation in case the moving is blocked
 		return;
 	}
 

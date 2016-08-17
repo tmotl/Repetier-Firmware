@@ -48,7 +48,7 @@ FSTRINGVALUE( ui_text_home_unknown, UI_TEXT_HOME_UNKNOWN );
 FSTRINGVALUE( ui_text_saving_failed, UI_TEXT_SAVING_FAILED );
 FSTRINGVALUE( ui_text_operation_denied, UI_TEXT_OPERATION_DENIED );
 FSTRINGVALUE( ui_text_emergency_pause, UI_TEXT_EMERGENCY_PAUSE );
-FSTRINGVALUE( ui_text_emergency_z_stop, UI_TEXT_EMERGENCY_Z_STOP );
+FSTRINGVALUE( ui_text_emergency_stop, UI_TEXT_EMERGENCY_STOP );
 FSTRINGVALUE( ui_text_invalid_matrix, UI_TEXT_INVALID_MATRIX );
 FSTRINGVALUE( ui_text_min_reached, UI_TEXT_MIN_REACHED );
 FSTRINGVALUE( ui_text_max_reached, UI_TEXT_MAX_REACHED );
@@ -170,11 +170,11 @@ long			g_nEmergencyPauseDigitsMin	= 0;
 long			g_nEmergencyPauseDigitsMax	= 0;
 #endif // FEATURE_EMERGENCY_PAUSE
 
-#if FEATURE_EMERGENCY_Z_STOP
+#if FEATURE_EMERGENCY_STOP_ALL
 unsigned long	g_uLastZPressureTime		= 0;
 long			g_nZPressureSum				= 0;
 char			g_nZPressureChecks			= 0;
-#endif // FEATURE_EMERGENCY_Z_STOP
+#endif // FEATURE_EMERGENCY_STOP_ALL
 
 #if FEATURE_FIND_Z_ORIGIN
 char			g_nFindZOriginStatus		= 0;
@@ -407,6 +407,9 @@ void scanHeatBed( void )
 		// disable all heaters
 		Extruder::setHeatedBedTemperature( 0, false );
 		Extruder::setTemperatureForExtruder( 0, 0, false );
+#if NUM_EXTRUDER == 2
+		Extruder::setTemperatureForExtruder( 0, 1, false );
+#endif // NUM_EXTRUDER == 2
 
 		if( Printer::debugInfo() )
 		{
@@ -1428,6 +1431,9 @@ void scanHeatBed( void )
 			}
 			case 135:
 			{
+				// move the heat bed 10mm down
+				g_nZScanZPosition += moveZ( int(Printer::axisStepsPerMM[Z_AXIS] *10) );
+
 				// at this point we are homed and we are above the x/y position at which we shall perform the measurement of the z-offset with the hot extruder(s)
 #if FEATURE_PRECISE_HEAT_BED_SCAN
 				if ( g_nHeatBedScanMode == HEAT_BED_SCAN_MODE_PLA )
@@ -5147,8 +5153,8 @@ void loopRF( void )
 	}
 #endif // FEATURE_EMERGENCY_PAUSE
 
-#if FEATURE_EMERGENCY_Z_STOP
-	if( (uTime - g_uLastZPressureTime) > EMERGENCY_Z_STOP_INTERVAL )
+#if FEATURE_EMERGENCY_STOP_ALL
+	if( (uTime - g_uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
 	{
 		g_uLastZPressureTime = uTime;
 
@@ -5158,28 +5164,18 @@ void loopRF( void )
 			g_nZPressureSum	   += readStrainGauge( ACTIVE_STRAIN_GAUGE );
 			g_nZPressureChecks += 1;
 
-			if( g_nZPressureChecks == EMERGENCY_Z_STOP_CHECKS )
+			if( g_nZPressureChecks == EMERGENCY_STOP_CHECKS )
 			{
 				nPressure		 = g_nZPressureSum / g_nZPressureChecks;
 
 				g_nZPressureSum	   = 0;
 				g_nZPressureChecks = 0;
 
-				if( (nPressure < EMERGENCY_Z_STOP_DIGITS_MIN) ||
-					(nPressure > EMERGENCY_Z_STOP_DIGITS_MAX) )
+				if( (nPressure < EMERGENCY_STOP_DIGITS_MIN) ||
+					(nPressure > EMERGENCY_STOP_DIGITS_MAX) )
 				{
-					// the pressure is outside the allowed range, we must perform the emergency z-stop
-					HAL::forbidInterrupts();
-					moveZ( int(Printer::axisStepsPerMM[Z_AXIS] *5) );
-
-					// block any further movement into the z-direction
-					Printer::blockZ					  = 1;
-					Printer::stepperDirection[Z_AXIS] = 0;
-					HAL::allowInterrupts();
-
-					Com::printFLN( PSTR( "loopRF(): block Z" ) );
-
-					showError( (void*)ui_text_emergency_z_stop );
+					// the pressure is outside the allowed range, we must perform the emergency stop
+					doEmergencyStop( STOP_BECAUSE_OF_Z_BLOCK );
 				}
 			}
 		}
@@ -5189,7 +5185,7 @@ void loopRF( void )
 			g_nZPressureChecks = 0;
 		}
 	}
-#endif // FEATURE_EMERGENCY_Z_STOP
+#endif // FEATURE_EMERGENCY_STOP_ALL
 
 	if( g_uStopTime )
 	{
@@ -8612,11 +8608,10 @@ void processCommand( GCode* pCommand )
 						}
 						case 4:
 						{
-							// simulate blocking of the z-axis
-							Com::printFLN( PSTR( "M3200: block Z" ) );
-							Printer::blockZ = 1;
+							// simulate blocking of all axes
+							Com::printFLN( PSTR( "M3200: block all" ) );
 
-							showError( (void*)ui_text_emergency_z_stop );
+							doEmergencyStop( STOP_BECAUSE_OF_Z_BLOCK );
 							break;
 						}
 						case 5:
@@ -11350,7 +11345,7 @@ void testStrainGauge( void )
 				Com::printF( PSTR( ";nDeltaPressure;" ), (int)(nStartPressure - nCurrentPressure) );
 				Com::printFLN( PSTR( "" ) );
 
-				if( nCurrentPressure > EMERGENCY_Z_STOP_DIGITS_MAX || nCurrentPressure < EMERGENCY_Z_STOP_DIGITS_MIN )
+				if( nCurrentPressure > EMERGENCY_STOP_DIGITS_MAX || nCurrentPressure < EMERGENCY_STOP_DIGITS_MIN )
 				{
 					// we have reached the maximal allowed pressure
 					g_nTestStrainGaugeStatus = 40;
@@ -12158,6 +12153,12 @@ unsigned char isSupportedMCommand( unsigned int currentMCode, char neededMode, c
 
 unsigned char isMovingAllowed( const char* pszCommand, char outputLog )
 {
+	if( Printer::blockAll )
+	{
+		// do not allow to move in case the movements have been blocked
+		return 0;
+	}
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 	if( g_nHeatBedScanStatus )
 	{
@@ -12712,3 +12713,38 @@ void dump( char type, char from )
 
 } // dump
 
+
+void doEmergencyStop( char reason )
+{
+	showError( (void*)ui_text_emergency_stop );
+
+	Com::printF( PSTR( "doEmergencyStop(): block all" ) );
+	if( reason == STOP_BECAUSE_OF_Z_MIN )
+	{
+		Com::printFLN( PSTR( " (Z-Min)" ) );
+	}
+	else if( reason == STOP_BECAUSE_OF_Z_BLOCK )
+	{
+		Com::printFLN( PSTR( " (Z-Block)" ) );
+	}
+
+	HAL::forbidInterrupts();
+	moveZ( int(Printer::axisStepsPerMM[Z_AXIS] *5) );
+
+	// block any further movement
+	Printer::blockAll				  = 1;
+	Printer::stepperDirection[X_AXIS] = 0;
+	Printer::stepperDirection[Y_AXIS] = 0;
+	Printer::stepperDirection[Z_AXIS] = 0;
+	Printer::stepperDirection[E_AXIS] = 0;
+	HAL::allowInterrupts();
+
+	// we are not going to perform any further operations until the restart of the firmware
+	if( sd.sdmode )
+	{
+		sd.abortPrint();
+	}
+	Printer::kill( false );
+	return;
+
+} // doEmergencyStop

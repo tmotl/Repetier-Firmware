@@ -20,7 +20,7 @@
 #define CONSTANTS_H
 
 
-#define REPETIER_VERSION					"RF.01.31"
+#define REPETIER_VERSION					"RF.01.33"
 #define UI_PRINTER_COMPANY					"Conrad SE"
 #define UI_VERSION_STRING					"V " REPETIER_VERSION
 
@@ -76,7 +76,6 @@
 #define	TASK_NO_TASK						0
 #define	TASK_ENABLE_Z_COMPENSATION			1
 #define	TASK_DISABLE_Z_COMPENSATION			2
-#define	TASK_INIT_Z_COMPENSATION			3
 #define TASK_PAUSE_PRINT					4
 #define TASK_PAUSE_PRINT_AND_MOVE			5
 #define	TASK_MOVE_FROM_BUTTON				10
@@ -119,6 +118,9 @@
 #define Z_VALUE_MODE_Z_MIN					1	// show the z-distance to z-min (print)
 #define Z_VALUE_MODE_Z_ORIGIN				1	// show the z-distance to the z-origin (mill)
 #define Z_VALUE_MODE_SURFACE				2	// show the z-distance to the surface of the heat bed (print) or work part (mill)
+
+#define	STOP_BECAUSE_OF_Z_MIN				1
+#define	STOP_BECAUSE_OF_Z_BLOCK				2
 
 
 // ##########################################################################################

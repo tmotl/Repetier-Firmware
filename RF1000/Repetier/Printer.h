@@ -134,7 +134,7 @@ public:
 
     static long				queuePositionCurrentSteps[3];
 	static char				stepperDirection[3];				// this is the current x/y/z-direction from the processing of G-Codes
-	static char				blockZ;
+	static char				blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 	static long				currentZSteps;
@@ -391,6 +391,11 @@ public:
 
     static inline void setXDirection(bool positive)
     {
+		if( blockAll )
+		{
+			return;
+		}
+
         if(positive)
         {
             // extruder moves to the right
@@ -423,6 +428,11 @@ public:
 
     static inline void setYDirection(bool positive)
     {
+		if( blockAll )
+		{
+			return;
+		}
+
         if(positive)
         {
             // heat bed moves to the front
@@ -455,7 +465,7 @@ public:
 
     static inline void setZDirection(bool positive)
     {
-		if( blockZ )
+		if( blockAll )
 		{
 			return;
 		}
