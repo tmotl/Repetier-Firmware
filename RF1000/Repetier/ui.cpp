@@ -1208,14 +1208,34 @@ void UIDisplay::parse(char *txt,bool ram)
 				if(c2>='0' && c2<='3')																	
 				{
 					if(c2=='0')																			// %x0 : X position
-						fvalue = Printer::currentXPosition();
+					{
+						if( Printer::blockAll )
+						{
+							// we can not move any more
+							bDefect = true;
+						}
+						else
+						{
+							fvalue = Printer::currentXPosition();
+						}
+					}
 					else if(c2=='1')																	// %x1 : Y position
-						fvalue = Printer::currentYPosition();
+					{
+						if( Printer::blockAll )
+						{
+							// we can not move any more
+							bDefect = true;
+						}
+						else
+						{
+							fvalue = Printer::currentYPosition();
+						}
+					}
 					else if(c2=='2')																	// %x2 : Z position
 					{
-						if( Printer::blockZ )
+						if( Printer::blockAll )
 						{
-							// we can not move into z-direction any more
+							// we can not move any more
 							bDefect = true;
 						}
 						else
@@ -1225,7 +1245,15 @@ void UIDisplay::parse(char *txt,bool ram)
 					}
 					else																				// %x3 : Current extruder position
 					{
-						fvalue = (float)Printer::queuePositionLastSteps[E_AXIS]*Printer::invAxisStepsPerMM[E_AXIS];
+						if( Printer::blockAll )
+						{
+							// we can not move any more
+							bDefect = true;
+						}
+						else
+						{
+							fvalue = (float)Printer::queuePositionLastSteps[E_AXIS]*Printer::invAxisStepsPerMM[E_AXIS];
+						}
 					}
 
 					if( bDefect )
@@ -3459,6 +3487,12 @@ void UIDisplay::finishAction(int action)
 // action can behave differently. Other actions do always the same like home, disable extruder etc.
 void UIDisplay::executeAction(int action)
 {
+	if( Printer::blockAll )
+	{
+		// do not allow any user inputs when we have been blocked
+		return;
+	}
+
 #if UI_HAS_KEYS==1
     bool skipBeep = false;
     if(action & UI_ACTION_TOPMENU)   // Go to start menu

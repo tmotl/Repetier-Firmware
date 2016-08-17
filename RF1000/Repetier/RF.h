@@ -537,7 +537,7 @@ extern const char	ui_text_home_unknown[]			PROGMEM;
 extern const char	ui_text_saving_failed[]			PROGMEM;
 extern const char	ui_text_operation_denied[]		PROGMEM;
 extern const char	ui_text_emergency_pause[]		PROGMEM;
-extern const char	ui_text_emergency_z_stop[]		PROGMEM;
+extern const char	ui_text_emergency_stop[]		PROGMEM;
 extern const char	ui_text_invalid_matrix[]		PROGMEM;
 extern const char	ui_text_min_reached[]			PROGMEM;
 extern const char	ui_text_max_reached[]			PROGMEM;
@@ -1010,6 +1010,9 @@ extern void showInformation( void* line2, void* line3 = NULL, void* line4 = NULL
 
 // dump()
 extern void dump( char type, char from = 0 );
+
+// doEmergencyStop()
+void doEmergencyStop( char reason );
 
 
 #endif // RF_H

@@ -1711,23 +1711,6 @@ long PrintLine::performQueueMove()
 					--linesCount;
 					return 1000;
 				}
-
-				case TASK_INIT_Z_COMPENSATION:
-				{
-					// initialize the z compensation
-					if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
-					{
-						// initialize the z compensation only in case we have valid compensation values
-						Printer::resetCompensatedPosition();
-					}
-			
-					nextPlannerIndex(linesPos);
-					cur->task = TASK_NO_TASK;
-					cur = 0;
-					HAL::forbidInterrupts();
-					--linesCount;
-					return 1000;
-				}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 				default:
@@ -1989,7 +1972,7 @@ void PrintLine::performDirectSteps( void )
 				}
 			}
 	
-			if( !Printer::blockZ && !zLast )
+			if( !Printer::blockAll && !zLast )
 			{
 				// we have to move into z-direction
 				if( Printer::directPositionCurrentSteps[Z_AXIS] < Printer::directPositionTargetSteps[Z_AXIS] )
@@ -2025,7 +2008,7 @@ void PrintLine::performDirectSteps( void )
 
 				HAL::delayMicroseconds( EXTENDED_BUTTONS_STEPPER_DELAY );
 
-				if( Printer::blockZ )
+				if( Printer::blockAll )
 				{
 					// (probably) paranoid check
 					nDirectionZ = 0;
@@ -2204,7 +2187,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
             }
             if(move->isZMove())
 			{
-				if( Printer::blockZ )
+				if( Printer::blockAll )
 				{
 					// as soon as the z-axis is blocked, we must finish all z-axis moves
 					move->stepsRemaining = 0;

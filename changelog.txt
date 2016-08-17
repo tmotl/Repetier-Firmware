@@ -1,3 +1,9 @@
+V RF.01.33 (2016-08-17)
+- The emergency stop because of too high pressure values from the strain gauge stops all axes (instead of only the z-axis) now.
+- At the end of the precise heat bed scan, the z-axis is moved 10 mm down before the extruder is heated up so that it is not too close to the surface.
+- Successive homing of the z-axis and enabling of the z-compensation could lead to a wrong calculation of the z-position.
+- Removing of the .gitattributes file in order to allow easier cross-platform collaboration.
+
 V RF.01.31 (2016-06-10)
 - Another hang of the firmware in combination with a very specific G-code has been removed.
 - Minor clean-ups.

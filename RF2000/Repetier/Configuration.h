@@ -94,8 +94,8 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE	0													// 1 = on, 0 = off
 
-/** \brief Enables/diables the emergency z-stop in case of too high pressure */
-#define FEATURE_EMERGENCY_Z_STOP			1													// 1 = on, 0 = off
+/** \brief Enables/disables the emergency stop in case of too high pressure */
+#define FEATURE_EMERGENCY_STOP_ALL			1													// 1 = on, 0 = off
 
 /** \brief Specifies whether the current print shall be aborted in case a temperature sensor is defect */
 #define FEATURE_ABORT_PRINT_AFTER_TEMPERATURE_ERROR		1										// 1 = abort, 0 = do not abort
@@ -366,19 +366,19 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 // ##	configuration of the emergency z stop functionality
 // ##########################################################################################
 
-#if FEATURE_EMERGENCY_Z_STOP
+#if FEATURE_EMERGENCY_STOP_ALL
 
 /** \brief Specifies the pressure at which the emergency z-stop shall be performed, in [digits] */
-#define EMERGENCY_Z_STOP_DIGITS_MIN			-5000
-#define EMERGENCY_Z_STOP_DIGITS_MAX			5000
+#define EMERGENCY_STOP_DIGITS_MIN			-5000
+#define EMERGENCY_STOP_DIGITS_MAX			5000
 
 /** \brief Specifies the interval at which the pressure check shall be performed, in [ms] */
-#define	EMERGENCY_Z_STOP_INTERVAL			10
+#define	EMERGENCY_STOP_INTERVAL				10
 
-/** \brief Specifies the number of pressure values which shall be averaged. The emergency z-stop can be detected each EMERGENCY_Z_STOP_INTERVAL * EMERGENCY_Z_STOP_CHECKS [ms] */
-#define	EMERGENCY_Z_STOP_CHECKS				3
+/** \brief Specifies the number of pressure values which shall be averaged. The emergency stop can be detected each EMERGENCY_STOP_INTERVAL * EMERGENCY_STOP_CHECKS [ms] */
+#define	EMERGENCY_STOP_CHECKS				3
 
-#endif // FEATURE_EMERGENCY_Z_STOP
+#endif // FEATURE_EMERGENCY_STOP_ALL
 
 
 // ##########################################################################################
