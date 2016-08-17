@@ -1760,31 +1760,16 @@ void startSearchHeatBedZOffset( void )
 	}
 	else
 	{
-/*		if( PrintLine::linesCount )
-		{
-			// there is some printing in progress at the moment - do not start the heat bed scan in this case
-			if( Printer::debugErrors() )
-			{
-				Com::printFLN( PSTR( "startSearchHeatBedZOffset(): the scan can not be started while the printing is in progress" ) );
-			}
+		// start the heat bed scan
+		g_nSearchHeatBedZOffsetStatus = 1;
 
-			showError( (void*)ui_text_heat_bed_scan, (void*)ui_text_operation_denied );
-		}
-		else
-		{ */
-			// start the heat bed scan
-			g_nSearchHeatBedZOffsetStatus = 1;
+		// when the heat bed Z offset is searched, the z-compensation must be disabled
+        if( Printer::doHeatBedZCompensation )
+        {
+            Com::printFLN( PSTR( "startSearchHeatBedZOffset(): the z compensation has been disabled" ) );
+            resetZCompensation();
+        }
 
-			// when the heat bed is scanned, the z-compensation must be disabled
-			if( Printer::doHeatBedZCompensation )
-			{
-				if( Printer::debugInfo() )
-				{
-					Com::printFLN( PSTR( "startSearchHeatBedZOffset(): the z compensation has been disabled" ) );
-				}
-				resetZCompensation();
-			}
-//		}
 	}
 
 	return;
@@ -1876,6 +1861,7 @@ void searchHeatBedZOffset( void )
 			case 5:
 			{
 				// move to the first scan position of the heat bed scan matrix
+				// TODO use X and Y positions saved in the matrix instead!!
 				PrintLine::moveRelativeDistanceInSteps( g_nScanXStartSteps, 0, 0, 0, MAX_FEEDRATE_X, true, true );
 				PrintLine::moveRelativeDistanceInSteps( 0, g_nScanYStartSteps, 0, 0, MAX_FEEDRATE_Y, true, true );
 
@@ -1976,8 +1962,10 @@ void searchHeatBedZOffset( void )
 			
 			    // move heat bed down by the number of steps stored in the compensation matrix
 			    // for the current position (first scan position)
-                long currentStepsInMatrix = (long)((float)g_ZCompensationMatrix[1][0]*Printer::axisStepsPerMM[X_AXIS]);
-			    g_nZOriginPosition[Z_AXIS] += moveZ( currentStepsInMatrix );
+			    long currentStepsInMatrix = g_ZCompensationMatrix[1][1];    // this number is negative
+			    if(currentStepsInMatrix > 0) currentStepsInMatrix = 0;      // safety limit
+			    g_nZOriginPosition[Z_AXIS] += moveZ( -currentStepsInMatrix );   // positive number of steps: move down
+                HAL::delayMilliseconds( g_nScanSlowStepDelay );
 
 #if DEBUG_HEAT_BED_SCAN == 2
 	            Com::printFLN( PSTR( "searchHeatBedZOffset(): currentStepsInMatrix = " ), currentStepsInMatrix );
