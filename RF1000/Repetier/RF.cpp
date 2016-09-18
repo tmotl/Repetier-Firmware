@@ -1760,15 +1760,16 @@ void startSearchHeatBedZOffset( void )
 	}
 	else
 	{
-		// start the heat bed scan
-		g_nSearchHeatBedZOffsetStatus = 1;
 
 		// when the heat bed Z offset is searched, the z-compensation must be disabled
-        if( Printer::doHeatBedZCompensation )
-        {
-            Com::printFLN( PSTR( "startSearchHeatBedZOffset(): the z compensation has been disabled" ) );
-            resetZCompensation();
-        }
+        resetZCompensation();
+		
+		// load the unaltered compensation matrix from the EEPROM
+		loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+
+		// start the heat bed scan
+		g_nSearchHeatBedZOffsetStatus = 1;
+		g_abortZScan = 0;
 
 	}
 
@@ -1779,18 +1780,17 @@ void startSearchHeatBedZOffset( void )
 
 void searchHeatBedZOffset( void )
 {
-	static short	nMaxPressureContact;
-	static short	nMinPressureContact;
-	short			nCurrentPressure;
 	unsigned long	uStartTime;
 	unsigned long	uCurrentTime;
+	static char     nRetry;
+	short           nTempPressure;
 
 
 	if( g_abortSearch )
 	{
 		// the search has been aborted
 		g_abortSearch		= 0;
-		g_nZOriginPosition[Z_AXIS] = 0;
+		g_nZScanZPosition = 0;
 		g_nZOriginSet		= 0;
 
 		// turn off the engines
@@ -1817,7 +1817,8 @@ void searchHeatBedZOffset( void )
 			case 1:
 			{
 				g_abortSearch		= 0;
-				g_nZOriginPosition[Z_AXIS] = 0;
+				g_nZScanZPosition = 0;
+				g_scanRetries = 0; // never retry TODO allow retries?
 
 				Com::printFLN( PSTR( "searchHeatBedZOffset(): the search has been started" ) );
 
@@ -1880,7 +1881,7 @@ void searchHeatBedZOffset( void )
 					// do not check too early
 					break;
 				}
-				if( readIdlePressure( &nCurrentPressure ) )
+				if( readIdlePressure( &g_nCurrentIdlePressure ) )
 				{
 					// some error has occurred
 					Com::printFLN( PSTR( "searchHeatBedZOffset(): the idle pressure could not be determined" ) );
@@ -1888,12 +1889,20 @@ void searchHeatBedZOffset( void )
 					return;
 				}
 
-				nMinPressureContact = nCurrentPressure - g_nScanContactPressureDelta;
-				nMaxPressureContact = nCurrentPressure + g_nScanContactPressureDelta;
+				g_nMinPressureContact = g_nCurrentIdlePressure - g_nScanContactPressureDelta;
+				g_nMaxPressureContact = g_nCurrentIdlePressure + g_nScanContactPressureDelta;
+				g_nMinPressureRetry	  = g_nCurrentIdlePressure - g_nScanRetryPressureDelta;
+				g_nMaxPressureRetry   = g_nCurrentIdlePressure + g_nScanRetryPressureDelta;
+				g_nMinPressureIdle	  = g_nCurrentIdlePressure - g_nScanIdlePressureDelta;
+				g_nMaxPressureIdle	  = g_nCurrentIdlePressure + g_nScanIdlePressureDelta;
 
 #if DEBUG_HEAT_BED_SCAN == 2
-				Com::printF( PSTR( "searchHeatBedZOffset(): nMinPressureContact = " ), nMinPressureContact );
-				Com::printFLN( PSTR( ", nMaxPressureContact = " ), nMaxPressureContact );
+				Com::printF( PSTR( "searchHeatBedZOffset(): g_nMinPressureContact = " ), g_nMinPressureContact );
+				Com::printFLN( PSTR( ", g_nMaxPressureContact = " ), g_nMaxPressureContact );
+				Com::printFLN( PSTR( ", g_nMinPressureRetry = " ), g_nMinPressureRetry );
+				Com::printFLN( PSTR( ", g_nMaxPressureRetry = " ), g_nMaxPressureRetry );
+				Com::printFLN( PSTR( ", g_nMinPressureIdle = " ), g_nMinPressureIdle );
+				Com::printFLN( PSTR( ", g_nMaxPressureIdle = " ), g_nMaxPressureIdle );
 #endif // DEBUG_HEAT_BED_SCAN == 2
 
 				g_lastScanTime		 = HAL::timeInMilliseconds();
@@ -1906,51 +1915,42 @@ void searchHeatBedZOffset( void )
 			}
 			case 10:
 			{
-				// move the heat bed up until we detect the contact pressure
-				uStartTime = HAL::timeInMilliseconds();
-				while( 1 )
-				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-				
-                    HAL::delayMilliseconds( g_nScanSlowStepDelay );
-				    if( readAveragePressure( &nCurrentPressure ) )
-                    {
-					  // some error has occurred
-				      Com::printFLN( PSTR( "searchHeatBedZOffset(): the average pressure could not be determined" ) );
-					  g_abortSearch = 1;
-					  return;
-				    }
+				// move to the surface
+				moveZUpFast();
 
-					if( nCurrentPressure > nMaxPressureContact || nCurrentPressure < nMinPressureContact )
-					{
-						// we have reached the target pressure
-						g_nSearchHeatBedZOffsetStatus = 30;
+				g_nSearchHeatBedZOffsetStatus = 15;
 
 #if DEBUG_HEAT_BED_SCAN == 2
-				        Com::printFLN( PSTR( "searchHeatBedZOffset(): nCurrentPressure = " ), nCurrentPressure );
-						Com::printFLN( PSTR( "searchHeatBedZOffset(): 10 -> 30" ) );
+				Com::printFLN( PSTR( "searchHeatBedZOffset(): 10 -> 15" ) );
 #endif // DEBUG_HEAT_BED_SCAN
-						return;
-					}
 
-					g_nZOriginPosition[Z_AXIS] += moveZ( g_nScanHeatBedUpSlowSteps );
+				break;
+			}
+			case 15:
+			{
+				// ensure that we do not remember any previous z-position at this moment
+				g_nLastZScanZPosition = 0;
 
-					uCurrentTime = HAL::timeInMilliseconds();
-					if( (uCurrentTime - uStartTime) > SEARCH_Z_ORIGIN_BREAKOUT_DELAY )
-					{
-						// do not stay within this loop forever
-						return;
-					}
+				// move a little bit away from the surface
+				moveZDownSlow();
 
-					if( g_abortSearch )
-					{
-						break;
-					}
-				}
+				g_nSearchHeatBedZOffsetStatus = 20;
 
-				// we should never end up here
+#if DEBUG_HEAT_BED_SCAN == 2
+				Com::printFLN( PSTR( "searchHeatBedZOffset(): 15 -> 20" ) );
+#endif // DEBUG_HEAT_BED_SCAN
+				break;
+			}
+			case 20:
+			{
+				// move slowly to the surface
+			    moveZUpSlow( &nTempPressure, &nRetry );
+
+				g_nSearchHeatBedZOffsetStatus = 30;
+
+#if DEBUG_HEAT_BED_SCAN == 2
+				Com::printFLN( PSTR( "searchHeatBedZOffset(): 10 -> 30" ) );
+#endif // DEBUG_HEAT_BED_SCAN
 				break;
 			}
 			case 30:
@@ -1959,20 +1959,53 @@ void searchHeatBedZOffset( void )
 #if FEATURE_WATCHDOG
 				HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
-			
-			    // move heat bed down by the number of steps stored in the compensation matrix
-			    // for the current position (first scan position)
-			    long currentStepsInMatrix = g_ZCompensationMatrix[1][1];    // this number is negative
-			    if(currentStepsInMatrix > 0) currentStepsInMatrix = 0;      // safety limit
+
+                // safety check on the current matrix			
+			    if(g_ZCompensationMatrix[1][1] > 0) {
+					Com::printFLN( PSTR( "searchHeatBedZOffset(): The previous compensation matrix is invalid!" ) );
+					g_abortSearch = 1;
+					return;
+				}
+
+                // safety check on the current position			
+			    if(g_nZScanZPosition > 0) {
+					Com::printFLN( PSTR( "searchHeatBedZOffset(): The scanned position is invalid (z > 0)!" ) );
+					g_abortSearch = 1;
+					return;
+				}
 			    
-			    long nZ = g_nZOriginPosition[Z_AXIS] - currentStepsInMatrix;
+			    // compute number of steps we need to shift the entire matrix by
+			    long nZ = g_nZScanZPosition - g_ZCompensationMatrix[1][1];
+                
+#if DEBUG_HEAT_BED_SCAN == 2
+	            Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ), g_ZCompensationMatrix[1][1] );
+	            Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZScanZPosition = " ), g_nZScanZPosition );
+	            Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
+#endif // DEBUG_HEAT_BED_SCAN
 			    
-			    adjustCompensationMatrix(nZ);
+			    // update the matrix: shift by nZ and check for integer overflow
+			    bool overflow = false;
+	            for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
+		            for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
+		                long newValue = (long)g_ZCompensationMatrix[x][y] + (long)nZ;
+		                if(newValue > 32767 || newValue < -32768) overflow = true;
+			            g_ZCompensationMatrix[x][y] = newValue;
+		            }
+	            }
+	            
+	            // fail if overflow occurred
+			    if(overflow) {
+		            // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is invalid
+		            loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+					Com::printFLN( PSTR( "searchHeatBedZOffset(): The measured correction is too large to be stored in the matrix (integer overflow)!" ) );
+					g_abortSearch = 1;
+					return;
+				}
+
+	            // determine the minimal distance between extruder and heat bed
+	            determineCompensationOffsetZ();
 
 #if DEBUG_HEAT_BED_SCAN == 2
-	            Com::printFLN( PSTR( "searchHeatBedZOffset(): currentStepsInMatrix = " ), currentStepsInMatrix );
-	            Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZOriginPosition[Z_AXIS] = " ), g_nZOriginPosition[Z_AXIS] );
-	            Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
 	            Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ), g_ZCompensationMatrix[1][1] );
 #endif // DEBUG_HEAT_BED_SCAN
 
@@ -1996,11 +2029,7 @@ void searchHeatBedZOffset( void )
 				HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
-				// set the Z origin to the current position
-				setZOrigin();
-
-
-				GCode::executeFString( Com::tFindZOrigin );
+				moveZ( abs(g_nZScanZPosition) );    // g_nZScanZPosition is negative. we need to move up to be at z=0 again
 				g_nSearchHeatBedZOffsetStatus = 40;
 
 #if DEBUG_HEAT_BED_SCAN == 2
