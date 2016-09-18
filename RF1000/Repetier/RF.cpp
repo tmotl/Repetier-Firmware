@@ -1964,11 +1964,16 @@ void searchHeatBedZOffset( void )
 			    // for the current position (first scan position)
 			    long currentStepsInMatrix = g_ZCompensationMatrix[1][1];    // this number is negative
 			    if(currentStepsInMatrix > 0) currentStepsInMatrix = 0;      // safety limit
-			    g_nZOriginPosition[Z_AXIS] += moveZ( -currentStepsInMatrix );   // positive number of steps: move down
-                HAL::delayMilliseconds( g_nScanSlowStepDelay );
+			    
+			    long nZ = g_nZOriginPosition[Z_AXIS] - currentStepsInMatrix;
+			    
+			    adjustCompensationMatrix(nZ);
 
 #if DEBUG_HEAT_BED_SCAN == 2
 	            Com::printFLN( PSTR( "searchHeatBedZOffset(): currentStepsInMatrix = " ), currentStepsInMatrix );
+	            Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZOriginPosition[Z_AXIS] = " ), g_nZOriginPosition[Z_AXIS] );
+	            Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
+	            Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ), g_ZCompensationMatrix[1][1] );
 #endif // DEBUG_HEAT_BED_SCAN
 
 				g_lastScanTime		 = HAL::timeInMilliseconds();
