@@ -1843,29 +1843,52 @@ void startSearchHeatBedZOffset( void )
     // move to the surface
     moveZUpFast(false); // without runStandardTasks() inside to prevent an endless loop
 
-#if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 5" ) );
-#endif // DEBUG_HEAT_BED_SCAN
-
-    // move a little bit away from the surface
-    moveZDownSlow(false); // without runStandardTasks() inside to prevent an endless loop
+    // we have roughly found the surface, now we perform the precise slow scan three times
+    long min_nZScanZPosition = 0;
+    for(int i=0; i<3; ++i) {
 
 #if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6" ) );
+       Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 5  i = " ), i );
 #endif // DEBUG_HEAT_BED_SCAN
 
-    // move slowly to the surface
-    moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
+      // move two of the fast steps from moveZUpFast() down again
+      g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
+#if FEATURE_WATCHDOG
+      HAL::pingWatchdog();
+#endif // FEATURE_WATCHDOG
+      uid.refreshPage();
+      HAL::delayMilliseconds( g_nScanSlowStepDelay );
+      
+      g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
+#if FEATURE_WATCHDOG
+      HAL::pingWatchdog();
+#endif // FEATURE_WATCHDOG
+      uid.refreshPage();
+      HAL::delayMilliseconds( g_nScanSlowStepDelay );
+    
+#if DEBUG_HEAT_BED_SCAN == 2
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6  i = " ), i );
+#endif // DEBUG_HEAT_BED_SCAN
+
+      // move slowly to the surface
+      moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
+      
+      // keep the minimum
+      if(g_nZScanZPosition < min_nZScanZPosition) min_nZScanZPosition = g_nZScanZPosition;
 
 #if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 7" ) );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 7  i = " ), i );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZScanZPosition = " ), g_nZScanZPosition );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
 #endif // DEBUG_HEAT_BED_SCAN
 
-    HAL::delayMilliseconds( g_nScanSlowStepDelay );
+      HAL::delayMilliseconds( g_nScanSlowStepDelay );
 
 #if FEATURE_WATCHDOG
-    HAL::pingWatchdog();
+      HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
+
+    }
 
     // safety check on the current matrix			
     if(g_ZCompensationMatrix[1][1] > 0) {
@@ -1875,18 +1898,18 @@ void startSearchHeatBedZOffset( void )
     }
 
     // safety check on the current position			
-    if(g_nZScanZPosition > 0) {
+    if(min_nZScanZPosition > 0) {
       Com::printFLN( PSTR( "searchHeatBedZOffset(): The scanned position is invalid (z > 0)!" ) );
       abortSearchHeatBedZOffset();
       return;
     }
 			    
     // compute number of steps we need to shift the entire matrix by
-    long nZ = g_nZScanZPosition - g_ZCompensationMatrix[1][1];
+    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[1][1];
                 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ), g_ZCompensationMatrix[1][1] );
-    Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZScanZPosition = " ), g_nZScanZPosition );
+    Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
 #endif // DEBUG_HEAT_BED_SCAN
 			    
@@ -1932,6 +1955,7 @@ void startSearchHeatBedZOffset( void )
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 9" ) );
+    Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZScanZPosition =" ), g_nZScanZPosition );
 #endif // DEBUG_HEAT_BED_SCAN
 
     Commands::printCurrentPosition();
