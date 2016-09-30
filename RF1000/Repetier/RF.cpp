@@ -1763,7 +1763,8 @@ void startSearchHeatBedZOffset( void )
     loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
 
     g_nZScanZPosition = 0;
-    g_scanRetries = 0; // never retry TODO allow retries?
+    g_scanRetries = 0; // never retry   TODO allow retries?
+    g_abortZScan = 0;  // will be set in case of error inside moveZUpFast/Slow
 
     Com::printFLN( PSTR( "searchHeatBedZOffset(): the search has been started" ) );
 
@@ -1836,6 +1837,13 @@ void startSearchHeatBedZOffset( void )
 
     // move to the surface
     moveZUpFast(false); // without runStandardTasks() inside to prevent an endless loop
+    
+    // check for error
+    if(g_abortZScan) {
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): cannot find the surface in fast scan" ) );
+      abortSearchHeatBedZOffset();
+      return;
+    }
 
     // we have roughly found the surface, now we perform the precise slow scan three times
     long min_nZScanZPosition = 0;
@@ -1866,6 +1874,13 @@ void startSearchHeatBedZOffset( void )
 
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
+    
+      // check for error
+      if(g_abortZScan) {
+        Com::printFLN( PSTR( "searchHeatBedZOffset(): cannot find the surface in slow scan" ) );
+        abortSearchHeatBedZOffset();
+        return;
+      }
       
       // keep the minimum as the final result
       if(g_nZScanZPosition < min_nZScanZPosition) min_nZScanZPosition = g_nZScanZPosition;
