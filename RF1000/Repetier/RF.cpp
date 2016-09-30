@@ -1791,8 +1791,6 @@ void startSearchHeatBedZOffset( void )
     // move a bit away from the heat bed in order to achieve better measurements in case of hardware configurations where the extruder is very close to the heat bed after the z-homing
     g_nZScanZPosition += moveZ( HEAT_BED_SCAN_Z_START_STEPS );
 
-    g_lastScanTime		 = HAL::timeInMilliseconds();
-
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 2" ) );
 #endif // DEBUG_HEAT_BED_SCAN == 2
@@ -1801,8 +1799,6 @@ void startSearchHeatBedZOffset( void )
     // TODO use X and Y positions saved in the matrix instead!!
     PrintLine::moveRelativeDistanceInSteps( g_nScanXStartSteps, 0, 0, 0, MAX_FEEDRATE_X, true, true );
     PrintLine::moveRelativeDistanceInSteps( 0, g_nScanYStartSteps, 0, 0, MAX_FEEDRATE_Y, true, true );
-
-    g_lastScanTime		 = HAL::timeInMilliseconds();
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 3" ) );
@@ -1832,8 +1828,6 @@ void startSearchHeatBedZOffset( void )
     Com::printFLN( PSTR( ", g_nMinPressureIdle = " ), g_nMinPressureIdle );
     Com::printFLN( PSTR( ", g_nMaxPressureIdle = " ), g_nMaxPressureIdle );
 #endif // DEBUG_HEAT_BED_SCAN == 2
-
-    g_lastScanTime		 = HAL::timeInMilliseconds();
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 4" ) );
@@ -1873,7 +1867,7 @@ void startSearchHeatBedZOffset( void )
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
       
-      // keep the minimum
+      // keep the minimum as the final result
       if(g_nZScanZPosition < min_nZScanZPosition) min_nZScanZPosition = g_nZScanZPosition;
 
 #if DEBUG_HEAT_BED_SCAN == 2
@@ -1938,8 +1932,6 @@ void startSearchHeatBedZOffset( void )
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ), g_ZCompensationMatrix[1][1] );
 #endif // DEBUG_HEAT_BED_SCAN
-
-    g_lastScanTime		 = HAL::timeInMilliseconds();
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 8" ) );
