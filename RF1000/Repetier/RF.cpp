@@ -3839,7 +3839,7 @@ short moveZUpFast( bool execRunStandardTasks )
 		  runStandardTasks();
 		}
 		else {
-		  uid.refreshPage();
+		  Commands::checkForPeriodicalActions();
 		}
 
 		if( g_abortZScan )
@@ -3900,7 +3900,7 @@ short moveZDownSlow( bool execRunStandardTasks )
 		  runStandardTasks();
 		}
 		else {
-		  uid.refreshPage();
+		  Commands::checkForPeriodicalActions();
 		}
 
 		if( g_abortZScan )
@@ -3976,7 +3976,7 @@ short moveZUpSlow( short* pnContactPressure, char* pnRetry, bool execRunStandard
 		  runStandardTasks();
 		}
 		else {
-		  uid.refreshPage();
+		  Commands::checkForPeriodicalActions();
 		}
 
 		if( g_abortZScan )
@@ -4022,7 +4022,7 @@ short moveZDownFast( bool execRunStandardTasks )
 	  runStandardTasks();
 	}
 	else {
-	  uid.refreshPage();
+	  Commands::checkForPeriodicalActions();
 	}
 
 	if( readAveragePressure( &nTempPressure ) )
