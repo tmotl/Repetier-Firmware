@@ -9465,6 +9465,15 @@ void processCommand( GCode* pCommand )
 				break;
 			}
 #endif // FEATURE_RGB_LIGHT_EFFECTS
+			case 3901: // M3901 [X] [Y] [Z] - configure lengthes of the given axes in MM (without writing to EEPROM)
+			{
+				if( pCommand->hasX() ) Printer::lengthMM[X_AXIS] = pCommand->X;
+				if( pCommand->hasY() ) Printer::lengthMM[Y_AXIS] = pCommand->Y;
+				if( pCommand->hasZ() ) Printer::lengthMM[Z_AXIS] = pCommand->Z;
+				Printer::updateDerivedParameter();
+				break;
+			}
+
 		}
 	}
 
