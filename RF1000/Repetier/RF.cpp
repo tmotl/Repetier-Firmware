@@ -9471,6 +9471,26 @@ void processCommand( GCode* pCommand )
 				if( pCommand->hasY() ) Printer::lengthMM[Y_AXIS] = pCommand->Y;
 				if( pCommand->hasZ() ) Printer::lengthMM[Z_AXIS] = pCommand->Z;
 				Printer::updateDerivedParameter();
+
+				Com::printF( PSTR( "Axes start coordinates: X = " ), Printer::minMM[X_AXIS] );
+				Com::printF( PSTR( "mm ; Y = " ), Printer::minMM[Y_AXIS] );
+				Com::printF( PSTR( "mm ; Z = " ), Printer::minMM[Z_AXIS] );
+				Com::printFLN( PSTR( "mm" )) ;
+				Com::printF( PSTR( "Axes lenghtes: X = " ), Printer::lengthMM[X_AXIS] );
+				Com::printF( PSTR( "mm ; Y = " ), Printer::lengthMM[Y_AXIS] );
+				Com::printF( PSTR( "mm ; Z = " ), Printer::lengthMM[Z_AXIS] );
+				Com::printFLN( PSTR( "mm" )) ;
+				Com::printF( PSTR( "Steps per MM: X = " ), Printer::axisStepsPerMM[X_AXIS] );
+				Com::printF( PSTR( " ; Y = " ), Printer::axisStepsPerMM[Y_AXIS] );
+				Com::printF( PSTR( " ; Z = " ), Printer::axisStepsPerMM[Z_AXIS] );
+				Com::printFLN( PSTR( "" )) ;
+				Com::printF( PSTR( "Axes step ranges: X = " ), Printer::minSteps[X_AXIS] );
+				Com::printF( PSTR( " to " ), Printer::maxSteps[X_AXIS] );
+				Com::printF( PSTR( " ; Y = " ), Printer::minSteps[Y_AXIS] );
+				Com::printF( PSTR( " to " ), Printer::maxSteps[Y_AXIS] );
+				Com::printF( PSTR( " ; Z = " ), Printer::minSteps[Z_AXIS] );
+				Com::printF( PSTR( " to " ), Printer::maxSteps[Z_AXIS] );
+				Com::printFLN( PSTR( "" )) ;
 				break;
 			}
 
