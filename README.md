@@ -5,9 +5,10 @@ Based on Repetier-Firmware - the fast and user friendly firmware.
 
 The firmware is compiled and downloaded with Arduino V 1.6.5.
 
-## Version RF.01.33 (2016-08-17)
+## Version RF.01.33mod (2016-10-12)
 
-* This is the development branch on base of the RF.01.10 stable release.
+* UNOFFICIAL MODIFICATION of the RF.01.33 firmware:
+** added command M3901 [X] [Y] [Z] - configure lengthes of the given axes in MM (without writing to EEPROM)
 
 ## Documentation
 
