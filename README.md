@@ -7,8 +7,8 @@ The firmware is compiled and downloaded with Arduino V 1.6.5.
 
 ## Version RF.01.33mod (2016-10-12)
 
-* UNOFFICIAL MODIFICATION of the RF.01.33 firmware:
-** added command M3901 [X] [Y] [Z] - configure lengthes of the given axes in MM (without writing to EEPROM)
+UNOFFICIAL MODIFICATION of the RF.01.33 firmware:
+* added command M3901 [X] [Y] [Z] - configure lengthes of the given axes in MM (without writing to EEPROM)
 
 ## Documentation
 
