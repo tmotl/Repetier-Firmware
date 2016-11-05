@@ -973,7 +973,6 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_IDLE_PRESSURE_DELTA		0																		// [digits]
 #define HEAT_BED_SCAN_IDLE_PRESSURE_MIN			-7500																	// [digits]
 #define HEAT_BED_SCAN_IDLE_PRESSURE_MAX			7500																	// [digits]
-
 #else /* NUM_EXTRUDER != 2 -> */
 
 #define HEAT_BED_SCAN_X_START_MM				15																		// [mm] from the left border of the heat bed
@@ -1038,6 +1037,15 @@ Above this value the z compensation will distribute the roughness of the surface
 #define PRECISE_HEAT_BED_SCAN_EXTRUDER_TEMP_ABS		260																	// [°C]
 
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
+
+// configuration for the head bet offset search (M3900 command)
+#define SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA	40																		// [digits]
+#define SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA	30																		// [digits]
+#define SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA	2																		// [digits]
+#define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X    5       // scan position defined by the index of the heat bed matrix, counting from 1
+#define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y    5
+#define SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN      10      // [steps] amount of retract before each slow scanning iteration
+#define SEARCH_HEAT_BED_OFFSET_SCAN_ITERATIONS          5       // number of scanning iterations
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 

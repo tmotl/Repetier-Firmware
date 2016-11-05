@@ -1796,10 +1796,23 @@ void startSearchHeatBedZOffset( void )
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 2" ) );
 #endif // DEBUG_HEAT_BED_SCAN == 2
 
+    // safety check on the current matrix
+    if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT) {
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): The previous compensation matrix is invalid!" ) );
+      abortSearchHeatBedZOffset();
+      return;
+    }
+
     // move to the first scan position of the heat bed scan matrix
     // TODO use X and Y positions saved in the matrix instead!!
-    PrintLine::moveRelativeDistanceInSteps( g_nScanXStartSteps, 0, 0, 0, MAX_FEEDRATE_X, true, true );
-    PrintLine::moveRelativeDistanceInSteps( 0, g_nScanYStartSteps, 0, 0, MAX_FEEDRATE_Y, true, true );
+    long xScanPosition = g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][0]* Printer::axisStepsPerMM[X_AXIS];
+    long yScanPosition = g_ZCompensationMatrix[0][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y]* Printer::axisStepsPerMM[Y_AXIS];
+#if DEBUG_HEAT_BED_SCAN == 2
+    Com::printF( PSTR( "searchHeatBedZOffset(): Scan position in steps: " ), xScanPosition );
+    Com::printFLN( PSTR( ", " ), yScanPosition );
+#endif // DEBUG_HEAT_BED_SCAN == 2
+    PrintLine::moveRelativeDistanceInSteps( xScanPosition, 0, 0, 0, MAX_FEEDRATE_X, true, true );
+    PrintLine::moveRelativeDistanceInSteps( 0, yScanPosition, 0, 0, MAX_FEEDRATE_Y, true, true );
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 3" ) );
@@ -1814,19 +1827,19 @@ void startSearchHeatBedZOffset( void )
       return;
     }
 
-    g_nMinPressureContact = g_nCurrentIdlePressure - 4*g_nScanContactPressureDelta;
-    g_nMaxPressureContact = g_nCurrentIdlePressure + 4*g_nScanContactPressureDelta;
-    g_nMinPressureRetry	  = g_nCurrentIdlePressure - 4*g_nScanRetryPressureDelta;
-    g_nMaxPressureRetry   = g_nCurrentIdlePressure + 4*g_nScanRetryPressureDelta;
-    g_nMinPressureIdle	  = g_nCurrentIdlePressure - 4*g_nScanIdlePressureDelta;
-    g_nMaxPressureIdle	  = g_nCurrentIdlePressure + 4*g_nScanIdlePressureDelta;
+    g_nMinPressureContact = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA;
+    g_nMaxPressureContact = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA;
+    g_nMinPressureRetry	  = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA;
+    g_nMaxPressureRetry   = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA;
+    g_nMinPressureIdle	  = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA;
+    g_nMaxPressureIdle	  = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA;
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printF( PSTR( "searchHeatBedZOffset(): g_nMinPressureContact = " ), g_nMinPressureContact );
-    Com::printFLN( PSTR( ", g_nMaxPressureContact = " ), g_nMaxPressureContact );
-    Com::printFLN( PSTR( ", g_nMinPressureRetry = " ), g_nMinPressureRetry );
-    Com::printFLN( PSTR( ", g_nMaxPressureRetry = " ), g_nMaxPressureRetry );
-    Com::printFLN( PSTR( ", g_nMinPressureIdle = " ), g_nMinPressureIdle );
+    Com::printF( PSTR( ", g_nMaxPressureContact = " ), g_nMaxPressureContact );
+    Com::printF( PSTR( ", g_nMinPressureRetry = " ), g_nMinPressureRetry );
+    Com::printF( PSTR( ", g_nMaxPressureRetry = " ), g_nMaxPressureRetry );
+    Com::printF( PSTR( ", g_nMinPressureIdle = " ), g_nMinPressureIdle );
     Com::printFLN( PSTR( ", g_nMaxPressureIdle = " ), g_nMaxPressureIdle );
 #endif // DEBUG_HEAT_BED_SCAN == 2
 
@@ -1847,7 +1860,7 @@ void startSearchHeatBedZOffset( void )
 
     // we have roughly found the surface, now we perform the precise slow scan three times
     long min_nZScanZPosition = 0;
-    for(int i=0; i<3; ++i) {
+    for(int i=0; i<SEARCH_HEAT_BED_OFFSET_SCAN_ITERATIONS; ++i) {
 
 #if DEBUG_HEAT_BED_SCAN == 2
        Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 5  i = " ), i );
@@ -1871,6 +1884,9 @@ void startSearchHeatBedZOffset( void )
 #if DEBUG_HEAT_BED_SCAN == 2
       Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6  i = " ), i );
 #endif // DEBUG_HEAT_BED_SCAN
+
+      // small retract
+      PrintLine::moveRelativeDistanceInSteps( 0, 0, 0, -(SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN), EXT0_MAX_FEEDRATE, true, true );
 
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
@@ -1914,10 +1930,11 @@ void startSearchHeatBedZOffset( void )
     }
 			    
     // compute number of steps we need to shift the entire matrix by
-    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[1][1];
+    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y];
                 
 #if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ), g_ZCompensationMatrix[1][1] );
+    Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ),
+                   g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y] );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
 #endif // DEBUG_HEAT_BED_SCAN
