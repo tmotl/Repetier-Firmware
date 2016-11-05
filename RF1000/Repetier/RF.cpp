@@ -1804,7 +1804,6 @@ void startSearchHeatBedZOffset( void )
     }
 
     // move to the first scan position of the heat bed scan matrix
-    // TODO use X and Y positions saved in the matrix instead!!
     long xScanPosition = g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][0]* Printer::axisStepsPerMM[X_AXIS];
     long yScanPosition = g_ZCompensationMatrix[0][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y]* Printer::axisStepsPerMM[Y_AXIS];
 #if DEBUG_HEAT_BED_SCAN == 2
@@ -1887,6 +1886,12 @@ void startSearchHeatBedZOffset( void )
 
       // small retract
       PrintLine::moveRelativeDistanceInSteps( 0, 0, 0, -(SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN), EXT0_MAX_FEEDRATE, true, true );
+
+#if FEATURE_WATCHDOG
+      HAL::pingWatchdog();
+#endif // FEATURE_WATCHDOG
+      uid.refreshPage();
+      HAL::delayMilliseconds( g_nScanSlowStepDelay );
 
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
