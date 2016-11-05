@@ -1884,7 +1884,8 @@ void startSearchHeatBedZOffset( void )
       Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6  i = " ), i );
 #endif // DEBUG_HEAT_BED_SCAN
 
-      // small retract
+/*
+      // small retract  ---> seems not to work relibaly. Sometimes the following moveZUpSlow is not executed any more if this is enabled!
       PrintLine::moveRelativeDistanceInSteps( 0, 0, 0, -(SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN), EXT0_MAX_FEEDRATE, true, true );
 
 #if FEATURE_WATCHDOG
@@ -1892,6 +1893,7 @@ void startSearchHeatBedZOffset( void )
 #endif // FEATURE_WATCHDOG
       uid.refreshPage();
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
+*/
 
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
