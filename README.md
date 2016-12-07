@@ -16,3 +16,12 @@ https://github.com/RF1000/Repetier-Firmware
 
 For more details, have a look at this forum post (in German):
 http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
+
+
+## Version RF.01.33mod transcopied to RF2000 by Nibbels
+
+* This version is based on RF.01.33mod and is absolute Alphastage! 
+* Still in Testing! 
+* At this time I DID NOT EVEN TRY TO RUN IT!!!
+* Update 04.12.2016 21:49 : the changes compile well now.
+* Update 07.12.2016 13:34 : deleted repository, forked again and remerging files, to get a cleaner changelog
