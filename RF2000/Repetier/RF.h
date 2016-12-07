@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -702,6 +702,12 @@ extern void startHeatBedScan( void );
 // scanHeatBed()
 extern void scanHeatBed( void );
 
+// startSearchHeatBedZOffset()
+extern void startSearchHeatBedZOffset( void );
+
+// abortSearchHeatBedZOffset()
+extern void abortSearchHeatBedZOffset( void );
+
 // testExtruderTemperature()
 extern short testExtruderTemperature( void );
 
@@ -748,16 +754,16 @@ extern short testIdlePressure( void );
 extern short readAveragePressure( short* pnAveragePressure );
 
 // moveZUpFast()
-extern short moveZUpFast( void );
+extern short moveZUpFast( bool execRunStandardTasks=true );
 
 // moveZDownSlow()
-extern short moveZDownSlow( void );
+extern short moveZDownSlow( bool execRunStandardTasks=true );
 
 // moveZUpSlow()
-extern short moveZUpSlow( short* pnContactPressure, char* pnRetry );
+extern short moveZUpSlow( short* pnContactPressure, char* pnRetry, bool execRunStandardTasks=true );
 
 // moveZDownFast()
-extern short moveZDownFast( void );
+extern short moveZDownFast( bool execRunStandardTasks=true );
 
 // moveZ()
 extern int moveZ( int nSteps );
