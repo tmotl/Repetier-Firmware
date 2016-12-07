@@ -34,3 +34,9 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 * copied:
 * - RF.cpp
 * - RF.h
+
+* Update 07.12.2016 15:00 : Merged Project compiles well.
+*note: Arduino 1.6.5
+Der Sketch verwendet 218.498 Bytes (86%) des Programmspeicherplatzes. Das Maximum sind 253.952 Bytes.
+Globale Variablen verwenden 6.230 Bytes (76%) des dynamischen Speichers, 1.962 Bytes für lokale Variablen verbleiben. Das Maximum sind 8.192 Bytes.
+Wenig Speicher verfügbar, es können Stabilitätsprobleme auftreten.
