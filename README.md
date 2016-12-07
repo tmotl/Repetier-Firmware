@@ -25,3 +25,12 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 * At this time I DID NOT EVEN TRY TO RUN IT!!!
 * Update 04.12.2016 21:49 : the changes compile well now.
 * Update 07.12.2016 13:34 : deleted repository, forked again and remerging files, to get a cleaner changelog
+
+* updated:
+* - uilang.h
+* - RF2000.h
+* - Configuration.h
+* - Constants.h
+* copied:
+* - RF.cpp
+* - RF.h
