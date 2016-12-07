@@ -1,3 +1,7 @@
+V RF.01.33 mod by mhier
+- Z-Scan to compensate Offset for RF1000 only
+- merge of RF1000 to RF2000 by Nibbels
+
 V RF.01.33 (2016-08-17)
 - The emergency stop because of too high pressure values from the strain gauge stops all axes (instead of only the z-axis) now.
 - At the end of the precise heat bed scan, the z-axis is moved 10 mm down before the extruder is heated up so that it is not too close to the surface.
@@ -62,7 +66,7 @@ V RF.01.21 (2016-05-18)
 - The maximal length in x direction has been changed to 230 mm for the milling mode.
 - M3006 and M3146 support the Z parameter now which allows to configure the static z-offset in [mm].
 - M3007 and M3008 support the Z parameter now which allows to configure the z-compensation scope in [mm].
-- The codepage of all .cpp and .h files has been changed so that also characters like ° and µ can be used without warnings from the Arduino IDE.
+- The codepage of all .cpp and .h files has been changed so that also characters like Â° and Âµ can be used without warnings from the Arduino IDE.
 - Improved description of all RF-specific M-codes within RF.h.
 - M3013 P1 and M3153 P1 can be used now in order to output the z-offsets from the current z-compensation matrix in [mm] (instead of the default unit [steps]).
 - The firmware has sent "Start" via USB instead of "start" after its startup, which could cause problems with applications like OctoPrint.
@@ -118,7 +122,7 @@ V RF.01.10 (2015-12-14)
   - The speed of x/y/z movements which are performed via the hardware buttons and via the menu has been improved.
   - In case "Unload Filament" or "Load Filament" are called via the menu and the extruder is cold at the moment, the extruder is heated up before the requested operation is performed.
   - The minimal and maximal strain gauge digits which trigger the emergency pause can be configured via M3075 Ss Pp now.
-  - The status text could show "Heating Extruder" even in case the setpoint temperature after M109 was 0°.
+  - The status text could show "Heating Extruder" even in case the setpoint temperature after M109 was 0Â°.
   - The "Position Extruder" menu items could allow to move the cold extruder.
   - The two present "Position Z" menus could show a slightly different behavior when the Z position was close to the z-max endstop.
   - In case the z-max endstop is reached through a manual movement of the z-axis (either via the hardware buttons or via the menu), the z axis moves a short distance upwards automatically in order to free the z-endstop again.
@@ -158,7 +162,7 @@ V 0.91.59 (2015-08-21)
 
 V 0.91.57 (2015-08-13)
 - Changing of the precision of the xxx_STEPS_PER_MM from long to float.
-- Changing of MIN_EXTRUDER_TEMP from 160 to 120 °C (because a temperature of 120 °C can be used perfectly in order to remove/pull out the filament from the extruder).
+- Changing of MIN_EXTRUDER_TEMP from 160 to 120 Â°C (because a temperature of 120 Â°C can be used perfectly in order to remove/pull out the filament from the extruder).
 - Adding of the AUTOMATIC_EEPROM_UPDATE, which allows to choose whether the EEPROM shall be updated directly after each change within the menu or only after "Store to EEPROM" has been called.
 - Redefinition of SUPPORT_CURA to ALLOW_EXTENDED_COMMUNICATION.
   - Via this new define, all non-standard communication/messages from the firmware to the USB host can be disabled. Some applications/print servers may require to disable these non-standard messages.
@@ -193,7 +197,7 @@ V 0.91.53 (2015-02-25)
 - Improved clean-up after the end/abort of a print from the SD card.
   - Previous versions of the firmware might have performed a small additional move into x and/or y-direction after the output of the object.
 - In case the to-be-processed G-code from the SD card contained a non-ASCII character, the interpreter could switch from ASCII to binary - and as a result, it was not able to interpret the following G-code(s) properly.
-- All micro (µ) signs have been replaced through a standard-u in order to avoid problems which occurred at some platforms.
+- All micro (Âµ) signs have been replaced through a standard-u in order to avoid problems which occurred at some platforms.
 - Removing of the support for M26, M92 and M251.
 - M30 (delete file) can not be used anymore while the printing/milling from the SD card is in progress.
 - Pausing via the menu of the RF1000 now works in the same way as the pausing via the hardware buttons.
@@ -229,7 +233,7 @@ V 0.91.49 (2014-12-22)
   - In operating mode "mill", the "Find Z=0" menu item can be used in order move the work bed upwards automatically until the current work part hits the current tool.
   - This position is used in order to set the origin in z-direction (Z=0).
   - FIND_Z_ORIGIN_SCRIPT can be used in order to configure a series of G-codes which is executed after the z-origin has been found.
- - Adding of M3006, which allows to specify the manual z-offset in [µm].
+ - Adding of M3006, which allows to specify the manual z-offset in [Âµm].
   - M3004 has been discarded (it allowed to specify the manual z-offset in [steps] previously).
 - Adding of M3130, which allows to start/stop the search of the z-origin.
   - Calling of M3130 is identical to call of "Find Z=0" from the menu of the RF1000.
