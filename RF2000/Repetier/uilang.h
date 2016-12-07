@@ -348,6 +348,7 @@
 #define	UI_TEXT_TIMEOUT					"Timeout"
 #define UI_TEXT_AUTODETECT_PID_DONE		"PID determined"
 #define UI_TEXT_SENSOR_ERROR			"Sensor Error"
+#define UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED "Scan aborted"
 
 // Printtime output gets aggregated like <Days_5gisgits>UI_TEXT_PRINTTIME_DAYS<Hours>UI_TEXT_PRINTTIME_HOURS<Minutes>UI_TEXT_PRINTTIME_MINUTES
 // ___88 days 12:45
