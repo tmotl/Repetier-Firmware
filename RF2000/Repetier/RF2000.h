@@ -932,6 +932,12 @@ Above this value the z compensation will distribute the roughness of the surface
 #define	HEAT_BED_Z_COMPENSATION_MIN_MM			float(0.2)																// [mm]
 #define HEAT_BED_Z_COMPENSATION_MIN_STEPS		long(HEAT_BED_Z_COMPENSATION_MIN_MM * ZAXIS_STEPS_PER_MM)				// [steps]
 
+/* Maximum number of steps to scan after the Z-min switch has been reached. If within these steps the surface has not
+   been reached, the scan is retried HEAT_BED_SCAN_RETRIES times and then (if still not found) aborted.
+   Note that the head bed scan matrix consists of 16 bit signed values, thus more then 32767 steps will lead to an overflow! */
+#define HEAT_BED_SCAN_Z_SCAN_MAX_STEPS          long(3 * ZAXIS_STEPS_PER_MM)                                            // [steps]
+
+
 /** \brief Configuration of the heat bed scan */
 #if NUM_EXTRUDER == 2
 #define HEAT_BED_SCAN_X_START_MM				0																		// [mm] from the left border of the heat bed
@@ -1015,6 +1021,15 @@ Above this value the z compensation will distribute the roughness of the surface
 
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
+// configuration for the head bet offset search (M3900 command)
+#define SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA	40																		// [digits]
+#define SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA	30																		// [digits]
+#define SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA	0																		// [digits]
+#define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X    5       // scan position defined by the index of the heat bed matrix, counting from 1
+#define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y    5
+#define SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN      EXT0_STEPS_PER_MM/5      // [steps] amount of retract before each slow scanning iteration
+#define SEARCH_HEAT_BED_OFFSET_SCAN_ITERATIONS          5       // number of scanning iterations
+	
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 
