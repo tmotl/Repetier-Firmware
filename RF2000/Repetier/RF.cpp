@@ -9801,9 +9801,9 @@ void processCommand( GCode* pCommand )
 					if( pCommand->hasX() )
 					{
 						// test and take over the specified value
-						nTemp = pCommand->X;
+						nTemp = (long)pCommand->X;
 						if( nTemp < 1 )	nTemp = 1;
-						if( nTemp > g_uZMatrixMax[X_AXIS] ) nTemp = g_uZMatrixMax[X_AXIS];
+						if( nTemp > COMPENSATION_MATRIX_MAX_X ) nTemp = COMPENSATION_MATRIX_MAX_X; //1..n
 
 						g_ZOSTestPoint[X_AXIS] = nTemp;
 						if( Printer::debugInfo() )
@@ -9815,9 +9815,9 @@ void processCommand( GCode* pCommand )
 					if( pCommand->hasY() )
 					{
 						// test and take over the specified value
-						nTemp = pCommand->Y;
+						nTemp = (long)pCommand->Y;
 						if( nTemp < 1 )	nTemp = 1;
-						if( nTemp > g_uZMatrixMax[Y_AXIS] ) nTemp = g_uZMatrixMax[Y_AXIS];
+						if( nTemp > COMPENSATION_MATRIX_MAX_Y ) nTemp = COMPENSATION_MATRIX_MAX_Y; //1..n
 
 						g_ZOSTestPoint[Y_AXIS] = nTemp;
 						if( Printer::debugInfo() )
