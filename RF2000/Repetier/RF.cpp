@@ -1808,8 +1808,8 @@ void startSearchHeatBedZOffset( void )
     }
 
     // move to the first scan position of the heat bed scan matrix
-    long xScanPosition = g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS];
-    long yScanPosition = g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS];
+    long xScanPosition = g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS] + HEAT_BED_SCAN_X_START_STEPS;
+    long yScanPosition = g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS] + HEAT_BED_SCAN_Y_START_STEPS;
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printF( PSTR( "searchHeatBedZOffset(): Scan position in steps: " ), xScanPosition );
     Com::printFLN( PSTR( ", " ), yScanPosition );
