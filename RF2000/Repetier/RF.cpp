@@ -57,6 +57,10 @@ FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT );
 FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR );
 FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED );
 
+//Nibbels:
+long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
+
+//Rest:
 
 unsigned long	g_lastTime				   = 0;
 
@@ -1804,8 +1808,8 @@ void startSearchHeatBedZOffset( void )
     }
 
     // move to the first scan position of the heat bed scan matrix
-    long xScanPosition = g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][0]* Printer::axisStepsPerMM[X_AXIS];
-    long yScanPosition = g_ZCompensationMatrix[0][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y]* Printer::axisStepsPerMM[Y_AXIS];
+    long xScanPosition = g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS];
+    long yScanPosition = g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS];
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printF( PSTR( "searchHeatBedZOffset(): Scan position in steps: " ), xScanPosition );
     Com::printFLN( PSTR( ", " ), yScanPosition );
@@ -1937,11 +1941,11 @@ void startSearchHeatBedZOffset( void )
     }
 			    
     // compute number of steps we need to shift the entire matrix by
-    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y];
+    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][g_ZOSTestPoint[Y_AXIS]];
                 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ),
-                   g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y] );
+                   g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][g_ZOSTestPoint[Y_AXIS]] );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
 #endif // DEBUG_HEAT_BED_SCAN
@@ -9776,12 +9780,61 @@ void processCommand( GCode* pCommand )
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
+					
+					Com::printF( PSTR( "M3900: g_ZOSTestPoint[X_AXIS]: " ), g_ZOSTestPoint[X_AXIS] );					
+					Com::printF( PSTR( " g_ZOSTestPoint[Y_AXIS]: " ), g_ZOSTestPoint[Y_AXIS] );
+					Com::printFLN( PSTR( " [Matrix-index]" ) );
+					
 					startSearchHeatBedZOffset();
 				}
 				break;
 			}
 
-		
+			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, by Nibbels
+			{
+				if( !pCommand->hasX() || !pCommand->hasY() )
+				{
+					showInvalidSyntax( pCommand->M );
+				}
+				else
+				{
+					if( pCommand->hasX() )
+					{
+						// test and take over the specified value
+						nTemp = pCommand->X;
+						if( nTemp < 1 )	nTemp = 1;
+						if( nTemp > g_uZMatrixMax[X_AXIS] ) nTemp = g_uZMatrixMax[X_AXIS];
+
+						g_ZOSTestPoint[X_AXIS] = nTemp;
+						if( Printer::debugInfo() )
+						{
+							Com::printF( PSTR( "M3901: new x matrix positionindex: " ), nTemp );
+							Com::printFLN( PSTR( " [index]" ) );
+						}
+					}
+					if( pCommand->hasY() )
+					{
+						// test and take over the specified value
+						nTemp = pCommand->Y;
+						if( nTemp < 1 )	nTemp = 1;
+						if( nTemp > g_uZMatrixMax[Y_AXIS] ) nTemp = g_uZMatrixMax[Y_AXIS];
+
+						g_ZOSTestPoint[Y_AXIS] = nTemp;
+						if( Printer::debugInfo() )
+						{
+							Com::printF( PSTR( "M3901: new y matrix positionindex: " ), nTemp );
+							Com::printFLN( PSTR( " [index]" ) );
+						}
+					}
+					
+				}
+				break;
+			}		
+				
+				
+				
+				
+				
 		}
 	}
 
