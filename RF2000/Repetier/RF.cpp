@@ -1970,28 +1970,29 @@ void startSearchHeatBedZOffset( void )
     float x_dist = 0;
     float y_dist = 0;
     float xy_weight = 0;
+    Com::printFLN( PSTR( "INFO: weighted_nZ = g_ZOSlearningGradient*xy_weight*nZ + (1.0-g_ZOSlearningGradient)*nZ" ), weighted_nZ );
 	
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
 	x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
 	y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
 	
-        Com::printF( PSTR( "ZOS GradientTest x_dist = " ), x_dist );
-        Com::printF( PSTR( "  y_dist = " ), y_dist );
-        Com::printF( PSTR( "  x_i = " ), x );
-        Com::printF( PSTR( "  y_i = " ), y );
+        Com::printF( PSTR( "weighting: x_i=" ), x );
+        Com::printF( PSTR( " y_i=" ), y );
+        Com::printF( PSTR( " x_dist=" ), x_dist );
+        Com::printF( PSTR( " y_dist=" ), y_dist );
 	//das ist nur ein kreisabstand, wenn die messpunkte quadratisch angeordnet sind, ist aber nicht so?
 	      // evtl. todo: achse faktor skalieren, sodass kreis x/y=(10/13)
 	xy_weight = 1 - sqrt(x_dist*x_dist+y_dist*y_dist); //ohne wurzel wärs quadratisch gewichtet, ich will aber linear. 
 	if(xy_weight < 0.0) xy_weight = 0;
 	if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
+        Com::printF( PSTR( " xy_weight=" ), xy_weight );
 	      
-	nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
+	long weighted_nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
 	      
-        Com::printF( PSTR( " xy_weight = " ), xy_weight );
-        Com::printFLN( PSTR( " nZ(x,y) = " ), nZ );
+        Com::printFLN( PSTR( " nZ_weighted(x,y)=" ), weighted_nZ );
 	      
-        long newValue = (long)g_ZCompensationMatrix[x][y] + nZ;
+        long newValue = (long)g_ZCompensationMatrix[x][y] + weighted_nZ;
         if(newValue > 32767 || newValue < -32768) overflow = true;
         g_ZCompensationMatrix[x][y] = newValue;
       }
