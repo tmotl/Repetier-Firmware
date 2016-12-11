@@ -1955,12 +1955,12 @@ void startSearchHeatBedZOffset( void )
     bool overflow = false;
 	
     //Nibbels: scaling nZ according to learning Rate for additional corrective scans
-    nZ = (long)((float)nZ * g_ZOSlearningRate;
+    nZ = (long)((float)nZ * g_ZOSlearningRate);
     Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ*g_ZOSlearningRate = " ), nZ );		
 		
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
-        long newValue = (long)g_ZCompensationMatrix[x][y] + nZ);
+        long newValue = (long)g_ZCompensationMatrix[x][y] + nZ;
         if(newValue > 32767 || newValue < -32768) overflow = true;
         g_ZCompensationMatrix[x][y] = newValue;
       }
