@@ -1953,9 +1953,14 @@ void startSearchHeatBedZOffset( void )
 			    
     // update the matrix: shift by nZ and check for integer overflow
     bool overflow = false;
+	
+    //Nibbels: scaling nZ according to learning Rate for additional corrective scans
+    nZ = (long)((float)nZ * g_ZOSlearningRate;
+    Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ*g_ZOSlearningRate = " ), nZ );		
+		
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
-        long newValue = (long)g_ZCompensationMatrix[x][y] + (long)((float)nZ * g_ZOSlearningRate);
+        long newValue = (long)g_ZCompensationMatrix[x][y] + nZ);
         if(newValue > 32767 || newValue < -32768) overflow = true;
         g_ZCompensationMatrix[x][y] = newValue;
       }
@@ -9861,9 +9866,10 @@ void processCommand( GCode* pCommand )
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
 					
-					Com::printF( PSTR( "M3900: g_ZOSTestPoint[X_AXIS]: " ), g_ZOSTestPoint[X_AXIS] );					
+					Com::printF( PSTR( "M3901: g_ZOSTestPoint[X_AXIS]: " ), g_ZOSTestPoint[X_AXIS] );					
 					Com::printF( PSTR( " g_ZOSTestPoint[Y_AXIS]: " ), g_ZOSTestPoint[Y_AXIS] );
 					Com::printFLN( PSTR( " [Matrix-index]" ) );
+					Com::printFLN( PSTR( "M3903: ZOS Learning Rate is : "), g_ZOSlearningRate);
 					
 					startSearchHeatBedZOffset();
 				}
@@ -9939,6 +9945,7 @@ void processCommand( GCode* pCommand )
 						if ( pCommand->S >= 0 && pCommand->S <= 100 )
 						{
 						 g_ZOSlearningRate = (float)pCommand->S *0.01;
+						 Com::printFLN( PSTR( "ZOS Learning Rate : "), g_ZOSlearningRate);
 						}
 						else
 						{
