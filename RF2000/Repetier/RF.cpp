@@ -2062,12 +2062,14 @@ void fixKeramikLochInMatrix( void )
 		  for(short yy=y-1; yy<=y+1; yy++) { //iterate all points
 			if(xx != x || yy != y){ //nicht den punkt in der mitte
 				if(xx <= g_uZMatrixMax[X_AXIS] && xx >= 1 && yy <= g_uZMatrixMax[Y_AXIS] && yy >= 1){ //nicht punkte ausserhalb der matrix
-					heights += (long)g_ZCompensationMatrix[x][y];
+					heights += (long)g_ZCompensationMatrix[xx][yy];
 					div += 1;
 				}
 			}
 		  }
 		}		
+		
+			
 		Com::printF( PSTR( "; Y = " ), y );
 		Com::printF( PSTR( "; X = " ), x );
 		Com::printF( PSTR( "; heights = " ), (long)heights );
@@ -2075,7 +2077,7 @@ void fixKeramikLochInMatrix( void )
 		Com::printF( PSTR( "; VAL = " ), (long)((float)heights / div) );
 		Com::printF( PSTR( "; MID = " ), g_ZCompensationMatrix[x][y] );
 		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): MID =" ), g_ZCompensationMatrix[x][y] );
-
+		
 	      }
 	    }
     }else{
