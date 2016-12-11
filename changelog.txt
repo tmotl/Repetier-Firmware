@@ -4,7 +4,7 @@ V RF.01.33 mod by mhier
 - Added Parameters to add offsets to existing zMatrix by Nibbels
 - Added Parameter to give more weight to added near offsets by Nibbels
 - Added M3902 for fixing bad headbeds with holes by Nibbels
-- Added M3901 for configuration by Nibbels
+- Added M3901 for G-Code configuration of mhier's scan by Nibbels
 - fixed M116's temperature range.
 
 V RF.01.33 (2016-08-17)
