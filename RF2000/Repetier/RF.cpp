@@ -1976,7 +1976,7 @@ void startSearchHeatBedZOffset( void )
 	x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
 	y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
 	
-        Com::printFNL( PSTR( "ZOS GradientTest x_dist = " ), x_dist );
+        Com::printFLN( PSTR( "ZOS GradientTest x_dist = " ), x_dist );
         Com::printF( PSTR( "  y_dist = " ), y_dist );
         Com::printF( PSTR( "  x_i = " ), x );
         Com::printF( PSTR( "  y_i = " ), y );
@@ -1986,7 +1986,7 @@ void startSearchHeatBedZOffset( void )
 	if(xy_weight < 0.0) xy_weight = 0;
 	if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
 	      
-	nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ)
+	nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
 	      
         Com::printF( PSTR( " xy_dist = " ), xy_weight );
         Com::printF( PSTR( " nZ(x,y) = " ), nZ );
