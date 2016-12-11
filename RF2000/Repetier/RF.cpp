@@ -1970,7 +1970,7 @@ void startSearchHeatBedZOffset( void )
     float x_dist = 0;
     float y_dist = 0;
     float xy_weight = 0;
-    Com::printFLN( PSTR( "INFO: weighted_nZ = g_ZOSlearningGradient*xy_weight*nZ + (1.0-g_ZOSlearningGradient)*nZ" ), weighted_nZ );
+    Com::printFLN( PSTR( "INFO: weighted_nZ = g_ZOSlearningGradient*xy_weight*nZ + (1.0-g_ZOSlearningGradient)*nZ" ) );
 	
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
