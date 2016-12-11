@@ -1,6 +1,11 @@
 V RF.01.33 mod by mhier
-- Z-Scan to compensate Offset for RF1000 only
+- Z-Scan to compensate Offset for RF1000 by mhier
 - merge of RF1000 to RF2000 by Nibbels
+- Added Parameters to add offsets to existing zMatrix by Nibbels
+- Added Parameter to give more weight to added near offsets by Nibbels
+- Added M3902 for fixing bad headbeds with holes by Nibbels
+- Added M3901 for configuration by Nibbels
+- fixed M116's temperature range.
 
 V RF.01.33 (2016-08-17)
 - The emergency stop because of too high pressure values from the strain gauge stops all axes (instead of only the z-axis) now.
