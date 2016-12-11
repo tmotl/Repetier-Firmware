@@ -2032,6 +2032,61 @@ void abortSearchHeatBedZOffset( void )
 /**************************************************************************************************************************************/
 
 
+
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+
+void fixKeramikLochInMatrix( void )
+{	
+    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 1" ) );
+
+    // update the matrix: shift by nZ and check for integer overflow
+    bool undo = false;
+    for(short x=1; x<=COMPENSATION_MATRIX_MAX_X; x++) { //in der matrix ist alles von 1 an (?) -> also vermutlich anzahl = indexmax.
+      for(short y=1; y<=COMPENSATION_MATRIX_MAX_Y; y++) {
+		  	
+		long heights = 0;
+		char div = 0;
+		//circle around matrixposition
+		for(short xx=x-1; xx<=x+1; xx++) {
+		  for(short yy=y-1; yy<=y+1; yy++) { //iterate all points
+			if(xx != x || yy != y){ //nicht den punkt in der mitte
+				if(xx <= COMPENSATION_MATRIX_MAX_X && xx >= 1 && yy <= COMPENSATION_MATRIX_MAX_Y && yy >= 1){ //nicht punkte ausserhalb der matrix
+					heights += (long)g_ZCompensationMatrix[x][y];
+					div += 1;
+				}
+			}
+		  }
+		}		
+		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Y =" ), y );
+		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): X =" ), x );
+		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): VAL =" ), (long)((float)heights / div) );
+		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): MID =" ), g_ZCompensationMatrix[x][y] );
+    		
+      }
+    }
+
+    // fail if overflow occurred
+	/*
+    if(undo) {
+      // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is invalid
+      loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+      Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Fehler! Loaded original Matrix from EEPROM." ) );
+      return;
+    }
+	*/
+
+#if DEBUG_HEAT_BED_SCAN == 2
+    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): finished" ) );
+#endif // DEBUG_HEAT_BED_SCAN
+	return;
+} // fixKeramikLochInMatrix
+
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+
 short testExtruderTemperature( void )
 {
 	if( Extruder::current->tempControl.targetTemperatureC > 40 )
@@ -9808,7 +9863,7 @@ void processCommand( GCode* pCommand )
 						g_ZOSTestPoint[X_AXIS] = nTemp;
 						if( Printer::debugInfo() )
 						{
-							Com::printF( PSTR( "M3901: new x matrix positionindex: " ), nTemp );
+							Com::printF( PSTR( "M3901: new x matrix g_ZOSTestPoint: " ), nTemp );
 							Com::printFLN( PSTR( " [index]" ) );
 						}
 					}
@@ -9822,17 +9877,23 @@ void processCommand( GCode* pCommand )
 						g_ZOSTestPoint[Y_AXIS] = nTemp;
 						if( Printer::debugInfo() )
 						{
-							Com::printF( PSTR( "M3901: new y matrix positionindex: " ), nTemp );
+							Com::printF( PSTR( "M3901: new y matrix g_ZOSTestPoint: " ), nTemp );
 							Com::printFLN( PSTR( " [index]" ) );
 						}
 					}
 					
 				}
 				break;
-			}		
+			}
 				
-				
-				
+			case 3902: // M3902 search for a hole within the heat beds z-Matrix
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+					fixKeramikLochInMatrix();
+				}
+				break;
+			}	
 				
 				
 		}
