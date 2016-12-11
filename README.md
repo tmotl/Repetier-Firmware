@@ -42,4 +42,4 @@ Globale Variablen verwenden 6.230 Bytes (76%) des dynamischen Speichers, 1.962 B
 Wenig Speicher verfügbar, es können Stabilitätsprobleme auftreten.
 
 * Update 11.12.2016 : M3901 for Z-Offset-Scan Configuration
-
+* Added: Working StartCode Example (very extended Z-Offset-Scan)
