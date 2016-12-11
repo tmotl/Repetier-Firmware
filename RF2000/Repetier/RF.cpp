@@ -2039,9 +2039,7 @@ void abortSearchHeatBedZOffset( void )
 
 void fixKeramikLochInMatrix( void )
 {	
-	
-	
-    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 1" ) );
+    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 1 Init" ) );
 	
     if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
 	{
@@ -2050,13 +2048,22 @@ void fixKeramikLochInMatrix( void )
 	}
     if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
 	{
-	    // update the matrix: shift by nZ and check for integer overflow
-	    bool undo = false;
+	    // search for deepest hole in bed-z-matrix and fix it according to surrounding values
+	    
+	    long peak_hole = 0;
+	    long peak_x = 0;
+	    long peak_y = 0;
+	    
+	    long deepness = 0;
+	    long heights = 0;
+	    char div = 0;
+    	    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 2 Iterating" ) );
 	    for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) { //in der matrix ist alles von 1 an (?) -> also vermutlich anzahl = indexmax.
 	      for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
 
-		long heights = 0;
-		char div = 0;
+		heights = 0;
+		div = 0;
+		      
 		//circle around matrixposition
 		for(short xx=x-1; xx<=x+1; xx++) {
 		  for(short yy=y-1; yy<=y+1; yy++) { //iterate all points
@@ -2068,35 +2075,36 @@ void fixKeramikLochInMatrix( void )
 			}
 		  }
 		}		
-		
-			
-		Com::printF( PSTR( "; Y = " ), y );
-		Com::printF( PSTR( "; X = " ), x );
-		Com::printF( PSTR( "; heights = " ), (long)heights );
-		Com::printF( PSTR( "; div = " ), (long)div );
-		Com::printF( PSTR( "; VAL = " ), (long)((float)heights / div) );
-		Com::printF( PSTR( "; MID = " ), g_ZCompensationMatrix[x][y] );
-		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): MID =" ), g_ZCompensationMatrix[x][y] );
+		deepness = (long)((float)heights / div) - g_ZCompensationMatrix[x][y]; //nur täler, negative werte.
+		if(deepness > peak_hole && div > 3){ //nicht an ecken, sonst immer das tiefste loch suchen.
+			peak_hole = deepness;
+			peak_x = x;
+			peak_y = y
+		}		
 		
 	      }
 	    }
+	    
+    	    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 3 Extremwert" ) );
+	    Com::printF( PSTR( "peak_x = " ), peak_x );
+	    Com::printF( PSTR( "; peak_y = " ), peak_y );
+	    Com::printF( PSTR( "; peak_hole = " ), peak_hole );
+	    Com::printFLN( PSTR( "g_ZCompensationMatrix[peak_x,peak_y] =" ), g_ZCompensationMatrix[peak_x][peak_y] );
+	    	    
+	    if(peak_hole > 100){
+		//loch groß genug
+		g_ZCompensationMatrix[peak_x][peak_y] += peak_hole;
+	    	Com::printF( PSTR( "fixKeramikLochInMatrix(): STEP 4 Update, fixed: g_ZCompensationMatrix[peak_x,peak_y]=" ), g_ZCompensationMatrix[peak_x][peak_y] );
+	    }else{
+	    	Com::printF( PSTR( "fixKeramikLochInMatrix(): STEP 4 Cancel, no need to fix. dh<100 dh=" ), peak_hole );		    
+	    }
+	    
     }else{
       Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Matrix loading error" ) );
     }
-    // fail if overflow occurred
-	/*
-    if(undo) {
-      // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is invalid
-      loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
-      Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Fehler! Loaded original Matrix from EEPROM." ) );
-      return;
-    }
-	*/
 
-#if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "fixKeramikLochInMatrix(): finished" ) );
-#endif // DEBUG_HEAT_BED_SCAN
-	return;
+    return;
 } // fixKeramikLochInMatrix
 
 /**************************************************************************************************************************************/
