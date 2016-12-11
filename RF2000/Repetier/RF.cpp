@@ -1976,12 +1976,20 @@ void startSearchHeatBedZOffset( void )
 	x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
 	y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
 	
-        Com::printFLN( PSTR( "searchHeatBedZOffset(): ZOS Test 1-x_dist = " ), 1.0-x_dist );
-        Com::printFLN( PSTR( "searchHeatBedZOffset(): ZOS Test 1-y_dist = " ), 1.0-y_dist );
-	
-	xy_weight = (1-x_dist)*(1-x_dist)+(1-y_dist)*(1-y_dist);
-		 
-        Com::printFLN( PSTR( "searchHeatBedZOffset(): ZOS Test quadrierte kreisabstand gewichtung xy_dist = " ), xy_weight );
+        Com::printFNL( PSTR( "ZOS GradientTest x_dist = " ), x_dist );
+        Com::printF( PSTR( "  y_dist = " ), y_dist );
+        Com::printF( PSTR( "  x_i = " ), x );
+        Com::printF( PSTR( "  y_i = " ), y );
+	//das ist nur ein kreisabstand, wenn die messpunkte quadratisch angeordnet sind, ist aber nicht so?
+	      // evtl. todo: achse faktor skalieren, sodass kreis x/y=(10/13)
+	xy_weight = 1 - sqrt(x_dist*x_dist+y_dist*y_dist); //ohne wurzel wärs quadratisch gewichtet, ich will aber linear. 
+	if(xy_weight < 0.0) xy_weight = 0;
+	if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
+	      
+	nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ)
+	      
+        Com::printF( PSTR( " xy_dist = " ), xy_weight );
+        Com::printF( PSTR( " nZ(x,y) = " ), nZ );
 	      
         long newValue = (long)g_ZCompensationMatrix[x][y] + nZ;
         if(newValue > 32767 || newValue < -32768) overflow = true;
@@ -9899,7 +9907,7 @@ void processCommand( GCode* pCommand )
 				break;
 			}
 
-			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, by Nibbels
+			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
@@ -9955,18 +9963,30 @@ void processCommand( GCode* pCommand )
 						if ( pCommand->S >= 0 && pCommand->S <= 100 )
 						{
 						 g_ZOSlearningRate = (float)pCommand->S *0.01;
-						 Com::printFLN( PSTR( "M3901: ZOS Learning Rate : "), g_ZOSlearningRate);
+						 Com::printFLN( PSTR( "M3901: [S] ZOS Learning Rate : "), g_ZOSlearningRate);
 						 if ( g_ZOSlearningRate == 1.0 )
 						 {
-						 	Com::printFLN( PSTR( "M3901: ZOS::reset & overwriting mode"), g_ZOSlearningRate);	
+						 	Com::printFLN( PSTR( "M3901: [S] ZOS::reset & overwriting mode") );	
 						 }else{
-						 	Com::printFLN( PSTR( "M3901: ZOS::learning mode"), g_ZOSlearningRate);
+						 	Com::printFLN( PSTR( "M3901: [S] ZOS::learning mode") );
 						 }
 							
 						}
 						else
 						{
-						 Com::printFLN( PSTR( "M3901: ZOS Learning Rate ignored, out of range {0...100}") );
+						 Com::printFLN( PSTR( "M3901: [S] ZOS Learning Rate ignored, out of range {0...100}") );
+						}
+				  }
+				  if( pCommand->hasP() )
+					{
+						if ( pCommand->P >= 0 && pCommand->P <= 100 )
+						{
+						 g_ZOSlearningRate = (float)pCommand->P *0.01;
+						 Com::printFLN( PSTR( "M3901: [P] ZOS DistanceWeight : "), g_ZOSlearningRate);
+						}
+						else
+						{
+						 Com::printFLN( PSTR( "M3901: [P] ZOS DistanceWeight, out of range {0...100}") );
 						}
 				 }
 				}
