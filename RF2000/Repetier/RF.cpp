@@ -1765,7 +1765,12 @@ void startSearchHeatBedZOffset( void )
     resetZCompensation();
 		
     // load the unaltered compensation matrix from the EEPROM
-    if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0) loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+    if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0){
+   	 Com::printFLN( PSTR( "searchHeatBedZOffset(): Loading zMatrix from EEPROM" ) );
+	 loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+    }else{
+         Com::printFLN( PSTR( "searchHeatBedZOffset(): Reusing existing zMatrix" ) );
+    }
 
     g_nZScanZPosition = 0;
     g_scanRetries = 0; // never retry   TODO allow retries?
@@ -9932,11 +9937,18 @@ void processCommand( GCode* pCommand )
 						if ( pCommand->S >= 0 && pCommand->S <= 100 )
 						{
 						 g_ZOSlearningRate = (float)pCommand->S *0.01;
-						 Com::printFLN( PSTR( "ZOS Learning Rate : "), g_ZOSlearningRate);
+						 Com::printFLN( PSTR( "M3901: ZOS Learning Rate : "), g_ZOSlearningRate);
+						 if ( g_ZOSlearningRate == 1.0 )
+						 {
+						 	Com::printFLN( PSTR( "M3901: ZOS::reset & overwriting mode"), g_ZOSlearningRate);	
+						 }else{
+						 	Com::printFLN( PSTR( "M3901: ZOS::learning mode"), g_ZOSlearningRate);
+						 }
+							
 						}
 						else
 						{
-						 Com::printFLN( PSTR( "ZOS Learning Rate out of range ") );
+						 Com::printFLN( PSTR( "M3901: ZOS Learning Rate ignored, out of range {0...100}") );
 						}
 				 }
 				}
