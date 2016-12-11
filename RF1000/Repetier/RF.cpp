@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -57,6 +57,12 @@ FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT );
 FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR );
 FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED );
 
+//Nibbels:
+long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
+float			g_ZOSlearningRate = 1.0;
+float			g_ZOSlearningGradient = 0.0;
+
+//Rest:
 
 unsigned long	g_lastTime				   = 0;
 
@@ -1760,7 +1766,12 @@ void startSearchHeatBedZOffset( void )
     resetZCompensation();
 		
     // load the unaltered compensation matrix from the EEPROM
-    loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+    if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0){
+   	 Com::printFLN( PSTR( "searchHeatBedZOffset(): Loading zMatrix from EEPROM" ) );
+	 loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+    }else{
+         Com::printFLN( PSTR( "searchHeatBedZOffset(): Reusing existing zMatrix" ) );
+    }
 
     g_nZScanZPosition = 0;
     g_scanRetries = 0; // never retry   TODO allow retries?
@@ -1804,8 +1815,8 @@ void startSearchHeatBedZOffset( void )
     }
 
     // move to the first scan position of the heat bed scan matrix
-    long xScanPosition = g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][0]* Printer::axisStepsPerMM[X_AXIS] + HEAT_BED_SCAN_X_START_STEPS;
-    long yScanPosition = g_ZCompensationMatrix[0][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y]* Printer::axisStepsPerMM[Y_AXIS] + HEAT_BED_SCAN_Y_START_STEPS;
+    long xScanPosition = g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS] + HEAT_BED_SCAN_X_START_STEPS;
+    long yScanPosition = g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS] + HEAT_BED_SCAN_Y_START_STEPS;
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printF( PSTR( "searchHeatBedZOffset(): Scan position in steps: " ), xScanPosition );
     Com::printFLN( PSTR( ", " ), yScanPosition );
@@ -1937,20 +1948,51 @@ void startSearchHeatBedZOffset( void )
     }
 			    
     // compute number of steps we need to shift the entire matrix by
-    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y];
+    long nZ = min_nZScanZPosition - g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][g_ZOSTestPoint[Y_AXIS]];
                 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "searchHeatBedZOffset(): g_ZCompensationMatrix[1][1] = " ),
-                   g_ZCompensationMatrix[SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X][SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y] );
+                   g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][g_ZOSTestPoint[Y_AXIS]] );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
     Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ = " ), nZ );
 #endif // DEBUG_HEAT_BED_SCAN
 			    
     // update the matrix: shift by nZ and check for integer overflow
     bool overflow = false;
+	
+    //Nibbels: scaling nZ according to learning Rate for additional corrective scans
+    nZ = (long)((float)nZ * g_ZOSlearningRate);
+    Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ*g_ZOSlearningRate = " ), nZ );		
+	
+    //Nibbels: weight change because of distance. lerne bettwinkelausgleich.
+    float x_bed_len_quadrat = (float)((g_uZMatrixMax[X_AXIS]-2)*(g_uZMatrixMax[X_AXIS]-2)); //index zwischenabstamd x_n - x_0
+    float y_bed_len_quadrat = (float)((g_uZMatrixMax[Y_AXIS]-2)*(g_uZMatrixMax[Y_AXIS]-2));
+    float x_dist = 0;
+    float y_dist = 0;
+    float xy_weight = 0;
+    Com::printFLN( PSTR( "INFO: weighted_nZ = g_ZOSlearningGradient*xy_weight*nZ + (1.0-g_ZOSlearningGradient)*nZ" ) );
+	
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
-        long newValue = (long)g_ZCompensationMatrix[x][y] + (long)nZ;
+	x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
+	y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
+	
+        Com::printF( PSTR( "weighting: x_i=" ), x );
+        Com::printF( PSTR( " y_i=" ), y );
+        Com::printF( PSTR( " x_dist=" ), x_dist );
+        Com::printF( PSTR( " y_dist=" ), y_dist );
+	//das ist nur ein kreisabstand, wenn die messpunkte quadratisch angeordnet sind, ist aber nicht so?
+	      // evtl. todo: achse faktor skalieren, sodass kreis x/y=(10/13)
+	xy_weight = 1 - sqrt(x_dist*x_dist+y_dist*y_dist); //ohne wurzel wärs quadratisch gewichtet, ich will aber linear. 
+	if(xy_weight < 0.0) xy_weight = 0;
+	if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
+        Com::printF( PSTR( " xy_weight=" ), xy_weight );
+	      
+	long weighted_nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
+	      
+        Com::printFLN( PSTR( " nZ_weighted(x,y)=" ), weighted_nZ );
+	      
+        long newValue = (long)g_ZCompensationMatrix[x][y] + weighted_nZ;
         if(newValue > 32767 || newValue < -32768) overflow = true;
         g_ZCompensationMatrix[x][y] = newValue;
       }
@@ -2027,6 +2069,85 @@ void abortSearchHeatBedZOffset( void )
 
 /**************************************************************************************************************************************/
 
+
+
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+
+void fixKeramikLochInMatrix( void )
+{	
+    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 1 Init" ) );
+	
+    if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
+	{
+		// we load the z compensation matrix before its first usage because this can take some time
+		prepareZCompensation();
+	}
+    if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
+	{
+	    // search for deepest hole in bed-z-matrix and fix it according to surrounding values
+	    
+	    long peak_hole = 0;
+	    long peak_x = 0;
+	    long peak_y = 0;
+	    
+	    long deepness = 0;
+	    long heights = 0;
+	    char div = 0;
+    	    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 2 Iterating" ) );
+	    for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) { //in der matrix ist alles von 1 an (?) -> also vermutlich anzahl = indexmax.
+	      for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
+
+		heights = 0;
+		div = 0;
+		      
+		//circle around matrixposition
+		for(short xx=x-1; xx<=x+1; xx++) {
+		  for(short yy=y-1; yy<=y+1; yy++) { //iterate all points
+			if(xx != x || yy != y){ //nicht den punkt in der mitte
+				if(xx <= g_uZMatrixMax[X_AXIS] && xx >= 1 && yy <= g_uZMatrixMax[Y_AXIS] && yy >= 1){ //nicht punkte ausserhalb der matrix
+					heights += (long)g_ZCompensationMatrix[xx][yy];
+					div += 1;
+				}
+			}
+		  }
+		}		
+		deepness = (long)((float)heights / div) - g_ZCompensationMatrix[x][y]; //nur täler, negative werte.
+		if(deepness > peak_hole && div > 3){ //nicht an ecken, sonst immer das tiefste loch suchen.
+			peak_hole = deepness;
+			peak_x = x;
+			peak_y = y;
+		}		
+		
+	      }
+	    }
+	    
+    	    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 3 Extremwert" ) );
+	    Com::printF( PSTR( "peak_x = " ), peak_x );
+	    Com::printF( PSTR( "; peak_y = " ), peak_y );
+	    Com::printF( PSTR( "; peak_hole = " ), peak_hole );
+	    Com::printFLN( PSTR( "g_ZCompensationMatrix[peak_x,peak_y] =" ), g_ZCompensationMatrix[peak_x][peak_y] );
+	    	    
+	    if(peak_hole > 100){
+		//loch groß genug
+		g_ZCompensationMatrix[peak_x][peak_y] += peak_hole;
+	    	Com::printF( PSTR( "fixKeramikLochInMatrix(): STEP 4 Update, fixed: g_ZCompensationMatrix[peak_x,peak_y]=" ), g_ZCompensationMatrix[peak_x][peak_y] );
+	    }else{
+	    	Com::printF( PSTR( "fixKeramikLochInMatrix(): STEP 4 Cancel, no need to fix. dh<100 dh=" ), peak_hole );		    
+	    }
+	    
+    }else{
+      Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Matrix loading error" ) );
+    }
+
+    Com::printFLN( PSTR( "fixKeramikLochInMatrix(): finished" ) );
+    return;
+} // fixKeramikLochInMatrix
+
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
+/**************************************************************************************************************************************/
 
 short testExtruderTemperature( void )
 {
@@ -9776,12 +9897,116 @@ void processCommand( GCode* pCommand )
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
+					
+					Com::printF( PSTR( "M3901: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
+					Com::printF( PSTR( " Testposition [Y]: " ), g_ZOSTestPoint[Y_AXIS] );
+					Com::printFLN( PSTR( " [Matrix-index]" ) );
+					Com::printFLN( PSTR( "M3901: [S] ZOS learning rate is : "), g_ZOSlearningRate);
+					Com::printFLN( PSTR( "M3901: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
+					
 					startSearchHeatBedZOffset();
 				}
 				break;
 			}
 
-		
+			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+				 if( !pCommand->hasX() || !pCommand->hasY() )
+				 {
+					
+				 }
+				 else
+				 {
+				    if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
+				    {
+					// we load the z compensation matrix before its first usage because this can take some time
+					prepareZCompensation();
+				    }
+				    if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
+				    {					
+					if( pCommand->hasX() )
+					{
+						// test and take over the specified value
+						nTemp = (long)pCommand->X;
+						if( nTemp < 1 )	nTemp = 1;
+						if( nTemp > g_uZMatrixMax[X_AXIS] ) nTemp = g_uZMatrixMax[X_AXIS]; //1..n
+
+						g_ZOSTestPoint[X_AXIS] = nTemp;
+						if( Printer::debugInfo() )
+						{
+							Com::printF( PSTR( "M3901: new x matrix g_ZOSTestPoint: " ), nTemp );
+							Com::printFLN( PSTR( " [index]" ) );
+						}
+					}
+					if( pCommand->hasY() )
+					{
+						// test and take over the specified value
+						nTemp = (long)pCommand->Y;
+						if( nTemp < 1 )	nTemp = 1;
+						if( nTemp > g_uZMatrixMax[Y_AXIS] ) nTemp = g_uZMatrixMax[Y_AXIS]; //1..n
+
+						g_ZOSTestPoint[Y_AXIS] = nTemp;
+						if( Printer::debugInfo() )
+						{
+							Com::printF( PSTR( "M3901: new y matrix g_ZOSTestPoint: " ), nTemp );
+							Com::printFLN( PSTR( " [index]" ) );
+						}
+					}
+				    }else{
+					Com::printFLN( PSTR( "M3901: Matrix Initialisation Error!" ) );
+				    }    
+				 }
+				 // M390 S set learning rate to limit changes caused of z-Offset Scan. This might proof handy for multiple positions scans.
+				
+				 if( pCommand->hasS() )
+					{
+						if ( pCommand->S >= 0 && pCommand->S <= 100 )
+						{
+						 g_ZOSlearningRate = (float)pCommand->S *0.01;
+						 Com::printFLN( PSTR( "M3901: [S] ZOS learning rate : "), g_ZOSlearningRate);
+						 if ( g_ZOSlearningRate == 1.0 )
+						 {
+						 	Com::printFLN( PSTR( "M3901: [S] ZOS::reset & overwriting mode") );	
+						 }else{
+						 	Com::printFLN( PSTR( "M3901: [S] ZOS::learning mode") );
+						 }
+							
+						}
+						else
+						{
+						 Com::printFLN( PSTR( "M3901: [S] ZOS learning rate ignored, out of range {0...100}") );
+						}
+				  }
+				  if( pCommand->hasP() )
+					{
+						if ( pCommand->P >= 0 && pCommand->P <= 100 )
+						{
+						 g_ZOSlearningGradient = (float)pCommand->P *0.01;
+						 Com::printFLN( PSTR( "M3901: [P] ZOS learning linear distance weight : "), g_ZOSlearningGradient);
+						 Com::printFLN( PSTR( "M3901: [P] Set 0 => 0.0 for Offset only, set 100 => 1.0 for distance weight only") );
+						 Com::printFLN( PSTR( "M3901: [P] Combine linear distance weight with low learning rate and multiple checks at corners (for example) against bed warping!") );
+						}
+						else
+						{
+						 Com::printFLN( PSTR( "M3901: [P] ZOS learning DistanceWeight, out of range {0...100}") );
+						}
+				 }
+				}
+				
+				break;
+			}
+				
+			case 3902: // M3902 search for a hole within the heat beds z-Matrix
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+					fixKeramikLochInMatrix();
+				}
+				break;
+			}
+				
 		}
 	}
 
