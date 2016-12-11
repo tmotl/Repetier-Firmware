@@ -40,3 +40,6 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 Der Sketch verwendet 218.498 Bytes (86%) des Programmspeicherplatzes. Das Maximum sind 253.952 Bytes.
 Globale Variablen verwenden 6.230 Bytes (76%) des dynamischen Speichers, 1.962 Bytes für lokale Variablen verbleiben. Das Maximum sind 8.192 Bytes.
 Wenig Speicher verfügbar, es können Stabilitätsprobleme auftreten.
+
+* Update 11.12.2016 : M3901 for Z-Offset-Scan Configuration
+
