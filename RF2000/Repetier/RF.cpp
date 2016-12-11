@@ -59,6 +59,7 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_
 
 //Nibbels:
 long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
+float			g_ZOSlearningRate = 1.0;
 
 //Rest:
 
@@ -1764,7 +1765,7 @@ void startSearchHeatBedZOffset( void )
     resetZCompensation();
 		
     // load the unaltered compensation matrix from the EEPROM
-    loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+    if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0) loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
 
     g_nZScanZPosition = 0;
     g_scanRetries = 0; // never retry   TODO allow retries?
@@ -1954,7 +1955,7 @@ void startSearchHeatBedZOffset( void )
     bool overflow = false;
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
-        long newValue = (long)g_ZCompensationMatrix[x][y] + (long)nZ;
+        long newValue = (long)g_ZCompensationMatrix[x][y] + (long)((float)nZ * g_ZOSlearningRate);
         if(newValue > 32767 || newValue < -32768) overflow = true;
         g_ZCompensationMatrix[x][y] = newValue;
       }
@@ -9927,6 +9928,26 @@ void processCommand( GCode* pCommand )
 				}
 				break;
 			}	
+				
+				
+			case 3903: // M3903 set learning rate to limit changes caused of z-Offset Scan. This might proof handy for multiple positions scans.
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+				 if( pCommand->hasS() )
+					{
+						if ( pCommand->S >= 0 && pCommand->S <= 100 )
+						{
+						 g_ZOSlearningRate = (float)pCommand->S *0.01;
+						}
+						else
+						{
+						 Com::printFLN( PSTR( "ZOS Learning Rate out of range ") );
+						}
+				 }
+				}
+				break;
+			}
 				
 				
 		}
