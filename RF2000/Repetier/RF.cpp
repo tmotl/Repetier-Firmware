@@ -9878,12 +9878,14 @@ void processCommand( GCode* pCommand )
 
 			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, by Nibbels
 			{
-				if( !pCommand->hasX() || !pCommand->hasY() )
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
+				 if( !pCommand->hasX() || !pCommand->hasY() )
+				 {
 					showInvalidSyntax( pCommand->M );
-				}
-				else
-				{
+				 }
+				 else
+				 {
 				    if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
 				    {
 					// we load the z compensation matrix before its first usage because this can take some time
@@ -9922,24 +9924,9 @@ void processCommand( GCode* pCommand )
 				    }else{
 					Com::printFLN( PSTR( "M3901: Matrix Initialisation Error!" ) );
 				    }    
-				}
-				break;
-			}
+				 }
+				 // M390 S set learning rate to limit changes caused of z-Offset Scan. This might proof handy for multiple positions scans.
 				
-			case 3902: // M3902 search for a hole within the heat beds z-Matrix
-			{
-				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
-				{
-					fixKeramikLochInMatrix();
-				}
-				break;
-			}	
-				
-				
-			case 3903: // M3903 set learning rate to limit changes caused of z-Offset Scan. This might proof handy for multiple positions scans.
-			{
-				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
-				{
 				 if( pCommand->hasS() )
 					{
 						if ( pCommand->S >= 0 && pCommand->S <= 100 )
@@ -9953,9 +9940,18 @@ void processCommand( GCode* pCommand )
 						}
 				 }
 				}
+				
 				break;
 			}
 				
+			case 3902: // M3902 search for a hole within the heat beds z-Matrix
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+					fixKeramikLochInMatrix();
+				}
+				break;
+			}
 				
 		}
 	}
