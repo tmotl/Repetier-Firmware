@@ -60,6 +60,7 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_
 //Nibbels:
 long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
 float			g_ZOSlearningRate = 1.0;
+float			g_ZOSlearningGradient = 0.0;
 
 //Rest:
 
@@ -1962,9 +1963,26 @@ void startSearchHeatBedZOffset( void )
     //Nibbels: scaling nZ according to learning Rate for additional corrective scans
     nZ = (long)((float)nZ * g_ZOSlearningRate);
     Com::printFLN( PSTR( "searchHeatBedZOffset(): nZ*g_ZOSlearningRate = " ), nZ );		
-		
+	
+    //Nibbels: weight change because of distance. lerne bettwinkelausgleich.
+    float x_bed_len_quadrat = (float)((g_uZMatrixMax[X_AXIS]-2)*(g_uZMatrixMax[X_AXIS]-2)); //index zwischenabstamd x_n - x_0
+    float y_bed_len_quadrat = (float)((g_uZMatrixMax[Y_AXIS]-2)*(g_uZMatrixMax[Y_AXIS]-2));
+    float x_dist = 0;
+    float y_dist = 0;
+    float xy_weight = 0;
+	
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
+	x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
+	y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
+	
+        Com::printFLN( PSTR( "searchHeatBedZOffset(): ZOS Test 1-x_dist = " ), 1.0-x_dist );
+        Com::printFLN( PSTR( "searchHeatBedZOffset(): ZOS Test 1-y_dist = " ), 1.0-y_dist );
+	
+	xy_weight = (1-x_dist)*(1-x_dist)+(1-y_dist)*(1-y_dist);
+		 
+        Com::printFLN( PSTR( "searchHeatBedZOffset(): ZOS Test quadrierte kreisabstand gewichtung xy_dist = " ), xy_weight );
+	      
         long newValue = (long)g_ZCompensationMatrix[x][y] + nZ;
         if(newValue > 32767 || newValue < -32768) overflow = true;
         g_ZCompensationMatrix[x][y] = newValue;
