@@ -2039,34 +2039,48 @@ void abortSearchHeatBedZOffset( void )
 
 void fixKeramikLochInMatrix( void )
 {	
+	
+	
     Com::printFLN( PSTR( "fixKeramikLochInMatrix(): STEP 1" ) );
+	
+    if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
+	{
+		// we load the z compensation matrix before its first usage because this can take some time
+		prepareZCompensation();
+	}
+    if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
+	{
+	    // update the matrix: shift by nZ and check for integer overflow
+	    bool undo = false;
+	    for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) { //in der matrix ist alles von 1 an (?) -> also vermutlich anzahl = indexmax.
+	      for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
 
-    // update the matrix: shift by nZ and check for integer overflow
-    bool undo = false;
-    for(short x=1; x<=COMPENSATION_MATRIX_MAX_X; x++) { //in der matrix ist alles von 1 an (?) -> also vermutlich anzahl = indexmax.
-      for(short y=1; y<=COMPENSATION_MATRIX_MAX_Y; y++) {
-		  	
 		long heights = 0;
 		char div = 0;
 		//circle around matrixposition
 		for(short xx=x-1; xx<=x+1; xx++) {
 		  for(short yy=y-1; yy<=y+1; yy++) { //iterate all points
 			if(xx != x || yy != y){ //nicht den punkt in der mitte
-				if(xx <= COMPENSATION_MATRIX_MAX_X && xx >= 1 && yy <= COMPENSATION_MATRIX_MAX_Y && yy >= 1){ //nicht punkte ausserhalb der matrix
+				if(xx <= g_uZMatrixMax[X_AXIS] && xx >= 1 && yy <= g_uZMatrixMax[Y_AXIS] && yy >= 1){ //nicht punkte ausserhalb der matrix
 					heights += (long)g_ZCompensationMatrix[x][y];
 					div += 1;
 				}
 			}
 		  }
 		}		
-		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Y =" ), y );
-		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): X =" ), x );
-		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): VAL =" ), (long)((float)heights / div) );
+		Com::printF( PSTR( "; Y = " ), y );
+		Com::printF( PSTR( "; X = " ), x );
+		Com::printF( PSTR( "; heights = " ), (long)heights );
+		Com::printF( PSTR( "; div = " ), (long)div );
+		Com::printF( PSTR( "; VAL = " ), (long)((float)heights / div) );
+		Com::printF( PSTR( "; MID = " ), g_ZCompensationMatrix[x][y] );
 		Com::printFLN( PSTR( "fixKeramikLochInMatrix(): MID =" ), g_ZCompensationMatrix[x][y] );
-    		
-      }
-    }
 
+	      }
+	    }
+    }else{
+      Com::printFLN( PSTR( "fixKeramikLochInMatrix(): Matrix loading error" ) );
+    }
     // fail if overflow occurred
 	/*
     if(undo) {
@@ -9853,12 +9867,19 @@ void processCommand( GCode* pCommand )
 				}
 				else
 				{
+				    if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
+				    {
+					// we load the z compensation matrix before its first usage because this can take some time
+					prepareZCompensation();
+				    }
+				    if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
+				    {					
 					if( pCommand->hasX() )
 					{
 						// test and take over the specified value
 						nTemp = (long)pCommand->X;
 						if( nTemp < 1 )	nTemp = 1;
-						if( nTemp > COMPENSATION_MATRIX_MAX_X ) nTemp = COMPENSATION_MATRIX_MAX_X; //1..n
+						if( nTemp > g_uZMatrixMax[X_AXIS] ) nTemp = g_uZMatrixMax[X_AXIS]; //1..n
 
 						g_ZOSTestPoint[X_AXIS] = nTemp;
 						if( Printer::debugInfo() )
@@ -9872,7 +9893,7 @@ void processCommand( GCode* pCommand )
 						// test and take over the specified value
 						nTemp = (long)pCommand->Y;
 						if( nTemp < 1 )	nTemp = 1;
-						if( nTemp > COMPENSATION_MATRIX_MAX_Y ) nTemp = COMPENSATION_MATRIX_MAX_Y; //1..n
+						if( nTemp > g_uZMatrixMax[Y_AXIS] ) nTemp = g_uZMatrixMax[Y_AXIS]; //1..n
 
 						g_ZOSTestPoint[Y_AXIS] = nTemp;
 						if( Printer::debugInfo() )
@@ -9881,7 +9902,9 @@ void processCommand( GCode* pCommand )
 							Com::printFLN( PSTR( " [index]" ) );
 						}
 					}
-					
+				    }else{
+					Com::printFLN( PSTR( "M3901: Matrix Initialisation Error!" ) );
+				    }    
 				}
 				break;
 			}
