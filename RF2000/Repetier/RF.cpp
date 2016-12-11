@@ -2079,7 +2079,7 @@ void fixKeramikLochInMatrix( void )
 		if(deepness > peak_hole && div > 3){ //nicht an ecken, sonst immer das tiefste loch suchen.
 			peak_hole = deepness;
 			peak_x = x;
-			peak_y = y
+			peak_y = y;
 		}		
 		
 	      }
