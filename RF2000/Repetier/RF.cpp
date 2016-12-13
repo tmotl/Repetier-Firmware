@@ -10014,9 +10014,9 @@ void processCommand( GCode* pCommand )
 				
 				if ( g_ZOSlearningRate == 1.0 )
 				 {
-				 	Com::printFLN( PSTR( "M3901: INFO Z-Matrix = EEPROM-HBS-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset") ) );
+				 	Com::printFLN( PSTR( "M3901: INFO Z-Matrix = EEPROM-HBS-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset" ) );
 				 }else{
-				 	Com::printFLN( PSTR( "M3901: INFO Z-Matrix = Z-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset") ) );
+				 	Com::printFLN( PSTR( "M3901: INFO Z-Matrix = Z-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset" ) );
 				 }
 				
 				break;
