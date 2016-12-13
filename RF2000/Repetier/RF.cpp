@@ -9898,11 +9898,11 @@ void processCommand( GCode* pCommand )
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
 					
-					Com::printF( PSTR( "M3901: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
+					Com::printF( PSTR( "M3900: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
 					Com::printF( PSTR( " Testposition [Y]: " ), g_ZOSTestPoint[Y_AXIS] );
 					Com::printFLN( PSTR( " [Matrix-index]" ) );
-					Com::printFLN( PSTR( "M3901: [S] ZOS learning rate is : "), g_ZOSlearningRate);
-					Com::printFLN( PSTR( "M3901: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
+					Com::printFLN( PSTR( "M3900: [S] ZOS learning rate is : "), g_ZOSlearningRate);
+					Com::printFLN( PSTR( "M3900: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
 					
 					startSearchHeatBedZOffset();
 				}
@@ -9980,25 +9980,23 @@ void processCommand( GCode* pCommand )
 						{
 						 g_ZOSlearningGradient = (float)pCommand->P *0.01;
 						 Com::printFLN( PSTR( "M3901: CHANGED [P] ZOS learning linear distance weight : "), g_ZOSlearningGradient);
-						 Com::printFLN( PSTR( "M3901: INFO [P] Set 0 => 0.0 for Offset only, set 100 => 1.0 for distance weight only") );
-						 Com::printFLN( PSTR( "M3901: INFO [P] Combine linear distance weight with low learning rate and multiple checks at corners (for example) against bed warping!") );
-						}
+						 }
 						else
 						{
 						 Com::printFLN( PSTR( "M3901: ERROR [P] ZOS learning DistanceWeight, out of range {0...100}") );
 						}
 				 }
 				}
-				Com::printF( PSTR( "M3901: ### AKTIVE ZOS SETTINGS ###" ) );
+				Com::printFLN( PSTR( "M3901: ### AKTIVE ZOS SETTINGS ###" ) );
 				Com::printF( PSTR( "M3901: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
 				Com::printF( PSTR( " Testposition [Y]: " ), g_ZOSTestPoint[Y_AXIS] );
-				Com::printFLN( PSTR( " [Matrix-index]" ) );
+				Com::printFLN( PSTR( " [Z-Matrix index]" ) );
 				Com::printFLN( PSTR( "M3901: [S] ZOS learning rate is : "), g_ZOSlearningRate);
 				if ( g_ZOSlearningRate == 1.0 )
 				 {
-				 	Com::printFLN( PSTR( "M3901: INFO [S] ZOS::overwrite mode") );	
+				 	Com::printFLN( PSTR( "M3901: INFO [S] ZOS::overwrite mode (1.00)") );	
 				 }else{
-				 	Com::printFLN( PSTR( "M3901: INFO [S] ZOS::additiv / learning mode") );
+				 	Com::printFLN( PSTR( "M3901: INFO [S] ZOS::additiv / learning mode (0.00 - 0.99)") );
 				 }
 				Com::printFLN( PSTR( "M3901: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
 				if ( g_ZOSlearningGradient == 0.0 )
@@ -10011,12 +10009,16 @@ void processCommand( GCode* pCommand )
 				 }else{
 				 	Com::printFLN( PSTR( "M3901: INFO [P] ZOS::Das Ergebnis-Offset setzt sich zusammen aus Abstandsgewichtung und Offset") );					
 				 }
-				
+				if ( g_ZOSlearningGradient > 0.0 )
+				 {
+				 	Com::printFLN( PSTR( "M3901: INFO [P] Set 0 => 0.0 for Offset only, set 100 => 1.0 for distance weight only") );
+					Com::printFLN( PSTR( "M3901: INFO [P] Combine linear distance weight with low learning rate and multiple checks at corners (for example) against bed warping!") );						
+				 }
 				if ( g_ZOSlearningRate == 1.0 )
 				 {
-				 	Com::printFLN( PSTR( "M3901: INFO Z-Matrix = EEPROM-HBS-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset" ) );
+				 	Com::printFLN( PSTR( "M3901: FORMEL Z-Matrix = EEPROM-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset)" ) );
 				 }else{
-				 	Com::printFLN( PSTR( "M3901: INFO Z-Matrix = Z-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset" ) );
+				 	Com::printFLN( PSTR( "M3901: FORMEL Z-Matrix = Z-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset)" ) );
 				 }
 				
 				break;
