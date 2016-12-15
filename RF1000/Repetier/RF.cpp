@@ -10032,6 +10032,47 @@ void processCommand( GCode* pCommand )
 				}
 				break;
 			}
+			
+			#if	FEATURE_BEDTEMP_DECREASE	
+			case 3903: // 3903 [S]TempGoal [P]PausePerKelvin in seconds - configure the HeatBed Temp-Decreaser || by Nibbels
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+					if (reportTempsensorError()) break;
+					if (Printer::debugDryrun()) break;
+					if (pCommand->hasS() && pCommand->hasP()){
+						
+						if ( pCommand->S >= HEATED_BED_MIN_TEMP && pCommand->S < HEATED_BED_MAX_TEMP && pCommand->P >= 1 && pCommand->P <= 255 )
+						{
+							Extruder::decreaseHeatedBedTimeStamp = HAL::timeInMilliseconds(); //erst Zeit stellen.
+							Extruder::decreaseHeatedBedInterval = (uint8_t)pCommand->P; ///< Current Decrease Interval (0..255s)
+							Extruder::decreaseHeatedBedMinimum = (float)pCommand->S;		///< Minimal Temp -> Start
+							Com::printFLN( PSTR( "M3903: STARTED") );
+							Com::printFLN( PSTR( "M3903: INFO [S]Temp = "), Extruder::decreaseHeatedBedMinimum);
+							Com::printF( PSTR( "M3903: INFO [P]PausePerKelvin = "), Extruder::decreaseHeatedBedInterval);
+							Com::printFLN( PSTR( "s"));
+						
+						}else{
+							Com::printFLN( PSTR( "M3903: ERROR Cannot start Decreaser -> Wrong Parameters for [P]PausePerKelvin and or [S]Temp ") );
+						}
+				
+					}else if(Extruder::decreaseHeatedBedMinimum > 0.0){
+						//läuft noch
+						Extruder::decreaseHeatedBedMinimum = 0.0; //STOP
+						Extruder::decreaseHeatedBedTimeStamp = 0;
+						Com::printFLN( PSTR( "M3903: STOPPED") );
+						
+					}else{						
+						Com::printFLN( PSTR( "M3903: INFO Decreaser not active!") );
+					}				
+					Com::printFLN( PSTR( "M3903: INFO [P]PausePerKelvin = {1..255}") );
+					Com::printF( PSTR( "M3903: INFO [S]Temp = {"), HEATED_BED_MIN_TEMP);
+					Com::printF( PSTR( ".."), HEATED_BED_MAX_TEMP);
+					Com::printFLN( PSTR( "}") );
+				}
+				break;		
+			}
+			#endif // FEATURE_BEDTEMP_DECREASE	
 				
 		}
 	}
