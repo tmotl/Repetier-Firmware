@@ -400,7 +400,11 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 #endif // STEPPER_ON_DELAY
 
     } // enable
-
+#if  FEATURE_BEDTEMP_DECREASE
+  static uint8_t decreaseHeatedBedInterval;  ///< Current Decrease Interval (0..255s)
+  static uint32_t decreaseHeatedBedTimeStamp;   ///< Current Decrease last Timestamp
+  static float decreaseHeatedBedMinimum;   ///< Minimal Temp
+#endif // FEATURE_BEDTEMP_DECREASE
 
     static void manageTemperatures();
     static void disableCurrentExtruderMotor();
@@ -410,6 +414,7 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     static void initExtruder();
     static void initHeatedBed();
     static void setHeatedBedTemperature(float temp_celsius,bool beep = false);
+    static void decreaseHeatedBedTemperature(float min_temperatureInCelsius);
     static float getHeatedBedTemperature();
     static void setTemperatureForExtruder(float temp_celsius,uint8_t extr,bool beep = false);
 
