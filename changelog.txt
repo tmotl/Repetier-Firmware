@@ -1,3 +1,6 @@
+V RF.01.33 mod_c by Nibbels
+- Added M3903 S[Temp] P[s] for a stepwise HeatBed target temperature decrease
+
 V RF.01.33 mod by mhier
 - Z-Scan to compensate Offset for RF1000 by mhier
 - merge of RF1000 to RF2000 by Nibbels
