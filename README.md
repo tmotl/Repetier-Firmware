@@ -10,7 +10,7 @@ For the official version, have a look at the upstream repository:
 https://github.com/RF1000/Repetier-Firmware
 
 
- ## Version RF.01.35mod (2016-12-23)
+## Version RF.01.35mod (2016-12-23)
 
 * This version is based on RF.01.35 and introduces a new command M3900 to scan for the heat bed offset.
 
