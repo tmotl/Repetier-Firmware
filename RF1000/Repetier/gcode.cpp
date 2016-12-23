@@ -437,10 +437,6 @@ void GCode::readFromSerial()
     }
     while(HAL::serialByteAvailable() && commandsReceivingWritePosition < MAX_CMD_SIZE)    // consume data until no data or buffer full
     {
-#if FEATURE_WATCHDOG
-	    HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         timeOfLastDataPacket = time;
 
 		if( !commandsReceivingWritePosition )
@@ -590,34 +586,20 @@ void GCode::readFromSD()
 
     while( sd.filesize > sd.sdpos && commandsReceivingWritePosition < MAX_CMD_SIZE)    // consume data until no data or buffer full
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
-		timeOfLastDataPacket = HAL::timeInMilliseconds();
+	timeOfLastDataPacket = HAL::timeInMilliseconds();
         int n = sd.file.read();
-
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		if(n==-1)
         {
-			if( Printer::debugErrors() )
-			{
+	if( Printer::debugErrors() )
+		{
 	            Com::printFLN(Com::tSDReadError);
-			}
-            UI_ERROR("SD Read Error");
+		}
+        UI_ERROR("SD Read Error");
 
-            // Second try in case of recoverable errors
-            sd.file.seekSet(sd.sdpos);
-            n = sd.file.read();
-
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
-			if(n==-1)
+        // Second try in case of recoverable errors
+        sd.file.seekSet(sd.sdpos);
+        n = sd.file.read();
+	if(n==-1)
             {
 				if( Printer::debugErrors() )
 				{
