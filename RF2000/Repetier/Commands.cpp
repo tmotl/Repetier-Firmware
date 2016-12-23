@@ -1731,10 +1731,26 @@ void Commands::executeGCode(GCode *com)
 				break;
 			}
 #endif // USE_ADVANCE
-
+// Idee und Teilcode und Vorarbeit von WESSIX 
+			//Code schaltet X19, nicht zwingend das licht! 
+		        case 355: // M355  - Turn case light on/off / Turn X19 on and off.
+			 	if(com->hasS()){
+					if(com->S == 1 || com->S == 0){
+						Printer::enableCaseLight = com->S;
+					}else{
+	            				Com::printFLN(PSTR("M355 Param Error S=0||1"));
+					}
+				}else{
+			    		if( Printer::enableCaseLight )  Printer::enableCaseLight = 0;
+			    		else Printer::enableCaseLight = 1;
+				}
+				WRITE(CASE_LIGHT_PIN, Printer::enableCaseLight);
+	            		Com::printFLN(PSTR("M355: X19 set to "),Printer::enableCaseLight);
+				break;
+// Ende Idee und Teilcode von WESSIX 
 			case 400:	// M400 - Finish all moves
 			{
-	            Commands::waitUntilEndOfAllMoves();
+	            		Commands::waitUntilEndOfAllMoves();
 		        break;
 			}
 
