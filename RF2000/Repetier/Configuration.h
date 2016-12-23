@@ -800,7 +800,7 @@ we use blocks of 2 kByte size for the structure of our EEPROM
 #if FEATURE_ENABLE_Z_SAFETY
 
 /** \brief Specifies the maximal steps which can be moved into z-direction after the z-endstop has been reached */
-#define	Z_OVERRIDE_MAX						(ZAXIS_STEPS_PER_MM / 2)
+#define	Z_OVERRIDE_MAX						(ZAXIS_STEPS_PER_MM * 1) //choice of mhier for rf1000
 
 #endif // FEATURE_ENABLE_Z_SAFETY
 
