@@ -10,15 +10,15 @@ For the official version, have a look at the upstream repository:
 https://github.com/RF1000/Repetier-Firmware
 
 
-## Version RF.01.33mod
+ ## Version RF.01.35mod (2016-12-23)
 
-* This version is based on RF.01.33 and introduces a new command M3900 to scan for the heat bed offset.
+* This version is based on RF.01.35 and introduces a new command M3900 to scan for the heat bed offset.
 
 For more details, have a look at this forum post (in German):
 http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 
 
-## Version RF.01.33mod transcopied to RF2000 by Nibbels
+## Version RF.01.35mod transcopied to RF2000 by Nibbels
 
 * This version is based on RF.01.33mod and is absolute Alphastage! 
 * Still in Testing! 
@@ -43,3 +43,5 @@ Wenig Speicher verfügbar, es können Stabilitätsprobleme auftreten.
 
 * Update 11.12.2016 : M3901 for Z-Offset-Scan Configuration
 * Added: Working StartCode Example (very extended Z-Offset-Scan)
+
+* Update 2016-12-23 committing changes to reach RF.01.35
