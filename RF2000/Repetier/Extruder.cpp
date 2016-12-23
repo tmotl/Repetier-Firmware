@@ -93,10 +93,6 @@ void Extruder::manageTemperatures()
     uint8_t errorDetected = 0;
     for(uint8_t controller=0; controller<NUM_TEMPERATURE_LOOPS; controller++)
     {
-#if FEATURE_WATCHDOG
-	    HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         if(controller == autotuneIndex) continue;
         TemperatureController *act = tempController[controller];
 
@@ -242,52 +238,6 @@ void Extruder::initHeatedBed()
 #endif // HAVE_HEATED_BED
 
 } // initHeatedBed
-
-
-#if defined(USE_GENERIC_THERMISTORTABLE_1) || defined(USE_GENERIC_THERMISTORTABLE_2) || defined(USE_GENERIC_THERMISTORTABLE_3)
-void createGenericTable(short table[GENERIC_THERM_NUM_ENTRIES][2],short minTemp,short maxTemp,float beta,float r0,float t0,float r1,float r2)
-{
-    t0+=273.15f;
-    float rs,vs;
-
-
-    if(r1==0)
-    {
-        rs = r2;
-        vs = GENERIC_THERM_VREF;
-    }
-    else
-    {
-        vs =(float)(GENERIC_THERM_VREF*r1)/(r1+r2);
-        rs = (r2*r1)/(r1+r2);
-    }
-
-    float k		= r0*exp(-beta/t0);
-    float delta = (maxTemp-minTemp)/(GENERIC_THERM_NUM_ENTRIES-1.0f);
-
-    for(uint8_t i=0; i<GENERIC_THERM_NUM_ENTRIES; i++)
-    {
-#if FEATURE_WATCHDOG
-        HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
-        float t = maxTemp-i*delta;
-        float r = exp(beta/(t+272.65))*k;
-        float v = 4092*r*vs/((rs+r)*GENERIC_THERM_VREF);
-        int adc = (int)(v);
-        t *= 8;
-        if(adc>4092) adc=4092;
-        table[i][0] = (adc>>(ANALOG_REDUCE_BITS));
-        table[i][1] = (int)t;
-
-#ifdef DEBUG_GENERIC
-        Com::printF(Com::tGenTemp,table[i][0]);
-        Com::printFLN(Com::tComma,table[i][1]);
-#endif // DEBUG_GENERIC
-    }
-
-} // createGenericTable
-#endif // defined(USE_GENERIC_THERMISTORTABLE_1) || defined(USE_GENERIC_THERMISTORTABLE_2) || defined(USE_GENERIC_THERMISTORTABLE_3)
 
 
 /** \brief Initalizes all extruder.
@@ -1086,12 +1036,9 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 			short oldraw = pgm_read_word(&temptable[0]);
 			short oldtemp = pgm_read_word(&temptable[1]);
 			short newraw,newtemp;
+			
 			while(i<num)
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				newraw = pgm_read_word(&temptable[i++]);
 				newtemp = pgm_read_word(&temptable[i++]);
 				if (newtemp < temp)
@@ -1128,13 +1075,8 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 			short oldtemp = pgm_read_word(&temptable[1]);
 			short newraw,newtemp;
 
-
 			while(i<num)
 			{
-#if FEATURE_WATCHDOG
-			 HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				newraw = pgm_read_word(&temptable[i++]);
 				newtemp = pgm_read_word(&temptable[i++]);
 				if (newtemp > temp)
