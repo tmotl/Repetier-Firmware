@@ -761,7 +761,11 @@ long				stepperWait  = 0;
 ISR(TIMER1_COMPA_vect)
 {
 #if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
+	if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
+ 	{
+ 		// ping the watchdog only in case the mainloop is still being called
+ 		HAL::pingWatchdog();
+ 	}
 #endif // FEATURE_WATCHDOG
 
     if(insideTimer1) return;
@@ -898,13 +902,7 @@ ISR(PWM_TIMER_VECTOR)
     static uint8_t pwm_cooler_pos_set[NUM_EXTRUDER];
     PWM_OCR += 64;
 
-
-
-#if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
-	if(pwm_count_heater == 0)
+   if(pwm_count_heater == 0)
     {
 #if EXT0_HEATER_PIN>-1
         if((pwm_heater_pos_set[0] = (pwm_pos[0] & HEATER_PWM_MASK))>0) WRITE(EXT0_HEATER_PIN,!HEATER_PINS_INVERTED);
@@ -1040,11 +1038,7 @@ ISR(PWM_TIMER_VECTOR)
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
     HAL::allowInterrupts();
-
-#if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
+	
 	counterPeriodical++; // Approximate a 100ms timer
     if(counterPeriodical>=(int)(F_CPU/40960))
     {
