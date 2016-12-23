@@ -152,8 +152,8 @@ is always running and is not hung up for some unknown reason. */
 /** \brief Allows to use the service interval */
 #define	FEATURE_SERVICE_INTERVAL			0													// 1 = on, 0 = off
 
-/** \brief Allows to use the case light */
-#define FEATURE_CASE_LIGHT					0													// 1 = on, 0 = off
+/** \brief Allows to use the case light @ X19 */
+#define FEATURE_CASE_LIGHT					1													// 1 = on, 0 = off
 
 /** \brief Allows to control up to 3 servos
 Servos are controlled by a pulse width normally between 500 and 2500 with 1500ms in center position. 0 turns servo off.
