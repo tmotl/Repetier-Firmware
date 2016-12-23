@@ -1,3 +1,8 @@
+V RF.01.35 (2016-12-23) by RF1000
+- In case the heat bed scan is started and the extruder is warmer than the target temperature, the firmware waits until the extruder has cooled down.
+- Review of all calls to the watchdog in order to avoid situations where the heaters could remain constantly on because of a hang of the firmware.
+- "Printer Ready" could be shown too early (= at any moment in the middle of the printing). Typically this information was shown only for a short moment of time.
+
 V RF.01.33 mod_c by Nibbels
 - Added M3903 S[Temp] P[s] for a stepwise HeatBed target temperature decrease
 
