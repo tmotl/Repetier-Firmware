@@ -1731,6 +1731,7 @@ void Commands::executeGCode(GCode *com)
 				break;
 			}
 #endif // USE_ADVANCE
+#if FEATURE_CASE_LIGHT
 // Idee und Teilcode und Vorarbeit von WESSIX 
 			//Code schaltet X19, nicht zwingend das licht! 
 		        case 355: // M355  - Turn case light on/off / Turn X19 on and off.
@@ -1748,6 +1749,7 @@ void Commands::executeGCode(GCode *com)
 	            		Com::printFLN(PSTR("M355: X19 set to "),Printer::enableCaseLight);
 				break;
 // Ende Idee und Teilcode von WESSIX 
+#endif // FEATURE_CASE_LIGHT
 			case 400:	// M400 - Finish all moves
 			{
 	            		Commands::waitUntilEndOfAllMoves();
