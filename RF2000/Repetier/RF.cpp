@@ -58,6 +58,8 @@ FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR );
 
 
 unsigned long	g_lastTime				   = 0;
+unsigned long	g_uLastCommandLoop		   = 0;
+unsigned long	g_uStartOfIdle			   = 0;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 long			g_offsetZCompensationSteps = 0;
@@ -300,7 +302,6 @@ short readStrainGauge( unsigned char uAddress )
 {
 	unsigned char	Register;
 	short			Result;
-
 
 	Wire.beginTransmission( uAddress );
 	Wire.requestFrom( (uint8_t)uAddress, (uint8_t)3 );
@@ -1750,7 +1751,7 @@ short testExtruderTemperature( void )
 	if( Extruder::current->tempControl.targetTemperatureC > 40 )
 	{
 		// we have to wait until the target temperature is reached
-		if( (Extruder::current->tempControl.currentTemperatureC + 2) < Extruder::current->tempControl.targetTemperatureC )
+		if( (Extruder::current->tempControl.currentTemperatureC + TEMP_TOLERANCE) < Extruder::current->tempControl.targetTemperatureC )
 		{
 			// wait until the extruder has reached its target temperature
 			if( Printer::debugInfo() )
@@ -1761,6 +1762,19 @@ short testExtruderTemperature( void )
 			}
 
 			UI_STATUS_UPD( UI_TEXT_HEATING_UP );
+			return -1;
+		}
+		if( (Extruder::current->tempControl.currentTemperatureC - TEMP_TOLERANCE) > Extruder::current->tempControl.targetTemperatureC )
+		{
+			// wait until the extruder has reached its target temperature
+			if( Printer::debugInfo() )
+			{
+				Com::printF( PSTR( "testExtruderTemperature(): cooling: " ), Extruder::current->tempControl.currentTemperatureC, 1 );
+				Com::printF( PSTR( " C / " ), Extruder::current->tempControl.targetTemperatureC, 1 );
+				Com::printFLN( PSTR( " C" ) );
+			}
+
+			UI_STATUS_UPD( UI_TEXT_COOLING_DOWN );
 			return -1;
 		}
 	}
@@ -1799,6 +1813,19 @@ short testHeatBedTemperature( void )
 			if( Printer::debugInfo() )
 			{
 				Com::printF( PSTR( "testHeatBedTemperature(): heating: " ), Extruder::getHeatedBedTemperature(), 1 );
+				Com::printF( PSTR( " C / " ), heatedBedController.targetTemperatureC, 1 );
+				Com::printFLN( PSTR( " C" ) );
+			}
+
+			UI_STATUS_UPD( UI_TEXT_HEATING_UP );
+			return -1;
+		}
+		if( (Extruder::getHeatedBedTemperature() - TEMP_TOLERANCE) > heatedBedController.targetTemperatureC )
+		{
+			// wait until the heat bed has reached its target temperature
+			if( Printer::debugInfo() )
+			{
+				Com::printF( PSTR( "testHeatBedTemperature(): cooling: " ), Extruder::getHeatedBedTemperature(), 1 );
 				Com::printF( PSTR( " C / " ), heatedBedController.targetTemperatureC, 1 );
 				Com::printFLN( PSTR( " C" ) );
 			}
@@ -1885,10 +1912,6 @@ void doHeatBedZCompensation( void )
 		// check whether we have to perform a compensation in z-direction
 		if( nCurrentPositionSteps[Z_AXIS] < g_maxZCompensationSteps )
 		{
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 			// find the rectangle which covers the current position of the extruder
 			nXLeftIndex = 1;
 			nXLeftSteps = (long)((float)g_ZCompensationMatrix[1][0] * Printer::axisStepsPerMM[X_AXIS]);
@@ -2373,10 +2396,6 @@ void scanWorkPart( void )
 				g_lastScanTime = HAL::timeInMilliseconds();
 				while( 1 )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					nCurrentPressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
 
 					if( nCurrentPressure > g_nMaxPressureContact || nCurrentPressure < g_nMinPressureContact )
@@ -2430,10 +2449,6 @@ void scanWorkPart( void )
 				g_lastScanTime = HAL::timeInMilliseconds();
 				while( 1 )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					nCurrentPressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
 
 					if( nCurrentPressure > g_nMinPressureContact && nCurrentPressure < g_nMaxPressureContact )
@@ -3085,10 +3100,6 @@ void doWorkPartZCompensation( void )
 	
 	if( nCurrentPositionSteps[Z_AXIS] )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		// find the rectangle which covers the current position of the miller
 		nXLeftIndex = 1;
 		nXLeftSteps = (long)((float)g_ZCompensationMatrix[1][0] * Printer::axisStepsPerMM[X_AXIS]);
@@ -3394,10 +3405,6 @@ short readIdlePressure( short* pnIdlePressure )
 	nTemp = 0;
 	while( abs( nTempPressure - *pnIdlePressure) > 5 )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		if( Printer::debugInfo() )
 		{
 			Com::printF( PSTR( "readIdlePressure(): pressure calibration: " ), nTempPressure );
@@ -3495,10 +3502,6 @@ short readAveragePressure( short* pnAveragePressure )
 		nMaxPressure = -32000;
 		for( i=0; i<g_nScanPressureReads; i++)
 		{
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 			HAL::delayMilliseconds( g_nScanPressureReadDelay );
 			nTempPressure =  readStrainGauge( ACTIVE_STRAIN_GAUGE );
 			nPressureSum  += nTempPressure;
@@ -3555,10 +3558,6 @@ short moveZUpFast( void )
 	// move the heat bed up until we detect the contact pressure (fast speed)
 	while( 1 )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		HAL::delayMilliseconds( g_nScanFastStepDelay );
 		if( readAveragePressure( &nTempPressure ) )
 		{
@@ -3611,10 +3610,6 @@ short moveZDownSlow( void )
 	// move the heat bed down until we detect the retry pressure (slow speed)
 	while( 1 )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		HAL::delayMilliseconds( g_nScanSlowStepDelay );
 		if( readAveragePressure( &nTempPressure ) )
 		{
@@ -3681,10 +3676,6 @@ short moveZUpSlow( short* pnContactPressure, char* pnRetry )
 	// move the heat bed up until we detect the contact pressure (slow speed)
 	while( 1 )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		HAL::delayMilliseconds( g_nScanSlowStepDelay );
 		if( readAveragePressure( &nTempPressure ) )
 		{
@@ -3844,10 +3835,6 @@ int moveZ( int nSteps )
 			break;
 		}
 
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		if( nSteps >= 0 )
 		{
 			if( READ( Z_DIR_PIN ) != !INVERT_Z_DIR )
@@ -3915,10 +3902,6 @@ void freeZ( int nSteps )
 	// perform the steps
 	for( i=0; i<nMaxLoops; i++ )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         HAL::delayMicroseconds( XYZ_STEPPER_HIGH_DELAY );
 		startZStep( g_nTempDirectionZ );
 
@@ -3959,10 +3942,6 @@ int moveExtruder( int nSteps )
 	// perform the steps
 	for( i=0; i<nMaxLoops; i++ )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         HAL::delayMicroseconds(EXTRUDER_STEPPER_HIGH_DELAY);
 		Extruder::step();
 
@@ -4503,10 +4482,6 @@ char saveCompensationMatrix( unsigned int uAddress )
 		{
 			for( y=0; y<=g_uZMatrixMax[Y_AXIS]; y++ )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				uTemp = g_ZCompensationMatrix[x][y];
 				writeWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, uOffset, uTemp );
 				uOffset += 2;
@@ -4559,10 +4534,6 @@ char saveCompensationMatrix( unsigned int uAddress )
 		{
 			for( y=0; y<COMPENSATION_MATRIX_MAX_Y; y++ )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				writeWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, uOffset, 0 );
 				uOffset += 2;
 			}
@@ -4769,10 +4740,6 @@ char loadCompensationMatrix( unsigned int uAddress )
 	{
 		for( y=0; y<=g_uZMatrixMax[Y_AXIS]; y++ )
 		{
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 			nTemp = readWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, uOffset );
 
 			if( x == 0 || y == 0 )
@@ -4981,10 +4948,6 @@ void loopRF( void )
 	short			nPressure;
 
 
-#if FEATURE_WATCHDOG
-    HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 	if( nEntered )
 	{
 		// do not enter more than once
@@ -4993,6 +4956,16 @@ void loopRF( void )
 	nEntered ++;
 
 	uTime = HAL::timeInMilliseconds();
+
+	if( g_uStartOfIdle )
+	{
+		if( (uTime - g_uStartOfIdle) > MINIMAL_IDLE_TIME )
+		{
+			// show that we are idle for a while already
+			showIdle();
+			g_uStartOfIdle = 0;
+		}
+	}
 
 #if FEATURE_CASE_FAN && !CASE_FAN_ALWAYS_ON
 	if( Printer::prepareFanOff )
@@ -5217,7 +5190,7 @@ void loopRF( void )
 				}
 #endif // FEATURE_MILLING_MODE
 
-				g_uBlockSDCommands = millis();
+				g_uBlockSDCommands = HAL::timeInMilliseconds();
 			}
 		}
 	}
@@ -5759,7 +5732,7 @@ void loopRF( void )
 			mode = Printer::operatingMode;
 #endif // FEATURE_MILLING_MODE
 
-			showIdle();
+			g_uStartOfIdle = HAL::timeInMilliseconds();
 
 			if( mode == OPERATING_MODE_PRINT )   
 			{
@@ -5866,7 +5839,7 @@ void loopRF( void )
 				Com::printFLN( PSTR( "loopRF(): z-max is free" ) );
 			}
 
-			showIdle();
+			g_uStartOfIdle = HAL::timeInMilliseconds();
 		}
 	}
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
@@ -5953,10 +5926,6 @@ void outputObject( void )
 			uStart = HAL::timeInMilliseconds();
 		}
 
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
         UI_MEDIUM;
@@ -5977,7 +5946,7 @@ void outputObject( void )
 	{
 		uid.unlock();
 	}
-	showIdle();
+	g_uStartOfIdle = HAL::timeInMilliseconds();
 
 } // outputObject
 #endif // FEATURE_OUTPUT_FINISHED_OBJECT
@@ -6048,10 +6017,6 @@ void pausePrint( void )
 			// wait until the current move is completed
 			while( g_pauseStatus != PAUSE_STATUS_PAUSED )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				HAL::delayMilliseconds( 1 );
 				Commands::checkForPeriodicalActions();
 				GCode::keepAlive( Paused );
@@ -6138,10 +6103,6 @@ void pausePrint( void )
 
 		while( g_pauseStatus != PAUSE_STATUS_PAUSED )
 		{
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 			HAL::delayMilliseconds( 1 );
 			Commands::checkForPeriodicalActions();
 			GCode::keepAlive( Paused );
@@ -6247,10 +6208,6 @@ void continuePrint( void )
 				   (Printer::directPositionTargetSteps[Z_AXIS] != Printer::directPositionCurrentSteps[Z_AXIS]) ||
 				   (Printer::directPositionTargetSteps[E_AXIS] != Printer::directPositionCurrentSteps[E_AXIS]) )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				HAL::delayMilliseconds( 1 );
 				Commands::checkForPeriodicalActions();
 
@@ -6269,10 +6226,6 @@ void continuePrint( void )
 
 					while( (Printer::directPositionTargetSteps[Z_AXIS] != Printer::directPositionCurrentSteps[Z_AXIS]) )
 					{
-#if FEATURE_WATCHDOG
-						HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 						HAL::delayMilliseconds( 1 );
 						Commands::checkForPeriodicalActions();
 
@@ -6306,10 +6259,6 @@ void continuePrint( void )
 
 				while( Printer::directPositionTargetSteps[E_AXIS] != Printer::directPositionCurrentSteps[E_AXIS] )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					HAL::delayMilliseconds( 1 );
 					Commands::checkForPeriodicalActions();
 
@@ -6335,10 +6284,6 @@ void continuePrint( void )
 		char			timeout   = 0;
 		while( !PrintLine::cur )
 		{
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 			if( !PrintLine::linesCount )
 			{
 				// the printing won't continue in case there is nothing else to do
@@ -6580,10 +6525,6 @@ void waitUntilContinue( void )
 	
 	while ( g_pauseStatus != PAUSE_STATUS_NONE )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
 		GCode::keepAlive( Paused );
@@ -8013,7 +7954,7 @@ void processCommand( GCode* pCommand )
 							Com::printFLN( PSTR( "M3117: unlock" ) );
 						}
 
-						showIdle();
+						g_uStartOfIdle = HAL::timeInMilliseconds();
 					}
 				}
 				break;
@@ -9478,10 +9419,6 @@ void runStandardTasks( void )
 	GCode*	pCode;
 
 
-#if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 	GCode::readFromSerial();
 	pCode = GCode::peekCurrentCommand();
 	if( pCode )
@@ -9503,10 +9440,6 @@ void queueTask( char task )
 {
 	while( PrintLine::linesCount >= MOVE_CACHE_SIZE )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		// wait for a free entry in movement cache
 		GCode::readFromSerial();
 		Commands::checkForPeriodicalActions();
@@ -10937,10 +10870,6 @@ void findZOrigin( void )
 				uStartTime = HAL::timeInMilliseconds();
 				while( 1 )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					nCurrentPressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
 
 					if( nCurrentPressure > nMaxPressureContact || nCurrentPressure < nMinPressureContact )
@@ -10989,10 +10918,6 @@ void findZOrigin( void )
 				uStartTime = HAL::timeInMilliseconds();
 				while( 1 )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					nCurrentPressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
 
 					if( nCurrentPressure > nMinPressureContact && nCurrentPressure < nMaxPressureContact )
@@ -11233,10 +11158,6 @@ void testStrainGauge( void )
 				uStartTime = HAL::timeInMilliseconds();
 				while( 1 )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					nCurrentPressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
 
 					if( nCurrentPressure > nMaxPressureContact || nCurrentPressure < nMinPressureContact )
@@ -11285,10 +11206,6 @@ void testStrainGauge( void )
 				uStartTime = HAL::timeInMilliseconds();
 				while( 1 )
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					readAveragePressure( &nCurrentPressure );
 
 					if( nCurrentPressure > nMinPressureContact && nCurrentPressure < nMaxPressureContact )
@@ -11935,7 +11852,7 @@ void setupForPrinting( void )
 	Printer::setMenuMode( MENU_MODE_MILLER, false );
 	Printer::setMenuMode( MENU_MODE_PRINTER, true );
 	
-	showIdle();
+	g_uStartOfIdle = HAL::timeInMilliseconds();
 	return;
 
 } // setupForPrinting
@@ -11992,7 +11909,7 @@ void setupForMilling( void )
 	Printer::setMenuMode( MENU_MODE_PRINTER, false );
 	Printer::setMenuMode( MENU_MODE_MILLER, true );
 	
-	showIdle();
+	g_uStartOfIdle = HAL::timeInMilliseconds();
 	return;
 
 } // setupForMilling
@@ -12585,10 +12502,6 @@ void notifyAboutWrongHardwareType( unsigned char guessedHardwareType )
 
 			for( uint8_t i=0; i<count; i++ )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				WRITE( BEEPER_PIN_RF1000, HIGH );
 				HAL::delayMilliseconds( duration );
 				WRITE( BEEPER_PIN_RF1000, LOW );
@@ -12603,10 +12516,6 @@ void notifyAboutWrongHardwareType( unsigned char guessedHardwareType )
 
 			for( uint8_t i=0; i<count; i++ )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				WRITE( BEEPER_PIN_RF2000, HIGH );
 				HAL::delayMilliseconds( duration );
 				WRITE( BEEPER_PIN_RF2000, LOW );

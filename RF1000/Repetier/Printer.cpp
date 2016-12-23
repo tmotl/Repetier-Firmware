@@ -603,7 +603,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
         if(unitIsInches)
             feedrate = com->F * 0.0042333f * (float)feedrateMultiply;  // Factor is 25.5/60/100
         else
-            feedrate = com->F * (float)feedrateMultiply * 0.00016666666f;
+            feedrate = com->F * 0.00016666666f * (float)feedrateMultiply;
     }
 
     if(!Printer::isPositionAllowed(x,y,z))
@@ -1674,7 +1674,7 @@ void Printer::homeAxis(bool xaxis,bool yaxis,bool zaxis) // home non-delta print
 	{
 		uid.unlock();
 	}
-	showIdle();
+	g_uStartOfIdle = HAL::timeInMilliseconds();
     Commands::printCurrentPosition();
 
 } // homeAxis
@@ -1848,7 +1848,7 @@ void Printer::performZCompensation( void )
 				// set the direction only in case it is not set already
 				prepareBedDown();
 				stepperDirection[Z_AXIS] = 1;
-				//HAL::delayMicroseconds( 1 );
+				//return;
 			}
 			startZStep( 1 );
 			endZCompensationStep = 1;
@@ -1868,7 +1868,7 @@ void Printer::performZCompensation( void )
 				// set the direction only in case it is not set already
 				prepareBedUp();
 				stepperDirection[Z_AXIS] = -1;
-				//HAL::delayMicroseconds( 1 );
+				//return;
 			}
 			startZStep( -1 );
 			endZCompensationStep = -1;

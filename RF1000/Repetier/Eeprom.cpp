@@ -394,15 +394,21 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 
 void EEPROM::clearEEPROM()
 {
-    unsigned int i;
+	millis_t		lastTime	= HAL::timeInMilliseconds();
+	millis_t		currentTime;
+	unsigned int	i;
+
 
     for( i=0; i<2048; i++ )
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         HAL::eprSetByte( i, 0 );
+
+		currentTime = HAL::timeInMilliseconds();
+		if( (currentTime - lastTime) > PERIODICAL_ACTIONS_CALL_INTERVAL )
+		{
+			Commands::checkForPeriodicalActions();
+			lastTime = currentTime;
+		}
     }
 
 } // clearEEPROM
@@ -500,10 +506,6 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
     // now the extruder
     for(uint8_t i=0; i<NUM_EXTRUDER; i++)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         int o=i*EEPROM_EXTRUDER_LENGTH+EEPROM_EXTRUDER_OFFSET;
         Extruder *e = &extruder[i];
         HAL::eprSetFloat(o+EPR_EXTRUDER_STEPS_PER_MM,e->stepsPerMM);
@@ -715,10 +717,6 @@ void EEPROM::readDataFromEEPROM()
     // now the extruder
     for(uint8_t i=0; i<NUM_EXTRUDER; i++)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         int o=i*EEPROM_EXTRUDER_LENGTH+EEPROM_EXTRUDER_OFFSET;
         Extruder *e = &extruder[i];
         e->stepsPerMM = HAL::eprGetFloat(o+EPR_EXTRUDER_STEPS_PER_MM);
@@ -1079,10 +1077,6 @@ void EEPROM::writeSettings()
     // now the extruder
     for(uint8_t i=0; i<NUM_EXTRUDER; i++)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		int o=i*EEPROM_EXTRUDER_LENGTH+EEPROM_EXTRUDER_OFFSET;
         Extruder *e = &extruder[i];
         writeFloat(o+EPR_EXTRUDER_STEPS_PER_MM,Com::tEPRStepsPerMM);
@@ -1170,18 +1164,23 @@ void EEPROM::writeSettings()
 #if EEPROM_MODE!=0
 uint8_t EEPROM::computeChecksum()
 {
+	millis_t		lastTime	= HAL::timeInMilliseconds();
+	millis_t		currentTime;
     unsigned int	i;
     uint8_t			checksum=0;
 
 
     for(i=0; i<2048; i++)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		if(i==EEPROM_OFFSET+EPR_INTEGRITY_BYTE) continue;
         checksum += HAL::eprGetByte(i);
+
+		currentTime = HAL::timeInMilliseconds();
+		if( (currentTime - lastTime) > PERIODICAL_ACTIONS_CALL_INTERVAL )
+		{
+			Commands::checkForPeriodicalActions();
+			lastTime = currentTime;
+		}
     }
     return checksum;
 

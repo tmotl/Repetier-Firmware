@@ -1,3 +1,8 @@
+V RF.01.35 (2016-12-23)
+- In case the heat bed scan is started and the extruder is warmer than the target temperature, the firmware waits until the extruder has cooled down.
+- Review of all calls to the watchdog in order to avoid situations where the heaters could remain constantly on because of a hang of the firmware.
+- "Printer Ready" could be shown too early (= at any moment in the middle of the printing). Typically this information was shown only for a short moment of time.
+
 V RF.01.33 (2016-08-17)
 - The emergency stop because of too high pressure values from the strain gauge stops all axes (instead of only the z-axis) now.
 - At the end of the precise heat bed scan, the z-axis is moved 10 mm down before the extruder is heated up so that it is not too close to the surface.

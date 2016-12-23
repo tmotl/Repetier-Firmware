@@ -859,10 +859,6 @@ void PrintLine::updateTrapezoids()
     millis_t minTime = 4500L * RMath::min(MOVE_CACHE_SIZE,10);
     while(timeleft < minTime && maxfirst != linesWritePos)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         timeleft += lines[maxfirst].timeInTicks;
         nextPlannerIndex(maxfirst);
     }
@@ -1253,10 +1249,6 @@ void PrintLine::waitForXFreeLines(uint8_t b)
 {
     while(linesCount+b>MOVE_CACHE_SIZE)		// wait for a free entry in movement cache
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
     }
@@ -1375,10 +1367,6 @@ void PrintLine::arc(float *position, float *target, float *offset, float radius,
 
     for (i = 1; i<segments; i++)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         if((count & 4) == 0)
         {
             GCode::readFromSerial();
@@ -2002,10 +1990,6 @@ void PrintLine::performDirectSteps( void )
 			nIterations = 4;
 			while( nDirectionX || nDirectionY || nDirectionZ )
 			{
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 				HAL::delayMicroseconds( EXTENDED_BUTTONS_STEPPER_DELAY );
 
 				if( Printer::blockAll )
@@ -2118,10 +2102,6 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
     {
         for(uint8_t loop=0; loop<max_loops; loop++)
         {
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
             ANALYZER_ON(ANALYZER_CH1);
 
 #if STEPPER_HIGH_DELAY+DOUBLE_STEP_DELAY > 0
@@ -2398,7 +2378,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 
 		if(linesCount == 0 && nIdle)
 		{
-			showIdle();
+			g_uStartOfIdle = HAL::timeInMilliseconds();
 		}
 
 		interval = Printer::interval = interval >> 1; // 50% of time to next call to do cur=0

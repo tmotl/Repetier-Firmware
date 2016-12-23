@@ -567,10 +567,6 @@ public:
 
     static inline void allowInterrupts()
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         sei();
 
     } // allowInterrupts
@@ -579,11 +575,7 @@ public:
     {
         cli();
 
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
-    } // forbidInterrupts
+	} // forbidInterrupts
 
     static inline unsigned long timeInMilliseconds()
     {
