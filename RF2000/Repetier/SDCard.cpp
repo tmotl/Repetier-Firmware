@@ -169,11 +169,6 @@ void SDCard::abortPrint()
 	{
 		return;
 	}
-
-#if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 	Printer::setMenuMode(MENU_MODE_SD_PRINTING,false);
     Printer::setMenuMode(MENU_MODE_SD_PAUSED,false);
     
@@ -253,10 +248,6 @@ void SDCard::abortPrint()
 	// wait until all moves are done
 	while( PrintLine::linesCount )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		HAL::delayMilliseconds( 1 );
 		Commands::checkForPeriodicalActions();
 	}
@@ -266,7 +257,7 @@ void SDCard::abortPrint()
 	    Com::printFLN(PSTR("Abort complete"));
 	}
 
-	g_uStopTime = millis();
+	g_uStopTime = HAL::timeInMilliseconds();
 
 } // abortPrint
 
@@ -590,7 +581,7 @@ void SDCard::finishWrite()
 		Com::printFLN(Com::tDoneSavingFile);
 	}
 
-    showIdle();
+    g_uStartOfIdle = HAL::timeInMilliseconds();
 
 } // finishWrite
 
