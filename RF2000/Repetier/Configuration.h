@@ -839,7 +839,14 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 /** \brief Configuration of the external watchdog
 The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it was triggered, the value of WATCHDOG_TIMEOUT should be less than half of this time. */
 #define WATCHDOG_TIMEOUT					10													// [ms]
-
+#define	WATCHDOG_MAIN_LOOP_TIMEOUT			10000												// [ms]
+ 
+/** \brief Longer-lasting operations shall call our periodical actions at least each defined time interval */
+#define	PERIODICAL_ACTIONS_CALL_INTERVAL	10													// [ms]
+ 
+/** \brief The display shows that the device is idle after no new commands were processed for longer than the minimal idle time */
+#define	MINIMAL_IDLE_TIME					500
+	
 /** \brief If enabled you can select the distance your filament gets retracted during a M140 command, after a given temperature is reached. */
 #define RETRACT_DURING_HEATUP				true
 
