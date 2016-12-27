@@ -93,6 +93,9 @@
 // can overwrite the definition. That way new strings are at least in english
 // available.
 
+#if !defined(UI_LANGUAGE) || UI_LANGUAGE==0
+// Nibbels
+
 #define UI_TEXT_ON						"On"
 #define UI_TEXT_OFF						"Off"
 #define UI_TEXT_0						"0"
@@ -400,6 +403,9 @@
 #define UI_TEXT_OPERATION_DENIED		"Operation denied"
 #define	UI_TEXT_TEMPERATURE_WRONG		"Temperature wrong"
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
+
+#endif
+//!defined(UI_LANGUAGE) || UI_LANGUAGE==0 Nibbels
 
 // ##########################################################################################
 // ##    German
