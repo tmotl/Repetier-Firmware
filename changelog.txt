@@ -1,3 +1,8 @@
+V RF.01.35b
+Fix for several compiler warnings and wrong init-values.
+Fix for several //comments after #defines
+Fix for several redeclarations of #defines
+
 V RF.01.35a
 Fix für pins.h according to rf_42
 Source: http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16000
