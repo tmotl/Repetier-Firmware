@@ -422,7 +422,7 @@ void initializeLCD();
 #define UI_HAS_KEYS						  1		// 1 = Some keys attached
 #define UI_HAS_BACK_KEY					  1
 #define UI_DISPLAY_TYPE					  1		// 1 = LCD Display with 4 bit data bus
-#define UI_DISPLAY_CHARSET				  1
+//#define UI_DISPLAY_CHARSET				  1
 #define UI_COLS							 16
 #define UI_ROWS							  4
 #define UI_DELAYPERCHAR					320
@@ -479,7 +479,7 @@ void ui_check_slow_keys(int &action) {}
 #define UI_HAS_KEYS						  1		// 1 = Some keys attached
 #define UI_HAS_BACK_KEY					  1
 #define UI_DISPLAY_TYPE					  1		// 1 = LCD Display with 4 bit data bus
-#define UI_DISPLAY_CHARSET				  1
+//#define UI_DISPLAY_CHARSET				  1
 #define UI_COLS							 20
 #define UI_ROWS							  4
 #define UI_DELAYPERCHAR					320
