@@ -4812,7 +4812,7 @@ char determineCompensationOffsetZ( void )
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 	short	x;
 	short	y;
-	short	uMax = -1000000;
+	short	uMax = -32768;
 
 
 	for( x=1; x<=g_uZMatrixMax[X_AXIS]; x++ )
