@@ -192,7 +192,7 @@ public:
         return flags & FLAG_NOMINAL;
     } // isNominalMove
 
-    inline bool setNominalMove()
+    inline void setNominalMove()
     {
         flags |= FLAG_NOMINAL;
     } // setNominalMove
