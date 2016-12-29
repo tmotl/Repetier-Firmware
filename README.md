@@ -29,3 +29,5 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 * introduceing a new command M3902 to fix a HeatBeds Hole within the HBS Matrix.
 * introduceing a new command M3903 to configure a very slow heat bed temperature decrease
 * introduceing a new command M355 to configure MOS FET X19 (Wessix-Licht-Mod)
+
+## !! 29.12.2016: Project is Work in Progress and untested changes are pending !! Fixing copiler warnings, but untested!
