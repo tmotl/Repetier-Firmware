@@ -156,10 +156,10 @@ unsigned long	g_uBlockSDCommands			= 0;
 //long			g_debugInt32				= 0;
 
 // other configurable parameters
-unsigned long	g_nManualSteps[4]			= { DEFAULT_MANUAL_STEPS_X, DEFAULT_MANUAL_STEPS_Y, DEFAULT_MANUAL_STEPS_Z, DEFAULT_MANUAL_STEPS_E };
+unsigned long	g_nManualSteps[4]			= { (unsigned long)DEFAULT_MANUAL_STEPS_X, (unsigned long)DEFAULT_MANUAL_STEPS_Y, (unsigned long)DEFAULT_MANUAL_STEPS_Z, (unsigned long)DEFAULT_MANUAL_STEPS_E };
 
 #if FEATURE_PAUSE_PRINTING
-long			g_nPauseSteps[4]			= { DEFAULT_PAUSE_STEPS_X, DEFAULT_PAUSE_STEPS_Y, DEFAULT_PAUSE_STEPS_Z, DEFAULT_PAUSE_STEPS_EXTRUDER };
+long			g_nPauseSteps[4]			= { (long)DEFAULT_PAUSE_STEPS_X, (long)DEFAULT_PAUSE_STEPS_Y, (long)DEFAULT_PAUSE_STEPS_Z, (long)DEFAULT_PAUSE_STEPS_EXTRUDER };
 long			g_nContinueSteps[4]			= { 0, 0, 0, 0 };
 char			g_pauseStatus				= PAUSE_STATUS_NONE;
 char			g_pauseMode					= PAUSE_MODE_NONE;
