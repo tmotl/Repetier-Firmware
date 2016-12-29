@@ -119,7 +119,7 @@ void SDCard::initsd()
     Printer::setMenuMode(MENU_MODE_SD_MOUNTED,true);
 
     fat.chdir();
-    if(selectFile("init.g",true))
+    if(selectFile((char *)"init.g",true))
     {
         startPrint();
     }
