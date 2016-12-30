@@ -372,8 +372,8 @@ The codes are only executed for multiple extruder when changing the extruder. */
 // ##	Configuration of the 2. extruder
 // ##########################################################################################
 
-#define EXT1_X_OFFSET						(33.9 * XAXIS_STEPS_PER_MM)		// [steps]
-#define EXT1_Y_OFFSET						( 0.1 * YAXIS_STEPS_PER_MM)		// [steps]
+#define EXT1_X_OFFSET						(int32_t)(33.9 * XAXIS_STEPS_PER_MM)		// [steps]
+#define EXT1_Y_OFFSET						(int32_t)( 0.1 * YAXIS_STEPS_PER_MM)		// [steps]
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
 #define EXT1_STEPS_PER_MM					(8.75 * RF_MICRO_STEPS)
