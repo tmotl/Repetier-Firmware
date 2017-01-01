@@ -31,3 +31,5 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 * introduceing a new command M355 to configure MOS FET X19 (Wessix-Licht-Mod)
 
 ## !! 29.12.2016: Project is Work in Progress and untested changes are pending !! Fixing copiler warnings, but untested!
+
+## !! 31.12.2016: As in V 1.35 i saw crashes when outputting objects. Once after calibrating, once after printing 1h. This needs to be tested and compared to the original V1.35.
