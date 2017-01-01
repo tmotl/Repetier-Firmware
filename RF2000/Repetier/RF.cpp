@@ -1883,6 +1883,7 @@ void startSearchHeatBedZOffset( void )
       HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG*/
       uid.refreshPage();
+	GCode::readFromSerial(); //empoy buffer, has to be called frequently
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
       
       g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
@@ -1891,7 +1892,7 @@ void startSearchHeatBedZOffset( void )
 #endif // FEATURE_WATCHDOG*/
       uid.refreshPage();
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
-    
+	GCode::readFromSerial(); //empoy buffer, has to be called frequently
 #if DEBUG_HEAT_BED_SCAN == 2
       Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6  i = " ), i );
 #endif // DEBUG_HEAT_BED_SCAN
@@ -1925,7 +1926,8 @@ void startSearchHeatBedZOffset( void )
       Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZScanZPosition = " ), g_nZScanZPosition );
       Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
 #endif // DEBUG_HEAT_BED_SCAN
-
+	    
+	GCode::readFromSerial(); //empoy buffer, has to be called frequently
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
 
 /*#if FEATURE_WATCHDOG
