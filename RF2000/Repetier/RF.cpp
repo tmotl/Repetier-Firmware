@@ -1768,6 +1768,7 @@ void startSearchHeatBedZOffset( void )
 		
     // load the unaltered compensation matrix from the EEPROM
     if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0){
+	g_uStopTime = HAL::timeInMilliseconds();
    	 Com::printFLN( PSTR( "searchHeatBedZOffset(): Loading zMatrix from EEPROM" ) );
 	 loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
     }else{
@@ -1810,7 +1811,7 @@ void startSearchHeatBedZOffset( void )
 
     // safety check on the current matrix
     if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT) {
-      Com::printFLN( PSTR( "searchHeatBedZOffset(): The previous compensation matrix is invalid!" ) );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): EEPROM_FORMAT::The previous compensation matrix is invalid!" ) );
       abortSearchHeatBedZOffset();
       return;
     }
@@ -1882,6 +1883,7 @@ void startSearchHeatBedZOffset( void )
 /*#if FEATURE_WATCHDOG
       HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG*/
+	g_uStopTime = HAL::timeInMilliseconds();
       uid.refreshPage();
 	GCode::readFromSerial(); //empoy buffer, has to be called frequently
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
@@ -1890,6 +1892,7 @@ void startSearchHeatBedZOffset( void )
 /*#if FEATURE_WATCHDOG
       HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG*/
+	g_uStopTime = HAL::timeInMilliseconds();
       uid.refreshPage();
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
 	GCode::readFromSerial(); //empoy buffer, has to be called frequently
@@ -1908,6 +1911,7 @@ void startSearchHeatBedZOffset( void )
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
 */
 
+	g_uStopTime = HAL::timeInMilliseconds();
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
     
@@ -1933,12 +1937,13 @@ void startSearchHeatBedZOffset( void )
 /*#if FEATURE_WATCHDOG
       HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG*/
+	g_uStopTime = HAL::timeInMilliseconds();
 
     }
 
     // safety check on the current matrix			
     if(g_ZCompensationMatrix[1][1] > 0) {
-      Com::printFLN( PSTR( "searchHeatBedZOffset(): The previous compensation matrix is invalid!" ) );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): Not_Negative::The previous compensation matrix is invalid!" ) );
       abortSearchHeatBedZOffset();
       return;
     }
@@ -2000,6 +2005,7 @@ void startSearchHeatBedZOffset( void )
         g_ZCompensationMatrix[x][y] = newValue;
       }
     }
+	g_uStopTime = HAL::timeInMilliseconds();
 
     // fail if overflow occurred
     if(overflow) {
@@ -2026,6 +2032,7 @@ void startSearchHeatBedZOffset( void )
 /*#if FEATURE_WATCHDOG
     HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG*/
+	g_uStopTime = HAL::timeInMilliseconds();
 
     moveZ( abs(g_nZScanZPosition) );    // g_nZScanZPosition is negative. we need to move the heatbed down to be at z=0 again
 
