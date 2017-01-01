@@ -1768,10 +1768,16 @@ void startSearchHeatBedZOffset( void )
 		
     // load the unaltered compensation matrix from the EEPROM
     if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0){
-   	 Com::printFLN( PSTR( "searchHeatBedZOffset(): Loading zMatrix from EEPROM" ) );
-	 loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+		Com::printFLN( PSTR( "searchHeatBedZOffset(): Loading zMatrix from EEPROM" ) );
+
+		//Bearbeitet Tasks:
+		GCode::readFromSerial(); //empoy buffer, has to be called frequently
+		Commands::checkForPeriodicalActions();
+		GCode::keepAlive( Processing );
+	  
+		loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
     }else{
-         Com::printFLN( PSTR( "searchHeatBedZOffset(): Reusing existing zMatrix" ) );
+		Com::printFLN( PSTR( "searchHeatBedZOffset(): Reusing existing zMatrix" ) );
     }
 
     g_nZScanZPosition = 0;
@@ -1810,7 +1816,8 @@ void startSearchHeatBedZOffset( void )
 
     // safety check on the current matrix
     if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT) {
-      Com::printFLN( PSTR( "searchHeatBedZOffset(): The previous compensation matrix is invalid!" ) );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): EEPROM_FORMAT::The previous compensation matrix is invalid!" ) );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): Bitte neuen HBS machen! Please do a fresh HBS!" ) );
       abortSearchHeatBedZOffset();
       return;
     }
@@ -1829,6 +1836,11 @@ void startSearchHeatBedZOffset( void )
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 3" ) );
 #endif // DEBUG_HEAT_BED_SCAN == 2
 
+	//Bearbeitet Tasks:
+	GCode::readFromSerial(); //empoy buffer, has to be called frequently
+	Commands::checkForPeriodicalActions();
+	GCode::keepAlive( Processing );
+	  
     HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
 
     int err = readIdlePressure( &g_nCurrentIdlePressure );
@@ -1879,34 +1891,35 @@ void startSearchHeatBedZOffset( void )
 
       // move two of the fast steps from moveZUpFast() down again
       g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
-/*#if FEATURE_WATCHDOG
-      HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG*/
+
       uid.refreshPage();
-      HAL::delayMilliseconds( g_nScanSlowStepDelay );
+	  
+	  //Bearbeitet Tasks:
+	  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+	  Commands::checkForPeriodicalActions();
+	  GCode::keepAlive( Processing );
+    
+	  HAL::delayMilliseconds( g_nScanSlowStepDelay );
       
       g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
-/*#if FEATURE_WATCHDOG
-      HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG*/
+
       uid.refreshPage();
+	  
+	  //Bearbeitet Tasks:
+	  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+	  Commands::checkForPeriodicalActions();
+	  GCode::keepAlive( Processing );
+	  
       HAL::delayMilliseconds( g_nScanSlowStepDelay );
-    
+	  
+	  //Bearbeitet Tasks:
+	  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+	  Commands::checkForPeriodicalActions();
+	  GCode::keepAlive( Processing );
+	  
 #if DEBUG_HEAT_BED_SCAN == 2
       Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6  i = " ), i );
 #endif // DEBUG_HEAT_BED_SCAN
-
-/*
-      // small retract  ---> seems not to work relibaly. Sometimes the following moveZUpSlow is not executed any more if this is enabled!
-      PrintLine::moveRelativeDistanceInSteps( 0, 0, 0, -(SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN), EXT0_MAX_FEEDRATE, true, true );
-
-#if FEATURE_WATCHDOG
-      HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-      uid.refreshPage();
-      HAL::delayMilliseconds( g_nScanSlowStepDelay );
-*/
-
       // move slowly to the surface
       moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
     
@@ -1925,18 +1938,17 @@ void startSearchHeatBedZOffset( void )
       Com::printFLN( PSTR( "searchHeatBedZOffset(): g_nZScanZPosition = " ), g_nZScanZPosition );
       Com::printFLN( PSTR( "searchHeatBedZOffset(): min_nZScanZPosition = " ), min_nZScanZPosition );
 #endif // DEBUG_HEAT_BED_SCAN
-
-      HAL::delayMilliseconds( g_nScanSlowStepDelay );
-
-/*#if FEATURE_WATCHDOG
-      HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG*/
+	    
+	  //Bearbeitet Tasks:
+	  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+	  Commands::checkForPeriodicalActions();
+	  GCode::keepAlive( Processing );
 
     }
 
     // safety check on the current matrix			
     if(g_ZCompensationMatrix[1][1] > 0) {
-      Com::printFLN( PSTR( "searchHeatBedZOffset(): The previous compensation matrix is invalid!" ) );
+      Com::printFLN( PSTR( "searchHeatBedZOffset(): Not_Negative::The previous compensation matrix is invalid!" ) );
       abortSearchHeatBedZOffset();
       return;
     }
@@ -1975,21 +1987,21 @@ void startSearchHeatBedZOffset( void )
 	
     for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
       for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
-	x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
-	y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
+		x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
+		y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
 	
         Com::printF( PSTR( "weighting: x_i=" ), x );
         Com::printF( PSTR( " y_i=" ), y );
         Com::printF( PSTR( " x_dist=" ), x_dist );
         Com::printF( PSTR( " y_dist=" ), y_dist );
-	//das ist nur ein kreisabstand, wenn die messpunkte quadratisch angeordnet sind, ist aber nicht so?
+		//das ist nur ein kreisabstand, wenn die messpunkte quadratisch angeordnet sind, ist aber nicht so?
 	      // evtl. todo: achse faktor skalieren, sodass kreis x/y=(10/13)
-	xy_weight = 1 - sqrt(x_dist*x_dist+y_dist*y_dist); //ohne wurzel wärs quadratisch gewichtet, ich will aber linear. 
-	if(xy_weight < 0.0) xy_weight = 0;
-	if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
-        Com::printF( PSTR( " xy_weight=" ), xy_weight );
+		xy_weight = 1 - sqrt(x_dist*x_dist+y_dist*y_dist); //ohne wurzel wärs quadratisch gewichtet, ich will aber linear. 
+		if(xy_weight < 0.0) xy_weight = 0;
+		if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
+		Com::printF( PSTR( " xy_weight=" ), xy_weight );
 	      
-	long weighted_nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
+		long weighted_nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
 	      
         Com::printFLN( PSTR( " nZ_weighted(x,y)=" ), weighted_nZ );
 	      
@@ -1998,6 +2010,7 @@ void startSearchHeatBedZOffset( void )
         g_ZCompensationMatrix[x][y] = newValue;
       }
     }
+	//g_uStopTime = HAL::timeInMilliseconds();
 
     // fail if overflow occurred
     if(overflow) {
@@ -2019,11 +2032,13 @@ void startSearchHeatBedZOffset( void )
     Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 8" ) );
 #endif // DEBUG_HEAT_BED_SCAN
 
-    HAL::delayMilliseconds( g_nScanSlowStepDelay );
 
-/*#if FEATURE_WATCHDOG
-    HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG*/
+	//Bearbeitet Tasks:
+	GCode::readFromSerial(); //empoy buffer, has to be called frequently
+	Commands::checkForPeriodicalActions();
+	GCode::keepAlive( Processing );
+
+    HAL::delayMilliseconds( g_nScanSlowStepDelay );
 
     moveZ( abs(g_nZScanZPosition) );    // g_nZScanZPosition is negative. we need to move the heatbed down to be at z=0 again
 
