@@ -33,3 +33,4 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
 ## !! 11.01.2017: Project is Work in Progress and untested changes are possible.
+## !! 11.01.2017: There is some instability in the newest Version, if the ZOS is processing, my heat bed moved in y.
