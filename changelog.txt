@@ -1,3 +1,9 @@
+V RF.01.35c.mod
+ZOS-Bugfix
+Message Cleanup for ZOS
+Sidejob-and-Wait-Strategy for ZOS
+Included StarTonys Fan-Mod http://www.rf1000.de/viewtopic.php?f=7&t=1638
+
 V RF.01.35c
 Changed ZOS Strategy to a "switch"-Type triggered by loopRF for better communication.
 ZOS Message cleanup
