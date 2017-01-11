@@ -1752,7 +1752,7 @@ void Commands::executeGCode(GCode *com)
 #endif // FEATURE_CASE_LIGHT
 			case 400:	// M400 - Finish all moves
 			{
-	            Commands::waitUntilEndOfAllMoves();
+	            		Commands::waitUntilEndOfAllMoves();
 		        break;
 			}
 
@@ -1771,7 +1771,6 @@ void Commands::executeGCode(GCode *com)
 
 			case 908:	// M908 - Control digital trimpot directly.
 			{
-				uint8_t channel,current;
 				if(com->hasP() && com->hasS())
 					setMotorCurrent((uint8_t)com->P, (unsigned int)com->S);
 		        break;

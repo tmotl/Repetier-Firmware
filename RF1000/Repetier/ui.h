@@ -343,11 +343,11 @@ public:
     void*				messageLine2;
     void*				messageLine3;
     void*				messageLine4;
-    uint16_t			activeAction;				// action for ok/next/previous
-    uint16_t			lastAction;
+    int			activeAction;				// action for ok/next/previous
+    int			lastAction;
     millis_t			lastSwitch;					// Last time display switched pages
     millis_t			lastRefresh;
-    uint16_t			lastButtonAction;
+    int			lastButtonAction;
     millis_t			lastButtonStart;
     millis_t			nextRepeat;					// Time of next autorepeat
     millis_t			lastNextPrev;				// for increasing speed settings
@@ -470,7 +470,9 @@ void ui_check_keys(int &action)
 } // ui_check_keys
 
 inline void ui_check_slow_encoder() {}
-void ui_check_slow_keys(int &action) {}
+void ui_check_slow_keys(int &action) {
+	(void)action;
+}
 #endif // UI_MAIN
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 
@@ -527,7 +529,9 @@ void ui_check_keys(int &action)
 } // ui_check_keys
 
 inline void ui_check_slow_encoder() {}
-void ui_check_slow_keys(int &action) {}
+void ui_check_slow_keys(int &action) {
+	(void)action;
+}
 #endif // UI_MAIN
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 

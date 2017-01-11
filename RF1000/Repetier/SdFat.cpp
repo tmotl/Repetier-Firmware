@@ -29,9 +29,9 @@ extern int8_t RFstrnicmp(const char* s1, const char* s2, size_t n);
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-static void pstrPrint(FSTRINGPARAM(str)) {
-    Com::printF(str);
-}
+//static void pstrPrint(FSTRINGPARAM(str)) {
+//    Com::printF(str);
+//}
 //------------------------------------------------------------------------------
 static void pstrPrintln(FSTRINGPARAM(str)) {
   Com::printFLN(str);
@@ -502,7 +502,7 @@ bool SdBaseFile::createContiguous(SdBaseFile* dirFile,
  * the value zero, false, is returned for failure.
  */
 bool SdBaseFile::dirEntry(dir_t* dir) {
-  dir_t* p;
+  dir_t* p = NULL;
   // make sure fields on SD are correct
   if (!sync()) {
     DBG_FAIL_MACRO;
@@ -604,7 +604,8 @@ int16_t SdBaseFile::fgets(char* str, int16_t num, char* delim) {
  * the value zero, false, is returned for failure.
  */
 bool SdBaseFile::getFilename(char* name) {
-  dir_t* p;
+  dir_t* p = NULL;
+  
   if (!isOpen()) {
     DBG_FAIL_MACRO;
     goto fail;
@@ -650,8 +651,8 @@ void SdBaseFile::ls(uint8_t flags) {
 uint8_t SdBaseFile::lsRecursive(SdBaseFile *parent, uint8_t level, char *findFilename, SdBaseFile *pParentFound)
 {
     dir_t *p = NULL;
-    uint8_t cnt=0;
-    char *oldpathend = pathend;
+    //uint8_t cnt=0;
+    //char *oldpathend = pathend;
 
     parent->rewind();
 
@@ -748,8 +749,9 @@ uint8_t SdBaseFile::lsRecursive(SdBaseFile *parent, uint8_t level, char *findFil
  * list to indicate subdirectory level.
  */
 void SdBaseFile::ls(uint8_t flags, uint8_t indent) {
+  (void)flags;
+  (void)indent;
   SdBaseFile parent;
-
   rewind();
     *fullName = 0;
    pathend = fullName;
@@ -761,7 +763,7 @@ void SdBaseFile::ls(uint8_t flags, uint8_t indent) {
 // return 0 - EOF, 1 - normal file, or 2 - directory
 int8_t SdBaseFile::lsPrintNext(uint8_t flags, uint8_t indent) {
   dir_t dir;
-  uint8_t w = 0;
+  //uint8_t w = 0;
   while (1) {
     if (read(&dir, sizeof(dir)) != sizeof(dir)) return 0;
     if (dir.name[0] == DIR_NAME_FREE) return 0;
@@ -871,7 +873,7 @@ bool SdBaseFile::mkdir(SdBaseFile* parent, const char* path, bool pFlag) {
     return mkdir(&newParent, dname);
     }
 
- fail:
+ //fail:
   return false;
 }
 //------------------------------------------------------------------------------
@@ -999,10 +1001,10 @@ bool SdBaseFile::mkdir(SdBaseFile* parent, const uint8_t *dname) {
    SdBaseFile *newParent, boolean bMakeDirs) {
   SdBaseFile dir1, dir2;
   SdBaseFile *parent = dirFile;
-  dir_t *pEntry;
+  //dir_t *pEntry;
   SdBaseFile *sub = &dir1;
   char *p;
-  boolean bFound;
+  //boolean bFound;
 
 #ifdef GLENN_DEBUG
     Commands::checkFreeMemory();
@@ -1046,7 +1048,7 @@ bool SdBaseFile::mkdir(SdBaseFile* parent, const uint8_t *dname) {
        Commands::checkFreeMemory();
        Commands::writeLowestFreeRAM();
 #endif
-        bFound = false;
+        //bFound = false;
         if (!sub->open(parent, dname, O_READ, false))
             {
             if (!bMakeDirs)
@@ -1087,7 +1089,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile, const char* path, uint8_t oflag)
     return open(&parent, dname, oflag, false);
     }
 
- fail:
+ //fail:
   return false;
 }
 
@@ -1107,11 +1109,11 @@ uint8_t SdBaseFile::lfn_checksum(const unsigned char *pFCBName)
 bool SdBaseFile::open(SdBaseFile* dirFile,const uint8_t *dname, uint8_t oflag, bool bDir) {
   bool emptyFound = false;
   uint8_t index = 0;
-  dir_t tempDir, *p;
+  dir_t tempDir, *p = NULL;
   const char *tempPtr;
   char newName[SHORT_FILENAME_LENGTH+2];
   boolean bShortName = false;
-  int8_t cVFATNeeded = -1, wIndex, cVFATFoundCur;
+  int8_t cVFATNeeded = -1, cVFATFoundCur = 0; //wIndex,
   uint32_t wIndexPos = 0;
   uint8_t cbFilename;
   char *Filename = (char *)dname;
@@ -1318,8 +1320,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile,const uint8_t *dname, uint8_t oflag, b
  * \return true for success or false for failure.
  */
 bool SdBaseFile::open(SdBaseFile* dirFile, uint16_t index, uint8_t oflag) {
-  dir_t* p;
-
+  dir_t* p = NULL;
   vol_ = dirFile->vol_;
 
   // error if already open
@@ -1427,7 +1428,6 @@ bool SdBaseFile::openCachedEntry(uint8_t dirIndex, uint8_t oflag) {
  * \return true for success or false for failure.
  */
 bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag) {
-  dir_t* p;
   uint8_t index;
 
   if (!dirFile) {
@@ -1445,7 +1445,7 @@ bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag) {
     index = 0XF & (dirFile->curPosition_ >> 5);
 
     // read entry into cache
-    p = dirFile->readDirCache();
+    dir_t* p = dirFile->readDirCache();
     if (!p) {
       DBG_FAIL_MACRO;
       goto fail;
@@ -1478,7 +1478,8 @@ bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag) {
  */
 bool SdBaseFile::openParent(SdBaseFile* dir) {
   dir_t entry;
-  dir_t* p;
+  dir_t* p = NULL;
+  
   SdBaseFile file;
   uint32_t c;
   uint32_t cluster;
@@ -1512,8 +1513,8 @@ bool SdBaseFile::openParent(SdBaseFile* dir) {
   // start block for '..'
   lbn = vol_->clusterStartBlock(cluster);
   // first block of parent dir
-    pc = vol_->cacheFetch(lbn, SdVolume::CACHE_FOR_READ);
-    if (!pc) {
+  pc = vol_->cacheFetch(lbn, SdVolume::CACHE_FOR_READ);
+  if (!pc) {
     DBG_FAIL_MACRO;
     goto fail;
   }
@@ -1954,6 +1955,8 @@ int SdBaseFile::read(void* buf, size_t nbyte) {
 
 dir_t *SdBaseFile::getLongFilename(dir_t *dir, char *longFilename, int8_t cVFATNeeded, uint32_t *pwIndexPos)
 {
+  (void)cVFATNeeded;
+  (void)pwIndexPos;
   int16_t n;
   uint8_t bLastPart = true;
   uint8_t checksum;
@@ -2047,7 +2050,7 @@ dir_t *SdBaseFile::getLongFilename(dir_t *dir, char *longFilename, int8_t cVFATN
 
 bool SdBaseFile::findSpace(dir_t *dir, int8_t cVFATNeeded, int8_t *pcVFATFound, uint32_t *pwIndexPos)
 {
-  int16_t n;
+  //int16_t n;
   int8_t cVFATFound = 0;
   // if not a directory file or miss-positioned return an error
   if (!isDir()) return -1;
@@ -2073,7 +2076,7 @@ bool SdBaseFile::findSpace(dir_t *dir, int8_t cVFATNeeded, int8_t *pcVFATFound, 
            {
           if (DIR_IS_LONG_NAME(dir))
             {
-            vfat_t *VFAT = (vfat_t*)dir;
+            //vfat_t *VFAT = (vfat_t*)dir;
             cVFATFound++;
             }
           else
@@ -2115,6 +2118,7 @@ bool SdBaseFile::findSpace(dir_t *dir, int8_t cVFATNeeded, int8_t *pcVFATFound, 
  */
 
 int8_t SdBaseFile::readDir(dir_t* dir, char* longFilename) {
+  (void)longFilename;
   int16_t n;
   // if not a directory file or miss-positioned return an error
   if (!isDir() || (0X1F & curPosition_)) return -1;
@@ -3458,7 +3462,7 @@ bool Sd2Card::readData(uint8_t* dst, size_t count) {
     goto fail;
   }
   // transfer data
-  if (status_ = spiRec(dst, count)) {
+  if ( (status_ = spiRec(dst, count)) ) {
     error(SD_CARD_ERROR_SPI_DMA);
     goto fail;
   }

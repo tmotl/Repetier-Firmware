@@ -391,6 +391,7 @@ void HAL::analogStart()
     /* ADCW must be read once, otherwise the next result is wrong. */
     uint dummyADCResult;
     dummyADCResult = ADCW;
+	(void)dummyADCResult;
     // Enable interrupt driven conversion loop
     uint8_t channel = pgm_read_byte(&osAnalogInputChannels[osAnalogInputPos]);
 
@@ -1116,6 +1117,7 @@ ISR(PWM_TIMER_VECTOR)
     pwm_count_cooler += COOLER_PWM_STEP;
     pwm_count_heater += HEATER_PWM_STEP;
 
+	(void)pwm_cooler_pos_set;
 } // ISR(PWM_TIMER_VECTOR)
 
 
