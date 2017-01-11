@@ -34,3 +34,4 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
 ## !! 11.01.2017: Project is Work in Progress and untested changes are possible.
 ## !! 11.01.2017: There is some instability in the newest Version, if the ZOS is processing, my heat bed moved in y.
+## !! 11.01.2017: ZOS is not working like it should rightnow. I know the reason but need time to solve it. Come back later or use the old version.
