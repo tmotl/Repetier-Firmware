@@ -30,8 +30,6 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 * introduceing a new command M3903 to configure a very slow heat bed temperature decrease
 * introduceing a new command M355 to configure MOS FET X19 (Wessix-Licht-Mod)
 
-## !! 29.12.2016: Project is Work in Progress and untested changes are pending !! Fixing copiler warnings, but untested!
-
-## !! 31.12.2016: As in V 1.35 i saw crashes when outputting objects. Once after calibrating, once after printing 1h. This needs to be tested and compared to the original V1.35.
--> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
+## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
+## !! 11.01.2017: Project is Work in Progress and untested changes are possible.
