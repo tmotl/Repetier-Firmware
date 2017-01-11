@@ -1,6 +1,7 @@
 V RF.01.35c
 Changed ZOS Strategy to a "switch"-Type triggered by loopRF for better communication.
 ZOS Message cleanup
+ZOS now reloads Matrix on +z-Matrix-Entry
 Fixed almost all Compiler-Warnings
 Fixed missing Init-Value für "enable" in Extruder::
 
