@@ -35,7 +35,7 @@ extern const int8_t encoder_table[16] PROGMEM ;
 #endif // BEEPER_TYPE==2 && defined(UI_HAS_I2C_KEYS) && UI_I2C_KEY_ADDRESS!=BEEPER_ADDRESS
 
 #if UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
-long	g_nAutoReturnTime		 = 0;
+millis_t g_nAutoReturnTime		 = 0;
 #endif // UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
 
 char	g_nYesNo				 = 0;		// 0 = no, 1 = yes
@@ -1867,7 +1867,7 @@ uint8_t nFilesOnCard;
 void UIDisplay::updateSDFileCount()
 {
     dir_t* p = NULL;
-    byte offset = menuTop[menuLevel];
+    //byte offset = menuTop[menuLevel];
     SdBaseFile *root = sd.fat.vwd();
 
     root->rewind();
@@ -1888,8 +1888,8 @@ void UIDisplay::updateSDFileCount()
 
 void getSDFilenameAt(byte filePos,char *filename)
 {
-    dir_t* p;
-    byte c=0;
+    dir_t* p = NULL;
+    //byte c=0;
     SdBaseFile *root = sd.fat.vwd();
 
     root->rewind();
@@ -2020,7 +2020,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
 void UIDisplay::refreshPage()
 {
     uint8_t r;
-    uint8_t mtype;
+    uint8_t mtype = 0;
     char cache[UI_ROWS][MAX_COLS+1];
     adjustMenuPos();
 
@@ -2055,7 +2055,7 @@ void UIDisplay::refreshPage()
     if(menuLevel==0)
     {
         UIMenu *men = (UIMenu*)pgm_read_word(&(ui_pages[menuPos[0]]));
-        uint8_t nr = pgm_read_word_near(&(men->numEntries));
+        short nr = pgm_read_word_near(&(men->numEntries));
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
         for(r=0; r<nr && r<UI_ROWS; r++)
         {
@@ -2068,7 +2068,7 @@ void UIDisplay::refreshPage()
     else
     {
         UIMenu *men = (UIMenu*)menu[menuLevel];
-        uint8_t nr = pgm_read_word_near((void*)&(men->numEntries));
+        short nr = pgm_read_word_near((void*)&(men->numEntries));
         mtype = pgm_read_byte((void*)&(men->menuType));
         uint8_t offset = menuTop[menuLevel];
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
@@ -2083,7 +2083,7 @@ void UIDisplay::refreshPage()
             }
 
 			unsigned char entType = pgm_read_byte(&(ent->menuType));
-            unsigned int entAction = pgm_read_word(&(ent->action));
+            int entAction = (int)pgm_read_word(&(ent->action));
 
 			printCols[0] = ' ';
 			col = 1;
@@ -2660,12 +2660,13 @@ void UIDisplay::nextPreviousAction(int8_t next)
     }
 
     UIMenu *men = (UIMenu*)menu[menuLevel];
-    uint8_t nr = pgm_read_word_near(&(men->numEntries));
+    short nr = pgm_read_word_near(&(men->numEntries));
     uint8_t mtype = HAL::readFlashByte((const prog_char*)&(men->menuType));
     UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
     UIMenuEntry *ent =(UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
     UIMenuEntry *testEnt;
     uint8_t entType = HAL::readFlashByte((const prog_char*)&(ent->menuType));	// 0 = Info, 1 = Headline, 2 = submenu ref, 3 = direct action command
+	(void)entType; //ignore unused error Nibbels
     int action = pgm_read_word(&(ent->action));
     
 	if(mtype==2 && activeAction==0)   // browse through menu items
@@ -3142,7 +3143,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		case UI_ACTION_BAUDRATE:
 		{
 #if EEPROM_MODE!=0
-			char p=0;
+			unsigned char p=0;
 			int32_t rate;
 			do
 			{
@@ -3152,11 +3153,15 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
 			}while(rate!=0);
 
-			if(rate==0) p-=2;
-			p+=increment;
-			if(p<0) p = 0;
+			if(rate==0 && p>=2) p-=2;
+			else if(rate==0 && p==1) p=0;
+			
+			if(p+increment >= 0) p+=increment;
+			else if(p+increment <= 0) p=0;
+			
+			//if(p<0) p = 0;
 			rate = pgm_read_dword(&(baudrates[p]));
-			if(rate==0) p--;
+			if(rate==0 && p>=1) p--;
 			baudrate = pgm_read_dword(&(baudrates[p]));
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
@@ -4635,6 +4640,7 @@ void UIDisplay::slowAction()
     {
         UIMenu *men = (UIMenu*)menu[menuLevel];
         uint8_t mtype = pgm_read_byte((void*)&(men->menuType));
+		(void)mtype; //ignore unused error Nibbels
         refresh=1;
     }
 

@@ -384,7 +384,6 @@ public:
             if(advanceTarget<advanceEnd)
                 advanceTarget = advanceEnd;
         }
-
         long h = HAL::mulu16xu16to32(v,advanceL);
         int tred = ((advanceTarget + h) >> 16);
 
@@ -412,6 +411,8 @@ public:
         HAL::allowInterrupts();
 #endif // ENABLE_QUADRATIC_ADVANCE
 #endif // USE_ADVANCE
+		(void)max_loops;
+		(void)accelerate;
     } // updateAdvanceSteps
 
     inline bool moveDecelerating()

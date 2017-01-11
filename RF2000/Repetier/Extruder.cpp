@@ -182,7 +182,7 @@ void Extruder::manageTemperatures()
             {
                 float raising = 3.333 * (act->currentTemperatureC - act->tempArray[act->tempPointer]); // raising dT/dt, 3.33 = reciproke of time interval (300 ms)
                 act->tempIState = 0.25 * (3.0 * act->tempIState + raising); // damp raising
-                output = (act->currentTemperatureC + act->tempIState * act->pidPGain > target ? 0 : output = act->pidDriveMax);
+                output = (act->currentTemperatureC + act->tempIState * act->pidPGain > target ? 0 : act->pidDriveMax);
             }
             pwm_pos[act->pwmIndex] = output;
         }
@@ -794,13 +794,13 @@ void TemperatureController::updateCurrentTemperature()
 			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word_near(&temptables[type]);
 			short oldraw = pgm_read_word(&temptable[0]);
 			short oldtemp = pgm_read_word(&temptable[1]);
-			short newraw,newtemp;
+			short newtemp = 0;
 			int temp = (1023<<(2-ANALOG_REDUCE_BITS))-currentTemperature;
 
 
 			while(i<num)
 			{
-				newraw = pgm_read_word(&temptable[i++]);
+				short newraw = pgm_read_word(&temptable[i++]);
 				newtemp = pgm_read_word(&temptable[i++]);
 				if (newraw > temp)
 				{
@@ -857,12 +857,12 @@ void TemperatureController::updateCurrentTemperature()
 			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word_near(&temptables[type]);
 			short oldraw = pgm_read_word(&temptable[0]);
 			short oldtemp = pgm_read_word(&temptable[1]);
-			short newraw,newtemp;
+			short newtemp = 0;
 
 
 			while(i<num)
 			{
-				newraw = pgm_read_word(&temptable[i++]);
+				short newraw = pgm_read_word(&temptable[i++]);
 				newtemp = pgm_read_word(&temptable[i++]);
 				if (newraw > currentTemperature)
 				{
@@ -1035,12 +1035,12 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
 			short oldraw = pgm_read_word(&temptable[0]);
 			short oldtemp = pgm_read_word(&temptable[1]);
-			short newraw,newtemp;
+			short newraw = 0;
 			
 			while(i<num)
 			{
 				newraw = pgm_read_word(&temptable[i++]);
-				newtemp = pgm_read_word(&temptable[i++]);
+				short newtemp = pgm_read_word(&temptable[i++]);
 				if (newtemp < temp)
 				{
 					targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
@@ -1073,12 +1073,12 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
 			short oldraw = pgm_read_word(&temptable[0]);
 			short oldtemp = pgm_read_word(&temptable[1]);
-			short newraw,newtemp;
+			short newraw = 0;
 
 			while(i<num)
 			{
 				newraw = pgm_read_word(&temptable[i++]);
-				newtemp = pgm_read_word(&temptable[i++]);
+				short newtemp = pgm_read_word(&temptable[i++]);
 				if (newtemp > temp)
 				{
 					targetTemperature = oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
@@ -1170,7 +1170,7 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 		}
 #endif
     }
-
+	(void)offset;
 } // setTargetTemperature
 
 
@@ -1485,6 +1485,9 @@ Extruder extruder[NUM_EXTRUDER] =
 #endif // TEMP_PID
         ,0}
         ,ext0_select_cmd,ext0_deselect_cmd,EXT0_EXTRUDER_COOLER_SPEED,0
+		#if STEPPER_ON_DELAY
+		,0
+		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>0
 
@@ -1515,6 +1518,9 @@ Extruder extruder[NUM_EXTRUDER] =
 #endif // TEMP_PID
         ,0}
         ,ext1_select_cmd,ext1_deselect_cmd,EXT1_EXTRUDER_COOLER_SPEED,0
+		#if STEPPER_ON_DELAY
+		,0
+		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>1
 
@@ -1539,7 +1545,10 @@ Extruder extruder[NUM_EXTRUDER] =
 #endif // TEMP_PID
 
         ,0}
-        ,ext2_select_cmd,ext2_deselect_cmd,EXT2_EXTRUDER_COOLER_SPEED,0
+        ,ext2_select_cmd,ext2_deselect_cmd,EXT2_EXTRUDER_COOLER_SPEED,0		
+		#if STEPPER_ON_DELAY
+		,0
+		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>2
 
@@ -1565,6 +1574,10 @@ Extruder extruder[NUM_EXTRUDER] =
 
         ,0}
         ,ext3_select_cmd,ext3_deselect_cmd,EXT3_EXTRUDER_COOLER_SPEED,0
+		
+		#if STEPPER_ON_DELAY
+		,0
+		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>3
 
@@ -1590,6 +1603,10 @@ Extruder extruder[NUM_EXTRUDER] =
 
         ,0}
         ,ext4_select_cmd,ext4_deselect_cmd,EXT4_EXTRUDER_COOLER_SPEED,0
+		
+		#if STEPPER_ON_DELAY
+		,0
+		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>4
 
@@ -1615,6 +1632,10 @@ Extruder extruder[NUM_EXTRUDER] =
 
         ,0}
         ,ext5_select_cmd,ext5_deselect_cmd,EXT5_EXTRUDER_COOLER_SPEED,0
+		
+		#if STEPPER_ON_DELAY
+		,0
+		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>5
 };

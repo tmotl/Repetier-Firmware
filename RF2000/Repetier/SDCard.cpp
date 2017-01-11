@@ -475,7 +475,7 @@ bool SDCard::selectFile(char *filename, bool silent)
 {
     SdBaseFile	parent;
     char*		oldP = filename;
-    boolean		bFound;
+    //boolean		bFound;
 
 
     if(!sdactive) return false;

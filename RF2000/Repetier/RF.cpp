@@ -61,6 +61,8 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_
 long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
 float			g_ZOSlearningRate = 1.0;
 float			g_ZOSlearningGradient = 0.0;
+unsigned char	g_ZOSScanStatus	   = 0;
+long			g_min_nZScanZPosition = 0;
 
 //Rest:
 
@@ -318,6 +320,7 @@ short readStrainGauge( unsigned char uAddress )
 	Result += Wire.read();
         
 	Register = Wire.read();
+	(void)Register; //Nibbels: Tut so als würde die variable benutzt werden. Macht aber nix.
 	Wire.endTransmission();
 
 	return Result;
@@ -377,13 +380,12 @@ void scanHeatBed( void )
 	static unsigned char	nIndexX;
 	static unsigned char	nIndexY;
 	static char				nIndexYDirection;
-	static char				nRetry;
 	static long				nX;
 	static long				nY;
 	static long				nZ;
 	static long				nYDirection;
 	static short			nContactPressure;
-	unsigned char			nLastHeatBedScanStatus = g_nHeatBedScanStatus;
+	//unsigned char			nLastHeatBedScanStatus = g_nHeatBedScanStatus;
 	short					nTempPressure;
 	long					nTempPosition;
 
@@ -915,7 +917,7 @@ void scanHeatBed( void )
 			case 53:
 			{
 				// move slowly to the surface
-				nZ += moveZUpSlow( &nTempPressure, &nRetry );
+				nZ += moveZUpSlow( &nTempPressure );
 				g_nZScanZPosition = nZ;
 				nContactPressure  = nTempPressure;
 
@@ -1337,7 +1339,7 @@ void scanHeatBed( void )
 			case 122:
 			{
 				// move slowly to the surface
-				nZ += moveZUpSlow( &nTempPressure, &nRetry );
+				nZ += moveZUpSlow( &nTempPressure );
 				g_nZScanZPosition = nZ;
 
 				g_nHeatBedScanStatus = 123;
@@ -1629,7 +1631,7 @@ void scanHeatBed( void )
 			case 143:
 			{
 				// move slowly to the surface
-				nZ += moveZUpSlow( &nTempPressure, &nRetry );
+				nZ += moveZUpSlow( &nTempPressure );
 				g_nZScanZPosition = nZ;
 
 				g_nHeatBedScanStatus = 144;
@@ -1754,11 +1756,362 @@ void scanHeatBed( void )
 
 /**************************************************************************************************************************************/
 
+
 void startSearchHeatBedZOffset( void )
 {
-	unsigned long	uStartTime;
-	unsigned long	uCurrentTime;
-	static char     nRetry;
+	if(g_ZOSScanStatus == 0) return; 
+	
+	switch( g_ZOSScanStatus )
+		{
+			case 1:
+			{	
+				Com::printFLN( PSTR( "ZOS(): started" ) );
+				// when the heat bed Z offset is searched, the z-compensation must be disabled
+				resetZCompensation();	
+				g_ZOSScanStatus = 2;	
+				g_nZScanZPosition = 0;
+				g_min_nZScanZPosition = 0; //nur nutzen wenn kleiner.
+				g_scanRetries = 0; // never retry   TODO allow retries?
+				g_abortZScan = 0;  // will be set in case of error inside moveZUpFast/Slow
+				break;
+			}
+			case 2:
+			{					
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printFLN( PSTR( "ZOS(): STEP 1 : Load Matrix" ) );
+				#endif // DEBUG_HEAT_BED_SCAN == 2
+				// load the unaltered compensation matrix from the EEPROM
+				if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT || g_ZOSlearningRate == 1.0){
+					Com::printFLN( PSTR( "ZOS(): Loading zMatrix from EEPROM" ) );
+					loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+				}else{
+					Com::printFLN( PSTR( "ZOS(): Reusing existing zMatrix" ) );
+					if(g_ZCompensationMatrix[1][1] > 0) {
+						Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix is >0!" ) );
+						Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
+						loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+					}
+				}				
+				// safety check on the current matrix			
+				if(g_ZCompensationMatrix[1][1] > 0) {
+				  Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix is >0!" ) );
+				  abortSearchHeatBedZOffset();
+				  break;
+				}			
+			    // safety check on the current matrix
+				if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT) {
+				  Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix EEPROM_FORMAT is invalid!" ) );
+				  Com::printFLN( PSTR( "ZOS(): ERROR::Bitte neuen HBS machen! Please do a fresh HBS!" ) );
+				  abortSearchHeatBedZOffset();
+				  break;
+				}
+				g_ZOSScanStatus = 3;	
+				break;
+			}
+			case 3:
+			{	
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printFLN( PSTR( "ZOS(): STEP 2 : Home" ) );
+				#endif // DEBUG_HEAT_BED_SCAN == 2
+
+				previousMillisCmd = HAL::timeInMilliseconds();
+				Printer::enableZStepper();
+				Printer::unsetAllSteppersDisabled();
+
+				// prepare the direction of the z-axis (we have to move the heat bed up)
+				prepareBedUp();
+				g_nTempDirectionZ	 = -1;			
+
+				// start at the home position
+				Printer::homeAxis( true, true, true );
+				Commands::waitUntilEndOfAllMoves();
+				g_ZOSScanStatus = 4;	
+				break;
+			}
+			case 4:
+			{	
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printF( PSTR( "ZOS(): STEP 3 : Spacing " ),HEAT_BED_SCAN_Z_START_STEPS );
+					Com::printFLN( PSTR( " [Steps]" ) );
+				#endif // DEBUG_HEAT_BED_SCAN == 2
+
+				// move a bit away from the heat bed in order to achieve better measurements in case of hardware configurations where the extruder is very close to the heat bed after the z-homing
+				g_nZScanZPosition += moveZ( HEAT_BED_SCAN_Z_START_STEPS );
+				g_ZOSScanStatus = 6;	
+				break;
+			}
+
+			case 6:
+			{	
+			    // move to the first scan position of the heat bed scan matrix
+				long xScanPosition = g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS] + HEAT_BED_SCAN_X_START_STEPS;
+				long yScanPosition = g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS] + HEAT_BED_SCAN_Y_START_STEPS;
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printF( PSTR( "ZOS(): STEP 4 : Scan Position" ) );
+					Com::printF( PSTR( "= (" ), xScanPosition );
+					Com::printF( PSTR( ", " ), yScanPosition );
+					Com::printFLN( PSTR( ") [(x,y) Steps]" ) );
+				#endif // DEBUG_HEAT_BED_SCAN == 2
+				PrintLine::moveRelativeDistanceInSteps( xScanPosition, 0, 0, 0, MAX_FEEDRATE_X, true, true );
+				PrintLine::moveRelativeDistanceInSteps( 0, yScanPosition, 0, 0, MAX_FEEDRATE_Y, true, true );
+
+				g_ZOSScanStatus = 8;	
+				break;
+			}
+			case 8:
+			{	
+			    HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+				g_ZOSScanStatus = 9;	
+				break;
+			}
+			case 9:
+			{	
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printFLN( PSTR( "ZOS(): STEP 5 : Idle Pressure" ) );
+				#endif // DEBUG_HEAT_BED_SCAN == 2
+				int err = readIdlePressure( &g_nCurrentIdlePressure );
+				if( err != 0 ) {
+				  Com::printFLN( PSTR( "ZOS(): ERROR::the idle pressure could not be determined" ) );
+				  abortSearchHeatBedZOffset();
+				  break;
+				}
+
+				g_nMinPressureContact = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA;
+				g_nMaxPressureContact = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA;
+				g_nMinPressureRetry	  = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA;
+				g_nMaxPressureRetry   = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA;
+				g_nMinPressureIdle	  = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA;
+				g_nMaxPressureIdle	  = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA;
+
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printFLN( PSTR( "Idle Values:" ) );
+					Com::printFLN( PSTR( " g_nMinPressureContact = " ), g_nMinPressureContact );
+					Com::printFLN( PSTR( " g_nMaxPressureContact = " ), g_nMaxPressureContact );
+					Com::printFLN( PSTR( " g_nMinPressureRetry = " ), g_nMinPressureRetry );
+					Com::printFLN( PSTR( " g_nMaxPressureRetry = " ), g_nMaxPressureRetry );
+					Com::printFLN( PSTR( " g_nMinPressureIdle = " ), g_nMinPressureIdle );
+					Com::printFLN( PSTR( " g_nMaxPressureIdle = " ), g_nMaxPressureIdle );
+				#endif // DEBUG_HEAT_BED_SCAN == 2
+				g_ZOSScanStatus = 10;	
+				break;
+			}
+			case 10:
+			{	
+				#if DEBUG_HEAT_BED_SCAN == 2
+					Com::printFLN( PSTR( "ZOS(): STEP 6 : Up" ) );
+				#endif // DEBUG_HEAT_BED_SCAN == 2			
+				// move to the surface
+				moveZUpFast(false); // without runStandardTasks() inside to prevent an endless loop
+				
+				// check for error
+				if(g_abortZScan) {
+				  Com::printFLN( PSTR( "ZOS(): ERROR::cannot find the surface in fast scan" ) );
+				  abortSearchHeatBedZOffset();
+				  break;
+				}
+		
+				g_ZOSScanStatus = 20;	
+				break;
+			}
+			case 20:
+			{	
+			    // we have roughly found the surface, now we perform the precise slow scan three times	
+				for(int i=0; i<SEARCH_HEAT_BED_OFFSET_SCAN_ITERATIONS; ++i) {
+				#if DEBUG_HEAT_BED_SCAN == 2
+					  Com::printFLN( PSTR( "ZOS(): STEP 7 : Testing Surface " ));
+					  Com::printF( PSTR( " " ), (i+1) );
+					  Com::printFLN( PSTR( "x" ) );
+				#endif // DEBUG_HEAT_BED_SCAN
+
+					  // move two of the fast steps from moveZUpFast() down again
+					  g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
+
+					  uid.refreshPage();
+					  
+					  //Bearbeitet Tasks:
+					  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+					  Commands::checkForPeriodicalActions();
+					  GCode::keepAlive( Processing );
+					
+					  HAL::delayMilliseconds( g_nScanSlowStepDelay );
+					  
+					  g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
+
+					  uid.refreshPage();
+					  
+					  //Bearbeitet Tasks:
+					  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+					  Commands::checkForPeriodicalActions();
+					  GCode::keepAlive( Processing );
+					  
+					  HAL::delayMilliseconds( g_nScanSlowStepDelay );
+					  
+					  //Bearbeitet Tasks:
+					  GCode::readFromSerial(); //empoy buffer, has to be called frequently
+					  Commands::checkForPeriodicalActions();
+					  GCode::keepAlive( Processing );
+					  
+					  // move slowly to the surface
+					  short nTempPressure;
+					  moveZUpSlow( &nTempPressure, false ); // without runStandardTasks() inside to prevent an endless loop
+					
+					  // check for error
+					  if(g_abortZScan) {
+						Com::printFLN( PSTR( "ZOS(): ERROR::cannot find the surface in slow scan" ) );
+						abortSearchHeatBedZOffset();
+						break;
+					  }
+					  
+					  // keep the minimum as the final result
+					  if(g_nZScanZPosition < g_min_nZScanZPosition) g_min_nZScanZPosition = g_nZScanZPosition;
+
+				#if DEBUG_HEAT_BED_SCAN == 2
+					  Com::printF( PSTR( "ZOS(): Z = " ), g_nZScanZPosition );
+					  Com::printFLN( PSTR( " Minimum-Z = " ), g_min_nZScanZPosition );
+				#endif // DEBUG_HEAT_BED_SCAN
+				}				
+				
+				g_ZOSScanStatus = 50;	
+				break;
+				
+			}
+			case 50:
+			{	 
+				// compute number of steps we need to shift the entire matrix by
+				long nZ = g_min_nZScanZPosition - g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][g_ZOSTestPoint[Y_AXIS]];
+							
+			#if DEBUG_HEAT_BED_SCAN == 2
+				Com::printFLN( PSTR( "ZOS(): STEP 8 : " ) );
+				Com::printFLN( PSTR( "ZOS(): Matrix-Wert Z = " ),
+							   g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][g_ZOSTestPoint[Y_AXIS]] );
+				Com::printFLN( PSTR( "ZOS(): Minimum Z = " ), g_min_nZScanZPosition );
+				Com::printFLN( PSTR( "ZOS(): Differenz = " ), nZ );
+			#endif // DEBUG_HEAT_BED_SCAN
+							
+				// update the matrix: shift by nZ and check for integer overflow
+				bool overflow = false;
+				bool overnull = false;
+				
+				//Nibbels: scaling nZ according to learning Rate for additional corrective scans
+				nZ = (long)((float)nZ * g_ZOSlearningRate);
+				Com::printFLN( PSTR( "ZOS(): nZ*g_ZOSlearningRate = " ), nZ );		
+				
+				//Nibbels: weight change because of distance. lerne bettwinkelausgleich.
+				float x_bed_len_quadrat = (float)((g_uZMatrixMax[X_AXIS]-2)*(g_uZMatrixMax[X_AXIS]-2)); //index zwischenabstamd x_n - x_0
+				float y_bed_len_quadrat = (float)((g_uZMatrixMax[Y_AXIS]-2)*(g_uZMatrixMax[Y_AXIS]-2));
+				float x_dist = 0;
+				float y_dist = 0;
+				float xy_weight = 0;
+				long weighted_nZ = 0;
+				long newValue = 0;
+				Com::printFLN( PSTR( "ZOS(): INFO: weighted_nZ = g_ZOSlearningGradient*xy_weight*nZ + (1.0-g_ZOSlearningGradient)*nZ" ) );
+				
+				for(short x=1; x<=g_uZMatrixMax[X_AXIS]; x++) {
+				  for(short y=1; y<=g_uZMatrixMax[Y_AXIS]; y++) {
+					x_dist = (g_ZOSTestPoint[X_AXIS]-x)*(g_ZOSTestPoint[X_AXIS]-x)/x_bed_len_quadrat; //normierter indexabstand
+					y_dist = (g_ZOSTestPoint[Y_AXIS]-y)*(g_ZOSTestPoint[Y_AXIS]-y)/y_bed_len_quadrat; //normierter indexabstand
+					//das ist nur ein kreisabstand, wenn die messpunkte quadratisch angeordnet sind, ist aber nicht so?
+					  // evtl. todo: achse faktor skalieren, sodass kreis x/y=(10/13)
+					xy_weight = 1 - sqrt(x_dist*x_dist+y_dist*y_dist); //ohne wurzel wärs quadratisch gewichtet, ich will aber linear. 
+					if(xy_weight < 0.0) xy_weight = 0;
+					if(xy_weight > 1.0) xy_weight = 1.0; //kann aber nicht wirklich vorkommen.
+					weighted_nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
+					newValue = (long)g_ZCompensationMatrix[x][y] + weighted_nZ;
+					if(newValue > 32767 || newValue < -32768) overflow = true;
+					if(newValue > 0) overnull = true; //darf nicht positiv werden.
+					g_ZCompensationMatrix[x][y] = newValue;
+				  }
+				}
+				// fail if overflow occurred
+				if(overflow) {
+				  // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is invalid
+				  Com::printFLN( PSTR( "ZOS(): ERROR::The measured correction is too large to be stored in the matrix (integer overflow)!" ) );
+				  Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
+				  loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+				  abortSearchHeatBedZOffset();
+					break;
+				}
+				// fail if z>0 occurred
+				if(overnull) {
+				  // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is bigger than z=zero
+				  Com::printFLN( PSTR( "ZOS(): ERROR::At least one measured correction is z>0!" ) );
+				  Com::printFLN( PSTR( "ZOS(): FIX::Clean Hotend-Nozzle" ) );
+				  Com::printFLN( PSTR( "ZOS(): FIX::Scrape off Filament-Popel from Scan-Position :)" ) );
+				  Com::printFLN( PSTR( "ZOS(): FIX::Improve Z-Endstop!" ) );
+				  Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
+				  loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+				  abortSearchHeatBedZOffset();
+					break;
+				}
+				
+				// determine the minimal distance between extruder and heat bed
+				determineCompensationOffsetZ();
+				
+				g_ZOSScanStatus = 54;	
+				break;
+			}
+			case 54:
+			{	
+
+			#if DEBUG_HEAT_BED_SCAN == 2
+				Com::printFLN( PSTR( "ZOS(): STEP 9 : GOTO z=0" ) );
+			#endif // DEBUG_HEAT_BED_SCAN
+			
+				HAL::delayMilliseconds( g_nScanSlowStepDelay );
+				moveZ( abs(g_nZScanZPosition) );    // g_nZScanZPosition is negative. we need to move the heatbed down to be at z=0 again
+				HAL::delayMilliseconds( g_nScanSlowStepDelay );
+				Commands::printCurrentPosition();
+				UI_STATUS_UPD( UI_TEXT_FIND_Z_ORIGIN_DONE );
+
+			#if DEBUG_HEAT_BED_SCAN == 2
+				Com::printFLN( PSTR( "ZOS(): finished" ) );
+			#endif // DEBUG_HEAT_BED_SCAN
+
+				g_nZScanZPosition = 0;
+				g_ZOSScanStatus = 0;
+				break;
+			}
+			default:
+			{
+				Com::printFLN( PSTR( "ZOS(): CASE DEFAULT SCHEISSE :D" ), g_nZScanZPosition );
+				abortSearchHeatBedZOffset();
+			}
+		}
+	return;
+} // startSearchHeatBedZOffset
+
+void abortSearchHeatBedZOffset( void )
+{
+	g_ZOSScanStatus = 0;
+    // the search has been aborted
+    Com::printFLN( PSTR( "searchHeatBedZOffset(): the search has been aborted" ) );
+
+    // move the heatbed 5mm down to avoid collisions, then home all axes, again move 5mm away
+    moveZ( 5*Printer::axisStepsPerMM[Z_AXIS] );
+    Printer::homeAxis( true, true, true );
+    moveZ( 5*Printer::axisStepsPerMM[Z_AXIS] );
+
+    // show error message (stays until confirmed by user)
+    showError( (void*)ui_text_heat_bed_zoffset_search_aborted );
+
+    // turn off all steppers and extruders
+	Printer::setAllSteppersDisabled();
+    Printer::disableXStepper();
+    Printer::disableYStepper();
+    Printer::disableZStepper();
+    Extruder::disableAllExtruders();
+
+    g_nZScanZPosition = 0;
+    return;
+
+} /* searchHeatBedZOffset */
+
+
+
+
+
+void startSearchHeatBedZOffset_old( void )
+{
 	short           nTempPressure;
 
     Com::printFLN( PSTR( "searchHeatBedZOffset(): started" ) );
@@ -1921,7 +2274,7 @@ void startSearchHeatBedZOffset( void )
       Com::printFLN( PSTR( "searchHeatBedZOffset(): STEP 6  i = " ), i );
 #endif // DEBUG_HEAT_BED_SCAN
       // move slowly to the surface
-      moveZUpSlow( &nTempPressure, &nRetry, false ); // without runStandardTasks() inside to prevent an endless loop
+      moveZUpSlow( &nTempPressure, false ); // without runStandardTasks() inside to prevent an endless loop
     
       // check for error
       if(g_abortZScan) {
@@ -2058,7 +2411,7 @@ void startSearchHeatBedZOffset( void )
 	return;
 } // startSearchHeatBedZOffset
 
-void abortSearchHeatBedZOffset( void )
+void abortSearchHeatBedZOffset_old( void )
 {
     // the search has been aborted
     Com::printFLN( PSTR( "searchHeatBedZOffset(): the search has been aborted" ) );
@@ -2281,13 +2634,13 @@ void doHeatBedZCompensation( void )
 {
 	long			nCurrentPositionSteps[3];
 	unsigned char	nXLeftIndex;
-	unsigned char	nXRightIndex;
+	unsigned char	nXRightIndex = 0;
 	unsigned char	nYFrontIndex;
-	unsigned char	nYBackIndex;
+	unsigned char	nYBackIndex = 0;
 	long			nXLeftSteps;
-	long			nXRightSteps;
+	long			nXRightSteps = 0;
 	long			nYFrontSteps;
-	long			nYBackSteps;
+	long			nYBackSteps = 0;
 	long			nTemp;
 	long			nDeltaX;
 	long			nDeltaY;
@@ -2297,7 +2650,7 @@ void doHeatBedZCompensation( void )
 	long			nNeededZCompensation;
 	long			nTempXFront;
 	long			nTempXBack;
-	long			nTempZ;
+	//long			nTempZ;
 	long			i;
 
 
@@ -2458,13 +2811,13 @@ long getHeatBedOffset( void )
 	long			nCurrentPositionSteps[2];
 	long			nOffset;
 	unsigned char	nXLeftIndex;
-	unsigned char	nXRightIndex;
+	unsigned char	nXRightIndex = 0;
 	unsigned char	nYFrontIndex;
-	unsigned char	nYBackIndex;
+	unsigned char	nYBackIndex = 0;
 	long			nXLeftSteps;
-	long			nXRightSteps;
+	long			nXRightSteps = 0;
 	long			nYFrontSteps;
-	long			nYBackSteps;
+	long			nYBackSteps= 0;
 	long			nTemp;
 	long			nDeltaX;
 	long			nDeltaY;
@@ -2598,13 +2951,12 @@ void scanWorkPart( void )
 	static unsigned char	nIndexX;
 	static unsigned char	nIndexY;
 	static char				nIndexYDirection;
-	static char				nRetry;
 	static long				nX;
 	static long				nY;
 	static long				nZ;
 	static long				nYDirection;
-	static short			nContactPressure;
-	char					nLastWorkPartScanStatus = g_nWorkPartScanStatus;
+	static short			nContactPressure = 0;
+	//char					nLastWorkPartScanStatus = g_nWorkPartScanStatus;
 	short					nTempPressure;
 	long					nTempPosition;
 
@@ -3158,7 +3510,7 @@ void scanWorkPart( void )
 			case 53:
 			{
 				// move slowly to the surface
-				nZ += moveZUpSlow( &nTempPressure, &nRetry );
+				nZ += moveZUpSlow( &nTempPressure );
 				g_nZScanZPosition = nZ;
 
 				nContactPressure	  = nTempPressure;
@@ -3464,7 +3816,7 @@ void scanWorkPart( void )
 			}
 		}
 	}
-
+	(void)nContactPressure;
 	return;
 
 } // scanWorkPart
@@ -3474,23 +3826,23 @@ void doWorkPartZCompensation( void )
 {
 	long			nCurrentPositionSteps[3];
 	unsigned char	nXLeftIndex;
-	unsigned char	nXRightIndex;
+	unsigned char	nXRightIndex = 0;
 	unsigned char	nYFrontIndex;
-	unsigned char	nYBackIndex;
+	unsigned char	nYBackIndex = 0;
 	long			nXLeftSteps;
-	long			nXRightSteps;
+	long			nXRightSteps = 0;
 	long			nYFrontSteps;
-	long			nYBackSteps;
+	long			nYBackSteps = 0;
 	long			nTemp;
 	long			nDeltaX;
 	long			nDeltaY;
-	long			nDeltaZ;
+	//long			nDeltaZ;
 	long			nStepSizeX;
 	long			nStepSizeY;
 	long			nNeededZCompensation;
 	long			nTempXFront;
 	long			nTempXBack;
-	long			nTempZ;
+	//long			nTempZ;
 	long			i;
 
 
@@ -3631,13 +3983,13 @@ long getWorkPartOffset( void )
 	long			nCurrentPositionSteps[2];
 	long			nOffset;
 	unsigned char	nXLeftIndex;
-	unsigned char	nXRightIndex;
+	unsigned char	nXRightIndex = 1;
 	unsigned char	nYFrontIndex;
-	unsigned char	nYBackIndex;
+	unsigned char	nYBackIndex = 0;
 	long			nXLeftSteps;
-	long			nXRightSteps;
+	long			nXRightSteps = 0;
 	long			nYFrontSteps;
-	long			nYBackSteps;
+	long			nYBackSteps = 0;
 	long			nTemp;
 	long			nDeltaX;
 	long			nDeltaY;
@@ -3730,17 +4082,17 @@ long getWorkPartOffset( void )
 void determineStaticCompensationZ( void )
 {
 	long	nXLeftIndex;
-	long	nXRightIndex;
+	long	nXRightIndex = 0;
 	long	nYFrontIndex;
-	long	nYBackIndex;
+	long	nYBackIndex = 0;
 	long	nXLeftSteps;
-	long	nXRightSteps;
+	long	nXRightSteps = 0;
 	long	nYFrontSteps;
-	long	nYBackSteps;
+	long	nYBackSteps = 0;
 	long	nTemp;
 	long	nDeltaX;
 	long	nDeltaY;
-	long	nDeltaZ;
+	//long	nDeltaZ;
 	long	nStepSizeX;
 	long	nStepSizeY;
 	long	nTempXFront;
@@ -3884,7 +4236,7 @@ short readIdlePressure( short* pnIdlePressure )
 short testIdlePressure( void )
 {
 	short	nTempPressure;
-	short	nTemp;
+	//short	nTemp;
 
 
 	if( readAveragePressure( &nTempPressure ) )
@@ -4096,7 +4448,7 @@ short moveZDownSlow( bool execRunStandardTasks )
 } // moveZDownSlow
 
 
-short moveZUpSlow( short* pnContactPressure, char* pnRetry, bool execRunStandardTasks )
+short moveZUpSlow( short* pnContactPressure, bool execRunStandardTasks )
 {
 	short	nTempPressure;
 	short	nZ = 0;
@@ -4318,8 +4670,8 @@ void freeZ( int nSteps )
 {
 	int		i;
 	int		nMaxLoops;
-	char	bBreak;
-	char	nRun = 1;
+	//char	bBreak;
+	//char	nRun = 1;
 	
 
 	// Warning: this function does not check any end stops
@@ -5425,12 +5777,20 @@ void loopRF( void )
 
 	if( Printer::operatingMode == OPERATING_MODE_PRINT )
 	{
+		
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 		if( g_nHeatBedScanStatus )
 		{
 			scanHeatBed();
 		}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+		if( g_ZOSScanStatus )
+		{
+			startSearchHeatBedZOffset();
+		}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
 	}
 	else
 	{
@@ -5448,6 +5808,13 @@ void loopRF( void )
 	if( g_nHeatBedScanStatus )
 	{
 		scanHeatBed();
+	}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+	if( g_ZOSScanStatus )
+	{
+		startSearchHeatBedZOffset();
 	}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -6428,7 +6795,7 @@ void parkPrinter( void )
 #if FEATURE_PAUSE_PRINTING
 void pausePrint( void )
 {
-	long	Temp;
+	//long	Temp;
 
 
 	if( Printer::debugErrors() )
@@ -9859,8 +10226,7 @@ void processCommand( GCode* pCommand )
 					Com::printFLN( PSTR( " [Matrix-index]" ) );
 					Com::printFLN( PSTR( "M3900: [S] ZOS learning rate is : "), g_ZOSlearningRate);
 					Com::printFLN( PSTR( "M3900: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
-					
-					startSearchHeatBedZOffset();
+					g_ZOSScanStatus = 1; //=startSearchHeatBedZOffset(); über loopRF
 				}
 				break;
 			}
@@ -10075,7 +10441,7 @@ void queueTask( char task )
 
 extern void processButton( int nAction )
 {
-	long	Temp;
+	//long	Temp;
 
 
 	switch( nAction )
@@ -11016,7 +11382,7 @@ void drv8711Disable( unsigned char driver )
 
 void drv8711Init( void )
 {
-	char	i;
+	//char	i;
   
 
 	// configure the pins
@@ -11099,7 +11465,7 @@ void drv8711Init( void )
 void setMotorCurrent( unsigned char driver, unsigned short level )
 {
 	unsigned short	command;
-	char			i;
+	//char			i;
 	
 	
 	// NOTE: Do not increase the current endlessly. In case the engine reaches its current saturation, the engine and the driver can heat up and loss power.
@@ -12605,7 +12971,7 @@ void prepareZCompensation( void )
 
 void resetZCompensation( void )
 {
-	Com::printFLN( PSTR( "resetZCompensation()" ) );
+	if(g_ZOSScanStatus == 0) Com::printFLN( PSTR( "resetZCompensation()" ) ); //nur melden, wenn es ausserhalb dem scan stattfindet.
 
 	HAL::forbidInterrupts();
 
@@ -12980,7 +13346,7 @@ float getHeatBedTemperatureOffset( float temperatureInCelsius )
 	const unsigned char		measuredTemperatures[] = BED_MEASURED_TEMPERATURES;
 	float					deltaLow, deltaHigh;
 	float					temp;
-	char					i;
+	unsigned char					i;
 
 
 	if( temperatureInCelsius <= setpointTemperatures[0] )

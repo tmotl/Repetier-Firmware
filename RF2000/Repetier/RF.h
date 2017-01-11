@@ -762,7 +762,7 @@ extern short moveZUpFast( bool execRunStandardTasks=true );
 extern short moveZDownSlow( bool execRunStandardTasks=true );
 
 // moveZUpSlow()
-extern short moveZUpSlow( short* pnContactPressure, char* pnRetry, bool execRunStandardTasks=true );
+extern short moveZUpSlow( short* pnContactPressure, bool execRunStandardTasks=true );
 
 // moveZDownFast()
 extern short moveZDownFast( bool execRunStandardTasks=true );

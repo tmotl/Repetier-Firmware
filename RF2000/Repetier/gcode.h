@@ -172,8 +172,8 @@ public:
     } // hasFormatError
 
     void printCommand();
-    bool parseBinary(uint8_t *buffer,bool fromSerial);
-    bool parseAscii(char *line,bool fromSerial);
+    bool parseBinary(uint8_t *buffer);
+    bool parseAscii(char *line);
     void popCurrentCommand();
     void echoCommand();
     static GCode *peekCurrentCommand();

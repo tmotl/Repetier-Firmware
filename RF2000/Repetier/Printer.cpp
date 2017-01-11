@@ -278,9 +278,13 @@ void Printer::constrainDirectDestinationCoords()
 
 bool Printer::isPositionAllowed(float x,float y,float z)
 {
-    if(isNoDestinationCheck())  return true;
+	if(isNoDestinationCheck())  return true;
     bool allowed = true;
-
+	//Nibbels 11.01.17: Die Funktion ist so wie sie ist etwas unnötig und prüft nix... blende warnings aus.
+	(void)x;
+	(void)y;
+	(void)z;
+	
     if(!allowed)
 	{
         Printer::updateCurrentPosition(true);
@@ -1745,7 +1749,7 @@ bool Printer::processAsDirectSteps( void )
 
 void Printer::resetDirectPosition( void )
 {
-	char	axis;
+	unsigned char	axis;
 
 
 	// we may have to update our x/y/z queue positions - there is no need/sense to update the extruder queue position
