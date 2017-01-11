@@ -246,6 +246,25 @@ void Commands::waitUntilEndOfAllBuffers()
 
 } // waitUntilEndOfAllBuffers
 
+/** \brief Waits until M3900 is finished. */
+void Commands::waitUntilEndOfZOS()
+{
+	char	bWait = 0;
+
+	if( g_ZOSScanStatus )		bWait = 1;
+
+	while( bWait )
+	{
+		GCode::readFromSerial();
+        Commands::checkForPeriodicalActions();
+		GCode::keepAlive( Processing );
+        UI_MEDIUM;
+		
+		bWait = 0;
+		if( g_ZOSScanStatus )		bWait = 1;
+	}
+
+} // waitUntilEndOfZOS
 
 void Commands::printCurrentPosition()
 {

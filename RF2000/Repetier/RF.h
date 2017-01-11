@@ -575,6 +575,12 @@ extern	long			g_maxZCompensationSteps;
 extern	long			g_diffZCompensationSteps;
 extern	unsigned char	g_nHeatBedScanStatus;
 extern	char			g_nActiveHeatBed;
+//ZOS:
+extern	unsigned char	g_ZOSScanStatus;
+extern	long			g_ZOSTestPoint[2];
+extern	float			g_ZOSlearningRate;
+extern	float			g_ZOSlearningGradient;
+extern	long			g_min_nZScanZPosition;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 
@@ -592,7 +598,7 @@ extern	unsigned char	g_uZMatrixMax[2];
 extern	long			g_nZScanZPosition;
 
 #if FEATURE_PRECISE_HEAT_BED_SCAN
-extern	char			g_nHeatBedScanMode;			// 1 = PLA, 2 = ABS
+extern	char			g_nHeatBedScanMode;			// 0 = oldScan, 1 = PLA, 2 = ABS
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
 extern	long			g_nScanXStepSizeMm;
@@ -704,8 +710,9 @@ extern void startHeatBedScan( void );
 // scanHeatBed()
 extern void scanHeatBed( void );
 
-// startSearchHeatBedZOffset()
-extern void startSearchHeatBedZOffset( void );
+// searchZOScan()
+extern void startZOScan( void );
+extern void searchZOScan( void );
 
 // abortSearchHeatBedZOffset()
 extern void abortSearchHeatBedZOffset( void );

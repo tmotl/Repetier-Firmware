@@ -1486,7 +1486,7 @@ Extruder extruder[NUM_EXTRUDER] =
         ,0}
         ,ext0_select_cmd,ext0_deselect_cmd,EXT0_EXTRUDER_COOLER_SPEED,0
 		#if STEPPER_ON_DELAY
-		,0
+		, '\x0'
 		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>0
@@ -1519,7 +1519,7 @@ Extruder extruder[NUM_EXTRUDER] =
         ,0}
         ,ext1_select_cmd,ext1_deselect_cmd,EXT1_EXTRUDER_COOLER_SPEED,0
 		#if STEPPER_ON_DELAY
-		,0
+		, '\x0'
 		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>1
@@ -1547,7 +1547,7 @@ Extruder extruder[NUM_EXTRUDER] =
         ,0}
         ,ext2_select_cmd,ext2_deselect_cmd,EXT2_EXTRUDER_COOLER_SPEED,0		
 		#if STEPPER_ON_DELAY
-		,0
+		, '\x0'
 		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>2
@@ -1576,7 +1576,7 @@ Extruder extruder[NUM_EXTRUDER] =
         ,ext3_select_cmd,ext3_deselect_cmd,EXT3_EXTRUDER_COOLER_SPEED,0
 		
 		#if STEPPER_ON_DELAY
-		,0
+		, '\x0'
 		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>3
@@ -1605,7 +1605,7 @@ Extruder extruder[NUM_EXTRUDER] =
         ,ext4_select_cmd,ext4_deselect_cmd,EXT4_EXTRUDER_COOLER_SPEED,0
 		
 		#if STEPPER_ON_DELAY
-		,0
+		, '\x0'
 		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>4
@@ -1634,7 +1634,7 @@ Extruder extruder[NUM_EXTRUDER] =
         ,ext5_select_cmd,ext5_deselect_cmd,EXT5_EXTRUDER_COOLER_SPEED,0
 		
 		#if STEPPER_ON_DELAY
-		,0
+		, '\x0'
 		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>5
