@@ -3741,7 +3741,7 @@ void UIDisplay::executeAction(int action)
 				if( PrintLine::linesCount )		deny = 1;	// the operating mode can not be switched while the printing is in progress
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-				if( g_nHeatBedScanStatus )		deny = 1;	// the operating mode can not be switched while a heat bed scan is in progress
+				if( g_nHeatBedScanStatus || g_ZOSScanStatus )		deny = 1;	// the operating mode can not be switched while a heat bed scan / ZOS is in progress
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION

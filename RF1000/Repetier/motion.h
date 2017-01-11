@@ -524,7 +524,7 @@ public:
 		BEGIN_INTERRUPT_PROTECTED
         linesCount++;
         END_INTERRUPT_PROTECTED
-	g_uStartOfIdle = 0;
+		g_uStartOfIdle = 0;
     } // pushLine
 
     static PrintLine *getNextWriteLine()

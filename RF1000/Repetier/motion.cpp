@@ -2349,7 +2349,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 		if( Printer::operatingMode == OPERATING_MODE_PRINT )
 		{
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-			if( g_nHeatBedScanStatus )
+			if( g_nHeatBedScanStatus || g_ZOSScanStatus )
 			{
 				// we are not idle because the heat bed scan is going on at the moment
 				nIdle = 0;
@@ -2368,7 +2368,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 		}
 #else
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-		if( g_nHeatBedScanStatus )
+		if( g_nHeatBedScanStatus || g_ZOSScanStatus )
 		{
 			// we are not idle because the heat bed scan is going on at the moment
 			nIdle = 0;

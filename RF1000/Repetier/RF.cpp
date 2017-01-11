@@ -57,15 +57,6 @@ FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT );
 FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR );
 FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED );
 
-//Nibbels:
-long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
-float			g_ZOSlearningRate = 1.0;
-float			g_ZOSlearningGradient = 0.0;
-unsigned char	g_ZOSScanStatus	   = 0;
-long			g_min_nZScanZPosition = 0;
-
-//Rest:
-
 unsigned long	g_lastTime				   = 0;
 unsigned long	g_uLastCommandLoop		   = 0;
 unsigned long	g_uStartOfIdle			   = 0;
@@ -77,6 +68,15 @@ long			g_maxZCompensationSteps	   = HEAT_BED_Z_COMPENSATION_MAX_STEPS;
 long			g_diffZCompensationSteps   = HEAT_BED_Z_COMPENSATION_MAX_STEPS - HEAT_BED_Z_COMPENSATION_MIN_STEPS;
 unsigned char	g_nHeatBedScanStatus	   = 0;
 char			g_nActiveHeatBed		   = 1;
+
+//ZOS
+//Nibbels: Das ist wie die g_nHeatBedScanStatus, die Schwestervariable, für den ZOS-Scan -> Vorsicht, wenn man sowas einführt müssen die überall vermerkt werden, weil sonst z.B. der G-Code weiter vorgeführt wird.
+unsigned char	g_ZOSScanStatus	   = 0;		
+//Nibbels:
+long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
+float			g_ZOSlearningRate = 1.0;
+float			g_ZOSlearningGradient = 0.0;
+long			g_min_nZScanZPosition = 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
@@ -1756,8 +1756,52 @@ void scanHeatBed( void )
 
 /**************************************************************************************************************************************/
 
+void startZOScan( void )
+{
+	if( g_ZOSScanStatus )
+	{
+		// abort the heat bed scan
+		if( Printer::debugInfo() )
+		{
+			Com::printFLN( PSTR( "ZOS(): the scan has been cancelled" ) );
+		}
+		abortSearchHeatBedZOffset();
+	}
+	else
+	{
+		if( PrintLine::linesCount )
+		{
+			// there is some printing in progress at the moment - do not start the heat bed scan in this case
+			if( Printer::debugErrors() )
+			{
+				Com::printFLN( PSTR( "ZOS(): the scan can not be started while the printing is in progress" ) );
+			}
 
-void startSearchHeatBedZOffset( void )
+			showError( (void*)ui_text_heat_bed_scan, (void*)ui_text_operation_denied );
+		}
+		else
+		{
+			Com::printFLN( PSTR( "ZOS(): started" ) );
+			// when the heat bed is scanned, the z-compensation must be disabled
+			if( Printer::doHeatBedZCompensation )
+			{
+				if( Printer::debugInfo() )
+				{
+					Com::printFLN( PSTR( "ZOS(): the z compensation has been disabled" ) );
+				}
+				resetZCompensation();
+			}
+			// start the heat bed scan
+			g_ZOSScanStatus = 1;
+			BEEP_START_HEAT_BED_SCAN
+		}
+	}
+
+	return;
+
+} // startZOScan
+
+void searchZOScan( void )
 {
 	if(g_ZOSScanStatus == 0) return; 
 	
@@ -1765,9 +1809,9 @@ void startSearchHeatBedZOffset( void )
 		{
 			case 1:
 			{	
-				Com::printFLN( PSTR( "ZOS(): started" ) );
+				Com::printFLN( PSTR( "ZOS(): init" ) );	
 				// when the heat bed Z offset is searched, the z-compensation must be disabled
-				resetZCompensation();	
+				//resetZCompensation();	 -> siehe Startfunktion
 				g_ZOSScanStatus = 2;	
 				g_nZScanZPosition = 0;
 				g_min_nZScanZPosition = 0; //nur nutzen wenn kleiner.
@@ -1829,7 +1873,9 @@ void startSearchHeatBedZOffset( void )
 				break;
 			}
 			case 4:
-			{	
+			{				
+				UI_STATUS_UPD( UI_TEXT_ZCALIB );
+				g_uStartOfIdle = 0; //zeige nicht gleich wieder Printer Ready an.
 				#if DEBUG_HEAT_BED_SCAN == 2
 					Com::printF( PSTR( "ZOS(): STEP 3 : Spacing " ),HEAT_BED_SCAN_Z_START_STEPS );
 					Com::printFLN( PSTR( " [Steps]" ) );
@@ -1898,7 +1944,7 @@ void startSearchHeatBedZOffset( void )
 			case 10:
 			{	
 				#if DEBUG_HEAT_BED_SCAN == 2
-					Com::printFLN( PSTR( "ZOS(): STEP 6 : Up" ) );
+					Com::printFLN( PSTR( "ZOS(): STEP 6 : Approaching HeatBed" ) );
 				#endif // DEBUG_HEAT_BED_SCAN == 2			
 				// move to the surface
 				moveZUpFast(false); // without runStandardTasks() inside to prevent an endless loop
@@ -1925,32 +1971,32 @@ void startSearchHeatBedZOffset( void )
 
 					  // move two of the fast steps from moveZUpFast() down again
 					  g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
-
+/*
 					  uid.refreshPage();
 					  
 					  //Bearbeitet Tasks:
 					  GCode::readFromSerial(); //empoy buffer, has to be called frequently
 					  Commands::checkForPeriodicalActions();
 					  GCode::keepAlive( Processing );
-					
+					*/
 					  HAL::delayMilliseconds( g_nScanSlowStepDelay );
 					  
 					  g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
-
+/*
 					  uid.refreshPage();
 					  
 					  //Bearbeitet Tasks:
 					  GCode::readFromSerial(); //empoy buffer, has to be called frequently
 					  Commands::checkForPeriodicalActions();
 					  GCode::keepAlive( Processing );
-					  
+					  */
 					  HAL::delayMilliseconds( g_nScanSlowStepDelay );
-					  
+					  /*
 					  //Bearbeitet Tasks:
 					  GCode::readFromSerial(); //empoy buffer, has to be called frequently
 					  Commands::checkForPeriodicalActions();
 					  GCode::keepAlive( Processing );
-					  
+					  */
 					  // move slowly to the surface
 					  short nTempPressure;
 					  moveZUpSlow( &nTempPressure, false ); // without runStandardTasks() inside to prevent an endless loop
@@ -2068,7 +2114,8 @@ void startSearchHeatBedZOffset( void )
 			#endif // DEBUG_HEAT_BED_SCAN
 
 				g_nZScanZPosition = 0;
-				g_ZOSScanStatus = 0;
+				g_ZOSScanStatus = 0;	
+				UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_DONE );
 				break;
 			}
 			default:
@@ -2078,13 +2125,14 @@ void startSearchHeatBedZOffset( void )
 			}
 		}
 	return;
-} // startSearchHeatBedZOffset
+} // searchZOScan
 
 void abortSearchHeatBedZOffset( void )
 {
 	g_ZOSScanStatus = 0;
     // the search has been aborted
-    Com::printFLN( PSTR( "searchHeatBedZOffset(): the search has been aborted" ) );
+	UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_ABORTED );
+    Com::printFLN( PSTR( "ZOS(): the scan has been aborted" ) );
 
     // move the heatbed 5mm down to avoid collisions, then home all axes, again move 5mm away
     moveZ( 5*Printer::axisStepsPerMM[Z_AXIS] );
@@ -2110,7 +2158,7 @@ void abortSearchHeatBedZOffset( void )
 
 
 
-void startSearchHeatBedZOffset_old( void )
+void searchZOScan_old( void )
 {
 	short           nTempPressure;
 
@@ -2245,6 +2293,7 @@ void startSearchHeatBedZOffset_old( void )
       // move two of the fast steps from moveZUpFast() down again
       g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
 
+	  
       uid.refreshPage();
 	  
 	  //Bearbeitet Tasks:
@@ -2409,7 +2458,7 @@ void startSearchHeatBedZOffset_old( void )
 
     g_nZScanZPosition = 0;
 	return;
-} // startSearchHeatBedZOffset
+} // searchZOScan
 
 void abortSearchHeatBedZOffset_old( void )
 {
@@ -2828,7 +2877,7 @@ long getHeatBedOffset( void )
 	long			i;
 
 
-	if( !Printer::doHeatBedZCompensation && !g_nHeatBedScanStatus )
+	if( !Printer::doHeatBedZCompensation && !( g_nHeatBedScanStatus || g_ZOSScanStatus ) )
 	{
 		// we determine the offset to the scanned heat bed only in case the heat bed z compensation is active
 		return 0;
@@ -5783,11 +5832,9 @@ void loopRF( void )
 		{
 			scanHeatBed();
 		}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-#if FEATURE_HEAT_BED_Z_COMPENSATION
 		if( g_ZOSScanStatus )
 		{
-			startSearchHeatBedZOffset();
+			searchZOScan();
 		}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -5809,12 +5856,9 @@ void loopRF( void )
 	{
 		scanHeatBed();
 	}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION
 	if( g_ZOSScanStatus )
 	{
-		startSearchHeatBedZOffset();
+		searchZOScan();
 	}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -6593,7 +6637,7 @@ void loopRF( void )
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-		if( g_nHeatBedScanStatus )		driveFree = 0;	// do not drive z-max free while a heat bed scan is in progress
+		if( g_nHeatBedScanStatus || g_ZOSScanStatus )		driveFree = 0;	// do not drive z-max free while a heat bed scan is in progress
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
@@ -10226,7 +10270,8 @@ void processCommand( GCode* pCommand )
 					Com::printFLN( PSTR( " [Matrix-index]" ) );
 					Com::printFLN( PSTR( "M3900: [S] ZOS learning rate is : "), g_ZOSlearningRate);
 					Com::printFLN( PSTR( "M3900: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
-					g_ZOSScanStatus = 1; //=startSearchHeatBedZOffset(); über loopRF
+					startZOScan();
+					Commands::waitUntilEndOfZOS();
 				}
 				break;
 			}
@@ -13065,7 +13110,7 @@ unsigned char isMovingAllowed( const char* pszCommand, char outputLog )
 	}
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-	if( g_nHeatBedScanStatus )
+	if( g_nHeatBedScanStatus || g_ZOSScanStatus )
 	{
 		// do not allow manual movements while the heat bed scan is in progress
 		if( Printer::debugErrors() && outputLog )
@@ -13138,7 +13183,7 @@ unsigned char isMovingAllowed( const char* pszCommand, char outputLog )
 unsigned char isHomingAllowed( GCode* com, char outputLog )
 {
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-	if( g_nHeatBedScanStatus )
+	if( g_nHeatBedScanStatus || g_ZOSScanStatus )
 	{
 		// do not allow homing while the heat bed scan is in progress
 		if( Printer::debugErrors() && outputLog )
