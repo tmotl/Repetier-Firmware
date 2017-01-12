@@ -28,9 +28,10 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 * Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm
 * introduceing a new command M3902 to fix a HeatBeds Hole within the HBS Matrix.
 * introduceing a new command M3903 to configure a very slow heat bed temperature decrease
-* introduceing a new command M355 to configure MOS FET X19 (Wessix-Licht-Mod)
+* included Wessixs Licht-Mod as a new command M355 to configure 24V-MOSFET @Connector X19
+* included StarTonys Fan-Speed-Patch, see http://www.rf1000.de/viewtopic.php?f=7&t=1638
 
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
 ## !! 11.01.2017: Project is Work in Progress and untested changes are possible.
-## !! 12.01.2017: ZOS is working good now!
+## !! 12.01.2017: ZOS is working good now! Only two compiler warnings left.
