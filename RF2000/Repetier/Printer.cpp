@@ -83,7 +83,7 @@ float			Printer::lengthMM[3];
 float			Printer::minMM[3];
 float			Printer::feedrate;										///< Last requested feedrate.
 int				Printer::feedrateMultiply;								///< Multiplier for feedrate in percent (factor 1 = 100)
-unsigned int	Printer::extrudeMultiply;								///< Flow multiplier in percdent (factor 1 = 100)
+int				Printer::extrudeMultiply;								///< Flow multiplier in percdent (factor 1 = 100)
 float			Printer::maxJerk;										///< Maximum allowed jerk in mm/s
 float			Printer::maxZJerk;										///< Maximum allowed jerk in z direction in mm/s
 float			Printer::extruderOffset[2];								///< offset for different extruder positions.

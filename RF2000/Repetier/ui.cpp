@@ -2915,12 +2915,9 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		}
 		case UI_ACTION_FLOWRATE_MULTIPLY:
 		{
-			INCREMENT_MIN_MAX(Printer::extrudeMultiply,1,25,500);
-
-			if( Printer::debugInfo() )
-			{
-				Com::printFLN(Com::tFlowMultiply,(int)Printer::extrudeMultiply);
-			}
+			int er = Printer::extrudeMultiply;
+			INCREMENT_MIN_MAX(er,1,25,200);
+			Commands::changeFlowateMultiply(er);
 			break;
 		}
 		case UI_ACTION_STEPPER_INACTIVE:
