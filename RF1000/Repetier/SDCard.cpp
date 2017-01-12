@@ -269,24 +269,34 @@ void SDCard::writeCommand(GCode *code)
     uint8_t			p=2;
     int				params = 128 | (code->params & ~1);
 
+	/*
+	https://github.com/repetier/Repetier-Firmware/blob/master/src/ArduinoDUE/Repetier/SDCard.cpp 
+	has fixes for 
+	warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+	*/	
 
     file.writeError = false;
-    *(int*)buf = params;
-
+    memcopy2(buf,&params);
+    //*(int*)buf = params;
+	
     if(code->isV2())   // Read G,M as 16 bit value
-    {
-        *(int*)&buf[p] = code->params2;
+    {        
+		memcopy2(&buf[p],&code->params2);
+        //*(int*)&buf[p] = code->params2;
+		
         p+=2;
         if(code->hasString())
             buf[p++] = strlen(code->text);
         if(code->hasM())
         {
-            *(int*)&buf[p] = code->M;
+            memcopy2(&buf[p],&code->M);
+            //*(int*)&buf[p] = code->M;
             p+=2;
         }
         if(code->hasG())
         {
-            *(int*)&buf[p]= code->G;
+            memcopy2(&buf[p],&code->G);
+            //*(int*)&buf[p]= code->G;
             p+=2;
         }
     }
@@ -303,27 +313,32 @@ void SDCard::writeCommand(GCode *code)
     }
     if(code->hasX())
     {
-        *(float*)&buf[p] = code->X;
+		memcopy4(&buf[p],&code->X);
+        //*(float*)&buf[p] = code->X;
         p+=4;
     }
     if(code->hasY())
     {
-        *(float*)&buf[p] = code->Y;
+		memcopy4(&buf[p],&code->Y);
+        //*(float*)&buf[p] = code->Y;
         p+=4;
     }
     if(code->hasZ())
     {
-        *(float*)&buf[p] = code->Z;
+		memcopy4(&buf[p],&code->Z);
+        //*(float*)&buf[p] = code->Z;
         p+=4;
     }
     if(code->hasE())
     {
-        *(float*)&buf[p] = code->E;
+		memcopy4(&buf[p],&code->E);
+        //*(float*)&buf[p] = code->E;
         p+=4;
     }
     if(code->hasF())
     {
-        *(float*)&buf[p] = code->F;
+		memcopy4(&buf[p],&code->F);
+        //*(float*)&buf[p] = code->F;
         p+=4;
     }
     if(code->hasT())
@@ -332,22 +347,30 @@ void SDCard::writeCommand(GCode *code)
     }
     if(code->hasS())
     {
-        *(long int*)&buf[p] = code->S;
+		memcopy4(&buf[p],&code->S);
+        //*(long int*)&buf[p] = code->S;
+        //*(int32_t*)&buf[p] = code->S;
         p+=4;
     }
     if(code->hasP())
-    {
-        *(long int*)&buf[p] = code->P;
+    {		
+		memcopy4(&buf[p],&code->P);
+        //*(int32_t*)&buf[p] = code->P;
+        //*(long int*)&buf[p] = code->P;
         p+=4;
     }
     if(code->hasI())
     {
-        *(float*)&buf[p] = code->I;
+		memcopy4(&buf[p],&code->I);
+        //*(float*)&buf[p] = code->I;
+        //*(float*)&buf[p] = code->I;
         p+=4;
     }
     if(code->hasJ())
-    {
-        *(float*)&buf[p] = code->J;
+    {		
+		memcopy4(&buf[p],&code->J);
+        //*(float*)&buf[p] = code->J;
+        //*(float*)&buf[p] = code->J;
         p+=4;
     }
     if(code->hasString())   // read 16 uint8_t into string

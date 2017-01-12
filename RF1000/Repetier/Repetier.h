@@ -40,6 +40,12 @@
 #include "Communication.h"
 
 #if SDSUPPORT
+inline void memcopy2(void *dest,void *source) {
+	*((int16_t*)dest) = *((int16_t*)source);
+}
+inline void memcopy4(void *dest,void *source) {
+	*((int32_t*)dest) = *((int32_t*)source);
+}
 #include "SdFat.h"
 #endif // SDSUPPORT
 

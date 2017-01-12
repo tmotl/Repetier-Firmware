@@ -86,7 +86,7 @@ public:
     static float			minMM[3];
     static float			feedrate;							// Last requested feedrate.
     static int				feedrateMultiply;					// Multiplier for feedrate in percent (factor 1 = 100)
-    static unsigned int		extrudeMultiply;					// Flow multiplier in percdent (factor 1 = 100)
+    static int				extrudeMultiply;					// Flow multiplier in percdent (factor 1 = 100)
     static float			maxJerk;							// Maximum allowed jerk in mm/s
     static float			maxZJerk;							// Maximum allowed jerk in z direction in mm/s
     static float			extruderOffset[2];					// offset for different extruder positions.
