@@ -2540,6 +2540,8 @@ void UIDisplay::rightAction()
 
 
 #define INCREMENT_MIN_MAX(a,steps,_min,_max) if ( (increment<0) && (_min>=0) && (a<_min-increment*steps) ) {a=_min;} else { a+=increment*steps; if(a<_min) a=_min; else if(a>_max) a=_max;};
+//increment ist ne variable, global.
+#define INCREMENT_MAX(a,steps,_max) if ( (increment<0) && (a<=-1*increment*steps) ) {a=0;} else { a+=increment*steps; if(a>_max) a=_max;};
 
 void UIDisplay::adjustMenuPos()
 {
@@ -2923,7 +2925,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		case UI_ACTION_STEPPER_INACTIVE:
 		{
 			stepperInactiveTime -= stepperInactiveTime % 1000;
-			INCREMENT_MIN_MAX(stepperInactiveTime,60000UL,0,10080000UL);
+			INCREMENT_MAX(stepperInactiveTime,60000UL,10080000UL);
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32(EPR_STEPPER_INACTIVE_TIME,stepperInactiveTime);
@@ -2935,7 +2937,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		case UI_ACTION_MAX_INACTIVE:
 		{
 			maxInactiveTime -= maxInactiveTime % 1000;
-			INCREMENT_MIN_MAX(maxInactiveTime,60000UL,0,10080000UL);
+			INCREMENT_MAX(maxInactiveTime,60000UL,10080000UL);
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32(EPR_MAX_INACTIVE_TIME,maxInactiveTime);
