@@ -814,7 +814,7 @@ ISR(TIMER1_COMPA_vect)
 
 	if(Printer::allowQueueMove())
     {
-        setTimer(PrintLine::performQueueMove());
+        setTimer(PrintLine::performQueueMove()); //hier drin volatile markieren??
 
 		DEBUG_MEMORY;
 	    insideTimer1 = 0;
