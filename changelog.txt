@@ -1,3 +1,9 @@
+M3902 Z-0.02 ;will add an offset to the zMatrix
+M3902 R1 ;will smoothen the zMatrix at its lowest extrema
+M3902 S2 ;will save the currently chosen (see M3009) zMatrix to "zMatrix-2" in EEPROM
+added volatile Markers to variable definitions on several variables which could be changed by an interrupt.
+see http://barrgroup.com/Embedded-Systems/How-To/C-Volatile-Keyword
+
 V RF.01.35c.mod
 ZOS-Bugfix
 Message Cleanup for ZOS
