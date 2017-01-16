@@ -46,10 +46,10 @@ unsigned long	Printer::maxTravelAccelerationStepsPerSquareSecond[4];
 uint8_t			Printer::relativeCoordinateMode = false;				///< Determines absolute (false) or relative Coordinates (true).
 uint8_t			Printer::relativeExtruderCoordinateMode = false;		///< Determines Absolute or Relative E Codes while in Absolute Coordinates mode. E is always relative in Relative Coordinates mode.
 
-long			Printer::queuePositionLastSteps[4];
-float			Printer::queuePositionLastMM[3];
-float			Printer::queuePositionCommandMM[3];
-long			Printer::queuePositionTargetSteps[4];
+volatile long	Printer::queuePositionLastSteps[4];
+volatile float	Printer::queuePositionLastMM[3];
+volatile float	Printer::queuePositionCommandMM[3];
+volatile long	Printer::queuePositionTargetSteps[4];
 float			Printer::originOffsetMM[3] = {0,0,0};
 uint8_t			Printer::flag0 = 0;
 uint8_t			Printer::flag1 = 0;
@@ -72,7 +72,7 @@ unsigned long	Printer::stepNumber;									///< Step number in current move.
 long			Printer::advanceExecuted;								///< Executed advance steps
 #endif // ENABLE_QUADRATIC_ADVANCE
 
-int				Printer::advanceStepsSet;
+volatile int	Printer::advanceStepsSet;
 #endif // USE_ADVANCE
 
 float			Printer::minimumSpeed;									///< lowest allowed speed to keep integration error small
@@ -125,30 +125,31 @@ int				debugWaitLoop = 0;
 #endif // DEBUG_PRINT
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-char			Printer::doHeatBedZCompensation;
+volatile char	Printer::doHeatBedZCompensation;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
-char			Printer::doWorkPartZCompensation;
-long			Printer::staticCompensationZ;
+volatile char	Printer::doWorkPartZCompensation;
+volatile long	Printer::staticCompensationZ;
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 
-long			Printer::queuePositionCurrentSteps[3];
-char			Printer::stepperDirection[3];
+volatile long	Printer::queuePositionCurrentSteps[3];
+volatile char	Printer::stepperDirection[3];
 char			Printer::blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
-long			Printer::currentZSteps;
+volatile long	Printer::currentZSteps;
 #endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-long			Printer::compensatedPositionTargetStepsZ;
-long			Printer::compensatedPositionCurrentStepsZ;
-char			Printer::endZCompensationStep;
+volatile long	Printer::compensatedPositionTargetStepsZ;
+volatile long	Printer::compensatedPositionCurrentStepsZ;
+
+volatile char	Printer::endZCompensationStep;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-long			Printer::directPositionTargetSteps[4];
+volatile long	Printer::directPositionTargetSteps[4];
 long			Printer::directPositionCurrentSteps[4];
 long			Printer::directPositionLastSteps[4];
 char			Printer::waitMove;

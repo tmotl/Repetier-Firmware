@@ -1412,7 +1412,7 @@ void PrintLine::arc(float *position, float *target, float *offset, float radius,
 /**
   Processes the moves from the queue and moves the stepper motors one step. If the last step is reached, the next movement from the queue is started.
   The function must be called from a timer loop. It returns the time for the next call. */
-long queueError;
+volatile long queueError;
 long PrintLine::performQueueMove()
 {
 	if(cur == NULL)

@@ -630,11 +630,11 @@ extern	unsigned long	g_nManualSteps[4];
 
 #if FEATURE_PAUSE_PRINTING
 extern	long			g_nPauseSteps[4];
-extern	long			g_nContinueSteps[4];
-extern	char			g_pauseStatus;
-extern	char			g_pauseMode;
-extern	unsigned long	g_uPauseTime;
-extern	char			g_pauseBeepDone;
+extern	volatile long	g_nContinueSteps[4];
+extern	volatile char	g_pauseStatus;
+extern	volatile char	g_pauseMode;
+extern	volatile unsigned long	g_uPauseTime;
+extern	volatile char			g_pauseBeepDone;
 #endif // FEATURE_PAUSE_PRINTING
 
 
@@ -651,9 +651,9 @@ extern	char			g_nTestStrainGaugeStatus;
 
 
 #if DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
-extern	long			g_nLastZCompensationPositionSteps[3];
-extern	long			g_nLastZCompensationTargetStepsZ;
-extern	long			g_nZCompensationUpdates;
+extern	volatile long	g_nLastZCompensationPositionSteps[3];
+extern	volatile long	g_nLastZCompensationTargetStepsZ;
+extern	volatile long	g_nZCompensationUpdates;
 extern	long			g_nDelta[2];
 extern	long			g_nStepSize[2];
 extern	long			g_nTempXFront;
@@ -664,7 +664,7 @@ extern	short			g_nMatrix[4];
 extern	long			g_nZDeltaMin;
 extern	long			g_nZDeltaMax;
 extern	long			g_nZCompensationUpdateTime;
-extern	long			g_nZCompensationDelayMax;
+extern volatile long	g_nZCompensationDelayMax;
 extern	long			g_nTooFast;
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
 
@@ -685,9 +685,9 @@ extern unsigned char	g_uRGBIdleB;
 extern unsigned char	g_uRGBManualR;
 extern unsigned char	g_uRGBManualG;
 extern unsigned char	g_uRGBManualB;
-extern unsigned char	g_uRGBCurrentR;
-extern unsigned char	g_uRGBCurrentG;
-extern unsigned char	g_uRGBCurrentB;
+extern volatile unsigned char	g_uRGBCurrentR;
+extern volatile unsigned char	g_uRGBCurrentG;
+extern volatile unsigned char	g_uRGBCurrentB;
 extern unsigned char	g_uRGBTargetR;
 extern unsigned char	g_uRGBTargetG;
 extern unsigned char	g_uRGBTargetB;

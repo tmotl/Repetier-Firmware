@@ -46,7 +46,7 @@ public:
     static volatile int		extruderStepsNeeded;				// This many extruder steps are still needed, <0 = reverse steps needed.
     static uint8_t			minExtruderSpeed;					// Timer delay for start extruder speed
     static uint8_t			maxExtruderSpeed;					// Timer delay for end extruder speed
-    static int				advanceStepsSet;
+    static volatile int		advanceStepsSet;
 
 #ifdef ENABLE_QUADRATIC_ADVANCE
     static long				advanceExecuted;					// Executed advance steps
@@ -73,10 +73,10 @@ public:
     static unsigned long	timer;								// used for acceleration/deceleration timing
     static unsigned long	stepNumber;							// Step number in current move.
     static float			originOffsetMM[3];
-    static long				queuePositionTargetSteps[4];		// Target position in steps.
-    static long				queuePositionLastSteps[4];			// Position in steps from origin.
-    static float			queuePositionLastMM[3];				// Position in mm from origin.
-    static float			queuePositionCommandMM[3];			// Last coordinates send by gcodes
+    static volatile long	queuePositionTargetSteps[4];		// Target position in steps.
+    static volatile long	queuePositionLastSteps[4];			// Position in steps from origin.
+    static volatile float	queuePositionLastMM[3];				// Position in mm from origin.
+    static volatile float	queuePositionCommandMM[3];			// Last coordinates send by gcodes
 
     static float			minimumSpeed;						// lowest allowed speed to keep integration error small
     static float			minimumZSpeed;						// lowest allowed speed to keep integration error small
@@ -124,30 +124,30 @@ public:
 #endif // DEBUG_REAL_JERK
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-    static char				doHeatBedZCompensation;
+    static volatile char	doHeatBedZCompensation;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
-    static char				doWorkPartZCompensation;
-	static long				staticCompensationZ;				// this is the z-delta which can occur in case the x/y position of the z-origin from the work part scan is different to the x/y position of the z-origin from the moment of the start of the milling
+    static volatile char	doWorkPartZCompensation;
+	static volatile long	staticCompensationZ;				// this is the z-delta which can occur in case the x/y position of the z-origin from the work part scan is different to the x/y position of the z-origin from the moment of the start of the milling
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 
-    static long				queuePositionCurrentSteps[3];
-	static char				stepperDirection[3];				// this is the current x/y/z-direction from the processing of G-Codes
+    static volatile long	queuePositionCurrentSteps[3];
+	static volatile char	stepperDirection[3];				// this is the current x/y/z-direction from the processing of G-Codes
 	static char				blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
-	static long				currentZSteps;
+	static volatile long	currentZSteps;
 #endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-    static long				compensatedPositionTargetStepsZ;
-    static long				compensatedPositionCurrentStepsZ;
-	static char				endZCompensationStep;
+    static volatile long	compensatedPositionTargetStepsZ;
+    static volatile long	compensatedPositionCurrentStepsZ;
+	static volatile char	endZCompensationStep;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-    static long				directPositionTargetSteps[4];
+    static volatile long	directPositionTargetSteps[4];
     static long				directPositionCurrentSteps[4];
 	static long				directPositionLastSteps[4];
 	static char				waitMove;
