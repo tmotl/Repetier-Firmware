@@ -36,14 +36,14 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 ## Version RF.01.35d.mod by Wessix and Nibbels
 
 * added a new Feature called "SensiblePressure" 
-* It is a pressure-sense-function ment for the first layer. Wessix told me about this idea.
-* Syntax: M3909 P[max.digits] S[max.offset]
-* The printer will adjust the heat-bed if z < g_minZCompensationSteps, whenever the digits rise atop [max.digits]. 
-* The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). the adjustment will not * violate the [max.offset] restriction in order to avoid unwanted offsets (not caused by too close nozzle).
-* When choosing [max.digits] you should already know how much digits your printer normally has (Same Material, same Temperatures) and * then add some 20%+.
-* When the z-Compensation gets deactivated the pressure-sense-function is deactivated as well.
-* Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.
-* You cannot activate the Feature if zCompensation is not active already.
+ It is a pressure-sense-function ment for the first layer. Wessix told me about this idea.
+ Syntax: M3909 P[max.digits] S[max.offset]
+ The printer will adjust the heat-bed if z < g_minZCompensationSteps, whenever the digits rise atop [max.digits]. 
+ The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). the adjustment will not  violate the [max.offset] restriction in order to avoid unwanted offsets (not caused by too close nozzle).
+ When choosing [max.digits] you should already know how much digits your printer normally has (Same Material, same Temperatures) and * then add some 20%+.
+ When the z-Compensation gets deactivated the pressure-sense-function is deactivated as well.
+ Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.
+ You cannot activate the Feature if zCompensation is not active already.
 
 
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
