@@ -37,9 +37,11 @@ http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882
 
 * added a new Feature called "SensiblePressure" 
  It is a pressure-sense-function ment for the first layer. Wessix told me about this idea.
- Syntax: M3909 P[max.digits] S[max.offset]
+ 
+    Syntax: M3909 P[max.digits] S[max.offset]
+ 
  The printer will adjust the heat-bed if z < g_minZCompensationSteps, whenever the digits rise atop [max.digits]. 
- The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). the adjustment will not  violate the [max.offset] restriction in order to avoid unwanted offsets (not caused by too close nozzle).
+ The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). The adjustment will not  violate the [max.offset] restriction in order to avoid unwanted offsets (not caused by too close nozzle).
  When choosing [max.digits] you should already know how much digits your printer normally has (Same Material, same Temperatures) and * then add some 20%+.
  When the z-Compensation gets deactivated the pressure-sense-function is deactivated as well.
  Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.
