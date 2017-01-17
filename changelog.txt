@@ -1,3 +1,14 @@
+V RF.01.35d.mod
+added a new Feature called "SensiblePressure" 
+It is a pressure-sense-function ment for the first layer. Wessix told me about this idea.
+Syntax: M3909 P[max.digits] S[max.offset]
+The printer will adjust the heat-bed if z < g_minZCompensationSteps, whenever the digits rise atop [max.digits]. 
+The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). the adjustment will not violate the [max.offset] restriction in order to avoid unwanted offsets (not caused by too close nozzle).
+When choosing [max.digits] you should already know how much digits your printer normally has (Same Material, same Temperatures) and then add some 20%+.
+When the z-Compensation gets deactivated the pressure-sense-function is deactivated as well.
+Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.
+You cannot activate the Feature if zCompensation is not active already.
+
 M3902 Z-0.02 ;will add an offset to the zMatrix
 M3902 R1 ;will now repair/smoothen the zMatrix at its lowest extrema (change of syntax)
 M3902 S2 ;will save the currently chosen (see M3009) zMatrix to "zMatrix-2" in EEPROM
