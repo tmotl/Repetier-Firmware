@@ -43,7 +43,7 @@ To override EEPROM settings with config settings, set EEPROM_MODE 0 */
 // ##########################################################################################
 
 /** \brief Define the type of your device */
-#define MOTHERBOARD							DEVICE_TYPE_RF1000
+#define MOTHERBOARD							DEVICE_TYPE_RF2000
 #define PROTOTYPE_PCB						0													// 1 = first PCB's / 0 = Final
 
 /** \brief EEPROM storage mode
@@ -68,13 +68,6 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Enables automatic compensation in z direction for the operationg mode "print" */
 #define FEATURE_HEAT_BED_Z_COMPENSATION		1													// 1 = on, 0 = off
 
-/** \brief Enables the precise heat bed scan */
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-
-#define FEATURE_PRECISE_HEAT_BED_SCAN		1													// 1 = on, 0 = off
-
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
 /** \brief Allows/disallows to override Z-min via G0 and G1 */
 #define FEATURE_Z_MIN_OVERRIDE_VIA_GCODE	1													// 1 = on, 0 = off
 
@@ -90,6 +83,20 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #define FEATURE_EMERGENCY_PAUSE				1													// 1 = on, 0 = off
 
 #endif // FEATURE_PAUSE_PRINTING
+
+/** \brief Enables the precise heat bed scan */
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+
+#define FEATURE_PRECISE_HEAT_BED_SCAN		1
+													// 1 = on, 0 = off
+ #if FEATURE_EMERGENCY_PAUSE
+ /** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
+	#define	SENSIBLE_PRESSURE_DIGIT_CHECKS				50										// ?? Adjust until 87 max. because of char comparison. ??
+	#define	SENSIBLE_PRESSURE_MAX_OFFSET				100										// Max lift in [um]; Standard: 100um=0,10mm
+
+ #endif // FEATURE_EMERGENCY_PAUSE
+
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE	0													// 1 = on, 0 = off
@@ -702,7 +709,7 @@ Values must be in range 1..255 */
 #define UI_SET_EXTRUDER_RETRACT_DISTANCE	3													// [mm]
 #define COOLDOWN_THRESHOLD					40													// [°C]
 
-#define	SHOW_DEBUGGING_MENU					1													// 1 = show, 0 = hide
+#define	SHOW_DEBUGGING_MENU					0													// 1 = show, 0 = hide
 
 #define SPEED_MIN_MILLIS					300
 #define SPEED_MAX_MILLIS					50
@@ -800,7 +807,7 @@ we use blocks of 2 kByte size for the structure of our EEPROM
 #if FEATURE_ENABLE_Z_SAFETY
 
 /** \brief Specifies the maximal steps which can be moved into z-direction after the z-endstop has been reached */
-#define	Z_OVERRIDE_MAX						(ZAXIS_STEPS_PER_MM * 1)
+#define	Z_OVERRIDE_MAX						(ZAXIS_STEPS_PER_MM * 1) //choice of mhier for rf1000
 
 #endif // FEATURE_ENABLE_Z_SAFETY
 
@@ -840,12 +847,12 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it was triggered, the value of WATCHDOG_TIMEOUT should be less than half of this time. */
 #define WATCHDOG_TIMEOUT					10													// [ms]
 #define	WATCHDOG_MAIN_LOOP_TIMEOUT			10000												// [ms]
-
+ 
 /** \brief Longer-lasting operations shall call our periodical actions at least each defined time interval */
 #define	PERIODICAL_ACTIONS_CALL_INTERVAL	10													// [ms]
-
+ 
 /** \brief The display shows that the device is idle after no new commands were processed for longer than the minimal idle time */
-#define	MINIMAL_IDLE_TIME					500	
+#define	MINIMAL_IDLE_TIME					500
 	
 /** \brief If enabled you can select the distance your filament gets retracted during a M140 command, after a given temperature is reached. */
 #define RETRACT_DURING_HEATUP				true
@@ -955,9 +962,9 @@ and it is elsewise difficult to know, what your reprap is currently doing. */
 #define CASE_FAN_ALWAYS_ON					0													// 1 = always on, 0 = automatic switching and switching via G-Code
 
 /** \brief Defines the default behavior of the Position X/Y/Z menus */
-#define DEFAULT_MOVE_MODE_X					MOVE_MODE_SINGLE_STEPS
-#define DEFAULT_MOVE_MODE_Y					MOVE_MODE_SINGLE_STEPS
-#define DEFAULT_MOVE_MODE_Z					MOVE_MODE_SINGLE_STEPS
+#define DEFAULT_MOVE_MODE_X					MOVE_MODE_SINGLE_MOVE
+#define DEFAULT_MOVE_MODE_Y					MOVE_MODE_SINGLE_MOVE
+#define DEFAULT_MOVE_MODE_Z					MOVE_MODE_SINGLE_MOVE
 
 /** \brief Defines the default z scale */
 #define DEFAULT_Z_SCALE_MODE				Z_VALUE_MODE_Z_MIN
