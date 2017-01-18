@@ -573,10 +573,10 @@ extern	long			g_offsetZCompensationSteps;	// this is the minimal distance betwee
 extern	long			g_minZCompensationSteps;
 extern	long			g_maxZCompensationSteps;
 extern	long			g_diffZCompensationSteps;
-extern	unsigned char	g_nHeatBedScanStatus;
+extern	volatile unsigned char	g_nHeatBedScanStatus;
 extern	char			g_nActiveHeatBed;
 //ZOS:
-extern	unsigned char	g_ZOSScanStatus;
+extern	volatile unsigned char	g_ZOSScanStatus;
 extern	long			g_ZOSTestPoint[2];
 extern	float			g_ZOSlearningRate;
 extern	float			g_ZOSlearningGradient;
@@ -634,19 +634,19 @@ extern	volatile long	g_nContinueSteps[4];
 extern	volatile char	g_pauseStatus;
 extern	volatile char	g_pauseMode;
 extern	volatile unsigned long	g_uPauseTime;
-extern	volatile char			g_pauseBeepDone;
+extern	volatile char	g_pauseBeepDone;
 #endif // FEATURE_PAUSE_PRINTING
 
 
 #if FEATURE_FIND_Z_ORIGIN
-extern	char			g_nFindZOriginStatus;
+extern	volatile char	g_nFindZOriginStatus;
 extern	long			g_nZOriginPosition[3];
 extern	int				g_nZOriginSet;
 #endif // FEATURE_FIND_Z_ORIGIN
 
 
 #if FEATURE_TEST_STRAIN_GAUGE
-extern	char			g_nTestStrainGaugeStatus;
+extern	volatile char	g_nTestStrainGaugeStatus;
 #endif // FEATURE_TEST_STRAIN_GAUGE
 
 

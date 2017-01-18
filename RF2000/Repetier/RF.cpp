@@ -66,12 +66,12 @@ long			g_offsetZCompensationSteps = 0;
 long			g_minZCompensationSteps	   = HEAT_BED_Z_COMPENSATION_MIN_STEPS;
 long			g_maxZCompensationSteps	   = HEAT_BED_Z_COMPENSATION_MAX_STEPS;
 long			g_diffZCompensationSteps   = HEAT_BED_Z_COMPENSATION_MAX_STEPS - HEAT_BED_Z_COMPENSATION_MIN_STEPS;
-unsigned char	g_nHeatBedScanStatus	   = 0;
+volatile unsigned char	g_nHeatBedScanStatus	   = 0;
 char			g_nActiveHeatBed		   = 1;
 
 //ZOS
 //Nibbels: Das ist wie die g_nHeatBedScanStatus, die Schwestervariable, für den ZOS-Scan -> Vorsicht, wenn man sowas einführt müssen die überall vermerkt werden, weil sonst z.B. der G-Code weiter vorgeführt wird.
-unsigned char	g_ZOSScanStatus	   = 0;		
+volatile unsigned char	g_ZOSScanStatus	   = 0;		
 //Nibbels:
 long			g_ZOSTestPoint[2]	  = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
 float			g_ZOSlearningRate = 1.0;
@@ -184,7 +184,7 @@ long			g_nEmergencyPauseDigitsMax	= 0;
 /* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
 long			g_nSensiblePressureSum		= 0;
 char			g_nSensiblePressureChecks	= 0;
-long			g_nSensiblePressureDigits	= 0;
+short			g_nSensiblePressureDigits	= 0;
 short			g_nSensiblePressureOffsetMax = SENSIBLE_PRESSURE_MAX_OFFSET;
 short			g_nSensiblePressureOffset	= 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
@@ -198,7 +198,7 @@ char			g_nZPressureChecks			= 0;
 #endif // FEATURE_EMERGENCY_STOP_ALL
 
 #if FEATURE_FIND_Z_ORIGIN
-char			g_nFindZOriginStatus		= 0;
+volatile char	g_nFindZOriginStatus		= 0;
 long			g_nZOriginPosition[3]		= { 0, 0, 0 };
 int				g_nZOriginSet				= 0;
 char			g_abortSearch				= 0;
@@ -5592,7 +5592,7 @@ void loopRF( void )
 	}
 #endif // FEATURE_PAUSE_PRINTING
 
-#if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
+#if FEATURE_SENSIBLE_PRESSURE
 	//ohne Z-Kompensation kein SensiblePressure!
 	if(g_nSensiblePressureDigits && !Printer::doHeatBedZCompensation){
 		g_nSensiblePressureDigits = 0;
@@ -5623,8 +5623,8 @@ void loopRF( void )
 				g_nPressureSum	  += pressure;
 				g_nPressureChecks += 1;
 				
-	/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
-#if FEATURE_HEAT_BED_Z_COMPENSATION
+/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
+#if FEATURE_SENSIBLE_PRESSURE
 
 				//check: "only at printing" -> here the condition is already valid
 				//check: "only when z-compensation is active" -> yes
@@ -5636,17 +5636,19 @@ void loopRF( void )
 						//wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
 						g_nSensiblePressureSum += pressure;
 						g_nSensiblePressureChecks += 1;
-						//jede 5 sekunden, bzw 2.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
-						if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS + (short)(g_nSensiblePressureOffset*0.2)){ //the more additional offset, the more time for relaxation. 
-							//offset max 200*0.2, SENSIBLE_PRESSURE_DIGIT_CHECKS ca. 50 -> char bis 128
+						//jede 1 sekunden, bzw 0.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
+						if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS ){ 
 							nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
-							Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );	
-							Com::printFLN( PSTR( " [digits]" ) );					
-							g_nSensiblePressureSum *= 0.5; //half interval, remember old values 50%
+							Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );								
+							Com::printFLN( PSTR( " [digits]" ) );	
+							
+							//half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5							
+							g_nSensiblePressureSum *= 0.5; 
 							g_nSensiblePressureChecks *= 0.5;
-							//größer, kleiner, falls Messzellen falschrum eingebaut.
-							if( (nPressure < -1*g_nSensiblePressureDigits) ||
-								(nPressure > g_nSensiblePressureDigits) )
+							
+							//größer, kleiner, falls Messzellen falschrum eingebaut. -> abs() // später einfacher zu verrechnen.
+							nPressure = abs(nPressure);
+							if( (nPressure > g_nSensiblePressureDigits) )
 							{
 								/* here the action is defined if digits are > g_nSensiblePressureDigits while printing */
 								
@@ -5661,9 +5663,27 @@ void loopRF( void )
 									g_nSensiblePressureOffset
 								*/								
 								
+								//wie stark reagieren?
+								//PID -Regler wollen wir uns aber sparen...
+								unsigned char step = 1; //0..255!! standardincrement
+								float inc = 0.0;
+								//mehr offsetincrement je höher digits oberhalb limit. linear
+								if(nPressure > g_nSensiblePressureDigits*1.1){
+									inc =	(float)nPressure / (float)g_nSensiblePressureDigits - 1; //0.1 ... riesig
+									if(inc > 2.0) inc = 2.0;
+									inc *= 12; // 1,2..24,0
+									step += (short)inc;
+								}
+								
+								inc = (float)g_nSensiblePressureOffset / (float)g_nSensiblePressureOffsetMax; //0.25 .. 1
+								if( inc >= 0.25) { 
+									step = step - (short)(inc * (step - 1)); //über der viertel offsetstrecke, das zusätzliche offset stark ausbremsen.
+								}
+								
+								if (step < 1) step = 1;
 								//um == mikrometer -> Offsetbereich beschränkt auf 0..0,10mm
-								if(g_nSensiblePressureOffset+Z_OFFSET_STEP <= (long)g_nSensiblePressureOffsetMax){
-									g_nSensiblePressureOffset += Z_OFFSET_STEP;
+								if(g_nSensiblePressureOffset+step <= (long)g_nSensiblePressureOffsetMax){
+									g_nSensiblePressureOffset += step;
 									Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
 									Com::printFLN( PSTR( "[um]" ) );
 								}else{
@@ -5672,17 +5692,14 @@ void loopRF( void )
 									Com::printFLN( PSTR( "[um] = MAX" ) );
 								}
 								g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-								//Com::printFLN( PSTR( "SensiblePressure(): g_staticZSteps = " ), g_staticZSteps );
-								
-								/* END // here the action is defined if digits are > g_nSensiblePressureDigits while printing */
-								g_nSensiblePressureSum = 0;  //full interval @z-step, remember nothing.
-								g_nSensiblePressureChecks = 0;
+								Com::printFLN( PSTR( "SensiblePressure(): g_staticZSteps = " ), g_staticZSteps );	
 							}
+							
 							if(g_nSensiblePressureOffset > 0){								
-								if( ((short)(-1*g_nSensiblePressureDigits*0.8) < nPressure) && (nPressure < (short)(g_nSensiblePressureDigits*0.8)) )
+								if( ((short)(-1*g_nSensiblePressureDigits*0.75) < nPressure) && (nPressure < (short)(g_nSensiblePressureDigits*0.8)) )
 								{
-									if(g_nSensiblePressureOffset - Z_OFFSET_STEP >= 0){
-										g_nSensiblePressureOffset -= Z_OFFSET_STEP;
+									if(g_nSensiblePressureOffset - 1 >= 0){ //~2..3, sehr langsam wieder abbauen, wenn überhaupt.
+										g_nSensiblePressureOffset -= 1;
 										Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
 										Com::printFLN( PSTR( "[um]" ) );										
 									}
@@ -5700,7 +5717,7 @@ void loopRF( void )
 						//offset muss bleiben! g_nSensiblePressureOffset != 0
 					}				
 				}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION			
+#endif // FEATURE_SENSIBLE_PRESSURE			
 
 				
 				if( g_nPressureChecks == EMERGENCY_PAUSE_CHECKS )
@@ -10315,7 +10332,7 @@ void processCommand( GCode* pCommand )
 			}
 #endif // FEATURE_BEDTEMP_DECREASE	
 							
-#if	FEATURE_EMERGENCY_PAUSE && FEATURE_HEAT_BED_Z_COMPENSATION
+#if	FEATURE_SENSIBLE_PRESSURE // auch: FEATURE_EMERGENCY_PAUSE && FEATURE_HEAT_BED_Z_COMPENSATION
 			case 3909: // M3909 [P]PressureDigits - configure the sensible pressure value threshold || by Wessix and Nibbels
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
@@ -10324,6 +10341,7 @@ void processCommand( GCode* pCommand )
 					if (pCommand->hasP() ){						
 						if ( pCommand->P >= 0 && pCommand->P < EMERGENCY_PAUSE_DIGITS_MAX )
 						{
+							if(pCommand->P > 32767) pCommand->P = 32767;
 							g_nSensiblePressureDigits = pCommand->P;
 							if(pCommand->P) Com::printFLN( PSTR( "M3909: SensiblePressure is now active") );
 								else{
@@ -10343,23 +10361,29 @@ void processCommand( GCode* pCommand )
 					if (pCommand->hasS() ){						
 						if ( pCommand->S > 0 && pCommand->S <= 200 )
 						{
+							//max darf nie 0 werden!! div/0 bei zeile ~5600
 							g_nSensiblePressureOffsetMax = (short)pCommand->S;
 							Com::printFLN( PSTR( "M3909: SensiblePressure [S]max. Offset changed to "),g_nSensiblePressureOffsetMax );
-						}							
+						}else{
+							Com::printFLN( PSTR( "M3909: ERROR::Dd never set automatic offset bigger than 0.2mm=S200. This function is ment only to compensate minimal amounts of too close distance.") );
+							Com::printFLN( PSTR( "M3909: ERROR::Versuche nicht das automatische Offset größer als 0.2mm=S200 einzustellen. Diese Funktion soll nur minimal justieren.") );
+							Com::printFLN( PSTR( "M3909: INFO::If you have to auto-compensate your offset to high, the extruder-distance cannot be your real problem. Clean your nozzle, rise your temp, lower your speed.") );
+							Com::printFLN( PSTR( "M3909: INFO::This function should lower the chance of an accidential emergency block on the first layer. It cannot help you to avoid calibration!") );
+						}						
 					}
 					
 					//Statusausgabe per M3909
 					if(g_nSensiblePressureDigits){
 						Com::printF( PSTR( "M3909: INFO SensiblePressure threshold is active. [P]PressureDigit = +-"), g_nSensiblePressureDigits );
-						Com::printFLN( PSTR( " [digits]") );
+						Com::printFLN( PSTR( " [digits] (Standard: use positive `Normal Digits`+20%)") );			
 						Com::printF( PSTR( "M3909: INFO SensiblePressures [S]max. offset is "), (long)g_nSensiblePressureOffsetMax );	
-						Com::printFLN( PSTR( " [um] (Standard: 100um)") );						
+						Com::printFLN( PSTR( " [um] (Standard: 100um, Min: 1um, Max: 200um)") );			
 					}else{
-						Com::printFLN( PSTR( "M3909: INFO SensiblePressure is currently disabled") );
-						Com::printFLN( PSTR( "M3909: INFO Example: M3909 P8000 S150") );
+						Com::printFLN( PSTR( "M3909: INFO SensiblePressure is currently disabled. [P]PressureDigit = OFF (Standard: use positive `Normal Digits`+20%" ) );
 						Com::printF( PSTR( "M3909: INFO SensiblePressures [S]max. offset is "), (long)g_nSensiblePressureOffsetMax );	
 						Com::printFLN( PSTR( " [um] (Standard: 100um)") );		
 					}
+					if (!pCommand->hasS() && !pCommand->hasP()) Com::printFLN( PSTR( "M3909: INFO Example: M3909 P8000 S120 for activation at 8000digits and additional offset limited to 0,12mm.") );
 				}
 				break;		
 			}
@@ -10367,7 +10391,7 @@ void processCommand( GCode* pCommand )
 			case 3909: // 3909 [P]PressureDigits - configure the sensible pressure value threshold || by Wessix and Nibbels
 				Com::printFLN( PSTR( "M3909 is disabled : inactive Feature FEATURE_EMERGENCY_PAUSE || FEATURE_HEAT_BED_Z_COMPENSATION" ) );
 			break;
-#endif // FEATURE_EMERGENCY_PAUSE && FEATURE_HEAT_BED_Z_COMPENSATION	
+#endif // FEATURE_SENSIBLE_PRESSURE
 		}
 	}
 

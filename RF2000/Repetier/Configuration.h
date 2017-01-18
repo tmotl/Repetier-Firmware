@@ -87,16 +87,22 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Enables the precise heat bed scan */
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 
+// 1 = on, 0 = off
 #define FEATURE_PRECISE_HEAT_BED_SCAN		1
-													// 1 = on, 0 = off
- #if FEATURE_EMERGENCY_PAUSE
- /** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
-	#define	SENSIBLE_PRESSURE_DIGIT_CHECKS				50										// ?? Adjust until 87 max. because of char comparison. ??
-	#define	SENSIBLE_PRESSURE_MAX_OFFSET				100										// Max lift in [um]; Standard: 100um=0,10mm
-
- #endif // FEATURE_EMERGENCY_PAUSE
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+/** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
+#if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
+														// 1 = on, 0 = off
+#define FEATURE_SENSIBLE_PRESSURE		1
+													
+#if FEATURE_SENSIBLE_PRESSURE
+	#define	SENSIBLE_PRESSURE_DIGIT_CHECKS				10										// MAximal auf 127 stellen, denn das wir mit char verglichen!!
+	#define	SENSIBLE_PRESSURE_MAX_OFFSET				100										// Max lift in [um]; Standard: 100um=0,10mm, darf nie 0 sein!!
+#endif // FEATURE_SENSIBLE_PRESSURE
+
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE	0													// 1 = on, 0 = off
