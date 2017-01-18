@@ -23,18 +23,13 @@
 // this file contains all definitions which are specific to the RF1000 hardware
 #define UI_PRINTER_NAME						"RF1000"
 
-// ##########################################################################################
-// ##	Nibbels Kram Config
-// ##########################################################################################
-
-#define	FEATURE_BEDTEMP_DECREASE				1													// 1 = on, 0 = off
 
 // ##########################################################################################
 // ##	main hardware configuration
 // ##########################################################################################
 
 /** \brief Allows to use the device for milling */
-#define	FEATURE_MILLING_MODE				1													// 1 = on, 0 = off
+#define	FEATURE_MILLING_MODE				0													// 1 = on, 0 = off
 
 
 #if FEATURE_MILLING_MODE
