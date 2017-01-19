@@ -187,6 +187,7 @@ char			g_nSensiblePressureChecks	= 0;
 short			g_nSensiblePressureDigits	= 0;
 short			g_nSensiblePressureOffsetMax = SENSIBLE_PRESSURE_MAX_OFFSET;
 short			g_nSensiblePressureOffset	= 0;
+short 			g_nLastPressure				= 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #endif // FEATURE_EMERGENCY_PAUSE
@@ -5639,8 +5640,6 @@ void loopRF( void )
 						//jede 1 sekunden, bzw 0.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
 						if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS ){ 
 							nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
-							Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );								
-							Com::printFLN( PSTR( " [digits]" ) );	
 							
 							//half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5							
 							g_nSensiblePressureSum *= 0.5; 
@@ -5669,33 +5668,53 @@ void loopRF( void )
 								float inc = 0.0;
 								//mehr offsetincrement je höher digits oberhalb limit. linear
 								if(nPressure > g_nSensiblePressureDigits*1.1){
+									//je größer der Fehler, desto beschränkt größer der step
 									inc =	(float)nPressure / (float)g_nSensiblePressureDigits - 1; //0.1 ... riesig
 									if(inc > 2.0) inc = 2.0;
 									inc *= 12; // 1,2..24,0
 									step += (short)inc;
 								}
-								
-								inc = (float)g_nSensiblePressureOffset / (float)g_nSensiblePressureOffsetMax; //0.25 .. 1
-								if( inc >= 0.25) { 
-									step = step - (short)(inc * (step - 1)); //über der viertel offsetstrecke, das zusätzliche offset stark ausbremsen.
-								}
-								
-								if (step < 1) step = 1;
-								//um == mikrometer -> Offsetbereich beschränkt auf 0..0,10mm
-								if(g_nSensiblePressureOffset+step <= (long)g_nSensiblePressureOffsetMax){
-									g_nSensiblePressureOffset += step;
-									Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
-									Com::printFLN( PSTR( "[um]" ) );
+
+								if(g_nLastPressure - nPressure > 0){
+									//digits sinken gerade -> egal wie hoch, regelspeed raus!
+									step = 1;
 								}else{
-									g_nSensiblePressureOffset = (long)g_nSensiblePressureOffsetMax;
-									Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
-									Com::printFLN( PSTR( "[um] = MAX" ) );
+									//digits steigen gerade -> je höher mein aktuelles zusätzliches offset, desto weniger regelspeed.
+									inc = (float)g_nSensiblePressureOffset / (float)g_nSensiblePressureOffsetMax; //0.25 .. 1
+									if( inc >= 0.25 ) { 
+										step = step - (short)(inc * (step - 1)); //über der viertel offsetstrecke, das zusätzliche offset stark ausbremsen.
+									}
+									if( inc >= 0.33){
+										if(nPressure < g_nSensiblePressureDigits*1.1) step = 0; //wenn schon etwas offset da und die kräfte nur um +10% rumpendeln, dann nicht weiter erhöhen.
+									}
+								}		
+								
+								
+								if (step > 0) {	
+									//um == mikrometer -> Offsetbereich beschränkt auf 0..0,10mm
+									if(g_nSensiblePressureOffset+step <= (long)g_nSensiblePressureOffsetMax){
+										g_nSensiblePressureOffset += step;
+										//Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
+										//Com::printFLN( PSTR( "[um]" ) );
+									}else{
+										g_nSensiblePressureOffset = (long)g_nSensiblePressureOffsetMax;
+										//Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
+										//Com::printFLN( PSTR( "[um] = MAX" ) );
+									}
+									g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+									//Com::printFLN( PSTR( "SensiblePressure(): g_staticZSteps = " ), g_staticZSteps );	
 								}
-								g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-								Com::printFLN( PSTR( "SensiblePressure(): g_staticZSteps = " ), g_staticZSteps );	
+							}else{
+								
 							}
+														
+							g_nLastPressure = nPressure; //save last pressure.
 							
-							if(g_nSensiblePressureOffset > 0){								
+							Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );								
+							Com::printF( PSTR( " [digits], senseoffset = " ), g_nSensiblePressureOffset );							
+							Com::printFLN( PSTR( " [um]" ) );	
+							
+							/*if(g_nSensiblePressureOffset > 0){								
 								if( ((short)(-1*g_nSensiblePressureDigits*0.75) < nPressure) && (nPressure < (short)(g_nSensiblePressureDigits*0.8)) )
 								{
 									if(g_nSensiblePressureOffset - 1 >= 0){ //~2..3, sehr langsam wieder abbauen, wenn überhaupt.
@@ -5704,7 +5723,7 @@ void loopRF( void )
 										Com::printFLN( PSTR( "[um]" ) );										
 									}
 								}
-							}
+							}*/
 						}
 					}else{
 						// if sensible not active 
