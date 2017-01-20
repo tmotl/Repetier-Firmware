@@ -73,10 +73,10 @@ P = {0..100}
 This is a configuration option to commit a scans offset to its surrounding area only.  
 Example: Put P to a high value and messure all corners. Then the matrix is somehow "bended" and not constantly updated. (Might work very well on heat-beds which tend to lift edges within different temperature ranges).
 
-## SensiblePressure
-* M3909 Pn Sm
+## SensiblePressure  
+* M3909 Pn Sm  
 P = max. digits = {1...14999} [digits]  
-S = max. SenseOffset = {1...200} [um] 
+S = max. SenseOffset = {1...200} [um]  
 
 Feature called "SensiblePressure"  
  The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
