@@ -1274,7 +1274,7 @@ void Commands::executeGCode(GCode *com)
 							for( uint8_t h=0; h<NUM_TEMPERATURE_LOOPS; h++ )
 							{
 								TemperatureController *act = tempController[h];
-								if( act->targetTemperatureC > 30 && fabs( act->targetTemperatureC-act->currentTemperatureC ) > 1 )
+								if( act->targetTemperatureC > 30 && fabs( act->targetTemperatureC-act->currentTemperatureC ) > TEMP_TOLERANCE )
 								{
 									allReached = false;
 								}

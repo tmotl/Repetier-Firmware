@@ -748,6 +748,10 @@ can set it on for safety. */
 /** \brief Automatic filament change, mounting of the filament without heating - ensure that G1 does not attempt to extrude more than EXTRUDE_MAXLENGTH */
 #define	MOUNT_FILAMENT_SCRIPT_WITHOUT_HEATING		"G21\nG90\nG92 E0\nG1 E40 F80"
 
+/** \brief speed of the PWM signal, 0 = 15.25Hz, 1 = 30.51Hz, 2 = 61.03Hz, 3 = 122.06Hz */
+#define HEATER_PWM_SPEED					1
+#define COOLER_PWM_SPEED					3
+
 
 // ##########################################################################################
 // ##	Movement settings

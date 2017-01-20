@@ -206,6 +206,7 @@ extern const int8_t	encoder_table[16] PROGMEM;
 extern	char	g_nYesNo;
 extern	char	g_nContinueButtonPressed;
 extern	char	g_nServiceRequest;
+extern	char	g_nPrinterReady;
 
 
 // Key codes
