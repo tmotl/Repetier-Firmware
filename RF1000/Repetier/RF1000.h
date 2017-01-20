@@ -23,6 +23,11 @@
 // this file contains all definitions which are specific to the RF1000 hardware
 #define UI_PRINTER_NAME						"RF1000"
 
+// ##########################################################################################
+// ##	Nibbels Kram Config
+// ##########################################################################################
+
+#define	FEATURE_BEDTEMP_DECREASE				1													// 1 = on, 0 = off
 
 // ##########################################################################################
 // ##	main hardware configuration
