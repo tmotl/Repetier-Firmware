@@ -240,7 +240,7 @@ for 2 row displays. You can add additional pages or change the default pages lik
 	#if UI_COLS<=16
 	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
 						"zO: %z0um zM: %HB",
-						"sO: %sSum @%sM",
+						"sO: %sSum@%sM",
 						"Z: %x2mm %sC");
 	#else	
 	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
