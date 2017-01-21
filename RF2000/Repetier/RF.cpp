@@ -179,18 +179,17 @@ long			g_nPressureSum				= 0;
 char			g_nPressureChecks			= 0;
 long			g_nEmergencyPauseDigitsMin	= 0;
 long			g_nEmergencyPauseDigitsMax	= 0;
+#endif // FEATURE_EMERGENCY_PAUSE
 
-#if FEATURE_HEAT_BED_Z_COMPENSATION
+#if FEATURE_SENSIBLE_PRESSURE
 /* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
 long			g_nSensiblePressureSum		= 0;
 char			g_nSensiblePressureChecks	= 0;
 short			g_nSensiblePressureDigits	= 0;
 short			g_nSensiblePressureOffsetMax = SENSIBLE_PRESSURE_MAX_OFFSET;
 short			g_nSensiblePressureOffset	= 0;
-short 			g_nLastPressure				= 0;
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#endif // FEATURE_EMERGENCY_PAUSE
+short 			g_nSensibleLastPressure		= 0;
+#endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_EMERGENCY_STOP_ALL
 unsigned long	g_uLastZPressureTime		= 0;
@@ -5676,7 +5675,7 @@ void loopRF( void )
 									step += (short)inc;
 								}
 
-								if(g_nLastPressure - nPressure > 0){
+								if(g_nSensibleLastPressure - nPressure > 0){
 									//digits sinken gerade -> egal wie hoch, regelspeed raus!
 									step = 1;
 								}else{
@@ -5709,7 +5708,7 @@ void loopRF( void )
 								
 							}
 														
-							g_nLastPressure = nPressure; //save last pressure.
+							g_nSensibleLastPressure = nPressure; //save last pressure.
 							
 							Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );								
 							Com::printF( PSTR( " [digits], senseoffset = " ), g_nSensiblePressureOffset );							

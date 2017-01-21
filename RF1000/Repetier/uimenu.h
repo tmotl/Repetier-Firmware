@@ -56,6 +56,8 @@ List of placeholder:
 %sz : State of z min endstop
 %sZ : State of z max endstop
 %sC : State of the z compensation
+%sS : State of the z compensation -> SensiblePressure
+%sM : State of the z compensation -> SensiblePressureDigits
 %do : Debug echo state
 %di : Debug info state
 %de : Debug error state
@@ -165,28 +167,28 @@ for 2 row displays. You can add additional pages or change the default pages lik
 	// graphic main status
 	UI_PAGE6(ui_page1,"\xa %e0/%E0\xb0 X:%x0",
 
-#if NUM_EXTRUDER>1
-     "\xa %e1/%E1\xb0 Y:%x1",
-#else
-     "\xa -----/---\xb0 Y:%x1",
-#endif // NUM_EXTRUDER>1
+	#if NUM_EXTRUDER>1
+		 "\xa %e1/%E1\xb0 Y:%x1",
+	#else
+		 "\xa -----/---\xb0 Y:%x1",
+	#endif // NUM_EXTRUDER>1
 
-#if HAVE_HEATED_BED==true
-     "\xe %eb/%Eb\xb0 Z:%x2",
-#else
-     "\xb -----/---\xb0 Z:%x2",
-#endif // HAVE_HEATED_BED==true
+	#if HAVE_HEATED_BED==true
+		 "\xe %eb/%Eb\xb0 Z:%x2",
+	#else
+		 "\xb -----/---\xb0 Z:%x2",
+	#endif // HAVE_HEATED_BED==true
 
 	"Mul:%om", "Buf:%oB", "%os");
 
-#if EEPROM_MODE!=0
-    UI_PAGE4(ui_page2,"%Z5","%Z6","%Z7","%Z8");
-    #define UI_PRINTTIME_PAGES ,&ui_page2
-    #define UI_PRINTTIME_COUNT 1
-#else
-    #define UI_PRINTTIME_PAGES
-    #define UI_PRINTTIME_COUNT 0
-#endif // EEPROM_MODE!=0
+	#if EEPROM_MODE!=0
+		UI_PAGE4(ui_page2,"%Z5","%Z6","%Z7","%Z8");
+		#define UI_PRINTTIME_PAGES ,&ui_page2
+		#define UI_PRINTTIME_COUNT 1
+	#else
+		#define UI_PRINTTIME_PAGES
+		#define UI_PRINTTIME_COUNT 0
+	#endif // EEPROM_MODE!=0
 
 	/* Merge pages together. Use the following pattern:
 	#define UI_PAGES {&name1,&name2,&name3} */
@@ -196,52 +198,65 @@ for 2 row displays. You can add additional pages or change the default pages lik
 	#define UI_NUM_PAGES 1+UI_PRINTTIME_COUNT
 
 #elif UI_ROWS>=4
-#if HAVE_HEATED_BED==true
-#if UI_COLS<=16
-	UI_PAGE4(ui_page1,"%U1%ec/%EcB%eB/%Eb","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
-#else
-	UI_PAGE4(ui_page1,"%U1%ec/%Ec\002 B%eB/%Eb\002","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
-#endif // UI_COLS<=16
-#else
-	UI_PAGE4(ui_page1,UI_TEXT_PAGE_EXTRUDER,"Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
-#endif // HAVE_HEATED_BED==true
+	#if HAVE_HEATED_BED==true
+		#if UI_COLS<=16
+			UI_PAGE4(ui_page1,"%U1%ec/%EcB%eB/%Eb","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
+		#else
+			UI_PAGE4(ui_page1,"%U1%ec/%Ec\002 B%eB/%Eb\002","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
+		#endif // UI_COLS<=16
+	#else
+		UI_PAGE4(ui_page1,UI_TEXT_PAGE_EXTRUDER,"Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
+	#endif // HAVE_HEATED_BED==true
 
 	UI_PAGE4(ui_page2,"X:%x0 mm","Y:%x1 mm","Z:%x2 mm %sC","%os");
 	UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1, 
 
- #if NUM_EXTRUDER>1
-	UI_TEXT_PAGE_EXTRUDER2
- #else
-	""
- #endif // NUM_EXTRUDER>1
-  
-	,UI_TEXT_PAGE_BED,"%os");
+			 #if NUM_EXTRUDER>1
+				UI_TEXT_PAGE_EXTRUDER2
+			 #else
+				""
+			 #endif // NUM_EXTRUDER>1
+			  
+				,UI_TEXT_PAGE_BED,"%os");
 
-#if EEPROM_MODE!=0
-	UI_PAGE4(ui_page4,"%Z5","%Z6","%Z7","%Z8");
-  
-	#define UI_PRINTTIME_PAGES ,&ui_page4
-	#define UI_PRINTTIME_COUNT 1
-#else
-	#define UI_PRINTTIME_PAGES
-	#define UI_PRINTTIME_COUNT 0
-#endif // EEPROM_MODE!=0
+	#if EEPROM_MODE!=0
+		UI_PAGE4(ui_page4,"%Z5","%Z6","%Z7","%Z8");
+	  
+		#define UI_PRINTTIME_PAGES ,&ui_page4
+		#define UI_PRINTTIME_COUNT 1
+	#else
+		#define UI_PRINTTIME_PAGES
+		#define UI_PRINTTIME_COUNT 0
+	#endif // EEPROM_MODE!=0
 
-#if EEPROM_MODE!=0 && FEATURE_SERVICE_INTERVAL
-	UI_PAGE4(ui_page5,"%Z1","%Z2","%Z3","%Z4");
-	#define UI_SERVICE_PAGES ,&ui_page5
-	#define UI_SERVICE_COUNT 1
-#else
-	#define UI_SERVICE_PAGES
-	#define UI_SERVICE_COUNT 0
-#endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
-
+	#if EEPROM_MODE!=0 && FEATURE_SERVICE_INTERVAL
+		UI_PAGE4(ui_page5,"%Z1","%Z2","%Z3","%Z4");
+		#define UI_SERVICE_PAGES ,&ui_page5
+		#define UI_SERVICE_COUNT 1
+	#else
+		#define UI_SERVICE_PAGES
+		#define UI_SERVICE_COUNT 0
+	#endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
+	#if UI_COLS<=16
+	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
+						"zO: %z0um zM: %HB",
+						"sO: %sSum @%sM",
+						"Z: %x2mm %sC");
+	#else	
+	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
+						"zO: %z0 um zMat: %HB",
+						"sO: %sS um @%sM",
+						"Z: %x2 mm %sC");
+	#endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
+	#define UI_MOD_PAGES &ui_page_mod
+	#define UI_MOD_COUNT 1
+	
 	/* Merge pages together. Use the following pattern:
 	#define UI_PAGES {&name1,&name2,&name3} */
-	#define UI_PAGES {&ui_page1,&ui_page2,&ui_page3 UI_PRINTTIME_PAGES UI_SERVICE_PAGES}
+	#define UI_PAGES {&ui_page1,UI_MOD_PAGES,&ui_page2,&ui_page3 UI_PRINTTIME_PAGES UI_SERVICE_PAGES}
 
 	// How many pages do you want to have. Minimum is 1.
-	#define UI_NUM_PAGES 3+UI_PRINTTIME_COUNT+UI_SERVICE_COUNT
+	#define UI_NUM_PAGES 3+UI_PRINTTIME_COUNT+UI_SERVICE_COUNT+UI_MOD_COUNT
 #else
 	UI_PAGE2(ui_page1,UI_TEXT_PAGE_EXTRUDER,UI_TEXT_PAGE_BED);
 	UI_PAGE2(ui_page2,"X:%x0 Y:%x1","%os");

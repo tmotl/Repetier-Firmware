@@ -1469,7 +1469,31 @@ void UIDisplay::parse(char *txt,bool ram)
 					}
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 				}
-
+				
+				if(c2=='S')																				// %sS : State of the sensible offset
+				{
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+				    if( Printer::doHeatBedZCompensation )
+					{
+						addInt((int)g_nSensiblePressureOffset,4);
+					}else{
+						addInt(0,4);	
+					}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+				}
+				
+				if(c2=='M')																				// %sM : State of the sensible offset
+				{
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+				    if( Printer::doHeatBedZCompensation )
+					{
+						addInt((int)g_nSensiblePressureDigits,5);
+					}else{
+						addStringP(ui_text_off);				
+					}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+				}
+				
 				if(c2=='1')																				// %s1 : current value of the strain gauge
 				{
 					addInt(readStrainGauge(I2C_ADDRESS_STRAIN_GAUGE),5);
