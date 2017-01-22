@@ -96,6 +96,7 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 														// 1 = on, 0 = off
 #define FEATURE_SENSIBLE_PRESSURE		1
+#define FEATURE_PRINT_PRESSURE			1
 													
 #if FEATURE_SENSIBLE_PRESSURE
 	#define	SENSIBLE_PRESSURE_DIGIT_CHECKS				10										// MAximal auf 127 stellen, denn das wir mit char verglichen!!

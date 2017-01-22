@@ -361,6 +361,11 @@ void Commands::printTemperatures(bool showRaw)
     }
 #endif // NUM_EXTRUDER
 
+#if FEATURE_PRINT_PRESSURE
+	Com::printF(Com::tF);
+	Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
+#endif //FEATURE_PRINT_PRESSURE
+
     Com::println();
 
 } // printTemperatures
