@@ -10992,8 +10992,43 @@ void nextPreviousZAction( int8_t increment )
 {
 	long	steps;
 	char	moveMode;
+	
+	//DO NOT MOVE Z: ALTER Z-OFFSET
+	if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+	
+		// show that we are active
+		previousMillisCmd = HAL::timeInMilliseconds();
+	
+		long nTemp = Printer::ZOffset; //um --> mm*1000
+		if(increment>0) nTemp += 10; //0.01mm schritte * 1000
+		else if(increment<0) nTemp -= 10;	
+			
+		if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
+		if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
+		
+		Printer::ZOffset = nTemp;
+		g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+		
+		if( Printer::debugInfo() )
+		{
+			Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
+			Com::printF( PSTR( " [um]" ) );
+			Com::printF( PSTR( " / " ), g_staticZSteps );
+			Com::printFLN( PSTR( " [steps]" ) );
+		}
 
-
+#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+		if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
+		{
+			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
+			EEPROM::updateChecksum();
+		}
+#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+		
+		return;
+	}
+	
+	//ELSE DO MOVE Z: 
 	if( PrintLine::direct.stepsRemaining )
 	{
 		// we are moving already, there is nothing more to do
@@ -11057,37 +11092,6 @@ void nextPreviousZAction( int8_t increment )
 
 	// show that we are active
 	previousMillisCmd = HAL::timeInMilliseconds();
-
-	if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
-	
-		long nTemp = Printer::ZOffset; //um --> mm*1000
-		if(increment>0) nTemp += 10; //0.01mm schritte * 1000
-		else if(increment<0) nTemp -= 10;	
-			
-		if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
-		if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
-		
-		Printer::ZOffset = nTemp;
-		g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
-		
-		if( Printer::debugInfo() )
-		{
-			Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
-			Com::printF( PSTR( " [um]" ) );
-			Com::printF( PSTR( " / " ), g_staticZSteps );
-			Com::printFLN( PSTR( " [steps]" ) );
-		}
-
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
-		if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
-		{
-			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
-			EEPROM::updateChecksum();
-		}
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-		
-		return;
-	}
 	
 	moveMode = Printer::moveMode[Z_AXIS];
 	if( Printer::processAsDirectSteps() )
