@@ -5605,7 +5605,7 @@ void loopRF( void )
 			g_nSensiblePressureOffset = 0; //OFFSET-RESET nur in SAFE-Zustand!! -> Wenn z-Compensation sowieso deaktiviert. oder per G-Code.
 			g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
 		}
-		Com::printFLN( PSTR( "SensiblePressure(): is now disabled because of no z-compensation." ), g_nSensiblePressureOffset );
+		Com::printFLN( PSTR( "SensiblePressure(): is now disabled because of no z-compensation. " ), g_nSensiblePressureOffset );
 	}
 #endif // FEATURE_PAUSE_PRINTING
 
@@ -10475,151 +10475,114 @@ extern void processButton( int nAction )
 		}
 		case UI_ACTION_RF_EXTRUDER_OUTPUT:
 		{
-#if !EXTRUDER_ALLOW_COLD_MOVE
-			if( Extruder::current->tempControl.currentTemperatureC < UI_SET_MIN_EXTRUDER_TEMP )
-			{
-				// we do not allow to move the extruder in case it is not heated up enough
-				if( Printer::debugErrors() )
+			if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+				//we are in the Mod menu
+				//so dont retract, change the speed of the print to a lower speed instead of retracting:
+				//limits handled by change-function!
+				Commands::changeFeedrateMultiply(Printer::feedrateMultiply + 1);
+			}else{
+	#if !EXTRUDER_ALLOW_COLD_MOVE
+				if( Extruder::current->tempControl.currentTemperatureC < UI_SET_MIN_EXTRUDER_TEMP )
 				{
-					Com::printFLN( PSTR( "processButton(): extruder output: aborted" ) );
-				}
+					// we do not allow to move the extruder in case it is not heated up enough
+					if( Printer::debugErrors() )
+					{
+						Com::printFLN( PSTR( "processButton(): extruder output: aborted" ) );
+					}
 
-				showError( (void*)ui_text_extruder, (void*)ui_text_operation_denied );
-				break;
-			}
-#endif // !EXTRUDER_ALLOW_COLD_MOVE
-
-			// show that we are active
-			previousMillisCmd = HAL::timeInMilliseconds();
-
-			//if( Printer::processAsDirectSteps() )
-			if( true )
-			{
-				// we are printing at the moment - use direct steps
-				if( Printer::debugInfo() )
-				{
-					Com::printF( PSTR( "processButton(): extruder output: " ), (int)g_nManualSteps[E_AXIS] );
-					Com::printFLN( PSTR( " [steps]" ) );
-				}
-
-#if DEBUG_DIRECT_MOVE
-				Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_OUTPUT: direct step" ) );
-#endif // DEBUG_DIRECT_MOVE
-
-				HAL::forbidInterrupts();
-				Extruder::enable();
-				Printer::directPositionTargetSteps[E_AXIS] += g_nManualSteps[E_AXIS];
-				HAL::allowInterrupts();
-
-				if( Printer::debugInfo() )
-				{
-					Com::printF( PSTR( "processButton(): current manual E steps: " ), (int)Printer::directPositionTargetSteps[E_AXIS] );
-					Com::printFLN( PSTR( " [steps]" ) );
-				}
-			}
-			else
-			{
-				// we are not printing at the moment - use direct moves
-				if( PrintLine::direct.stepsRemaining )
-				{
-					// we are moving already, there is nothing more to do
-#if DEBUG_DIRECT_MOVE
-					Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_OUTPUT: busy" ) );
-#endif // DEBUG_DIRECT_MOVE
+					showError( (void*)ui_text_extruder, (void*)ui_text_operation_denied );
 					break;
 				}
+	#endif // !EXTRUDER_ALLOW_COLD_MOVE
 
-#if DEBUG_DIRECT_MOVE
-				Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_OUTPUT: direct move" ) );
-#endif // DEBUG_DIRECT_MOVE
+				// show that we are active
+				previousMillisCmd = HAL::timeInMilliseconds();
 
-				HAL::forbidInterrupts();
-				float	fTemp = Printer::feedrate;
-				Printer::feedrate = 5;
-				Printer::directPositionTargetSteps[E_AXIS] = Printer::directPositionCurrentSteps[E_AXIS] + (long)(float(EXTRUDE_MAXLENGTH) * Extruder::current->stepsPerMM);
-				PrintLine::prepareDirectMove();
-				PrintLine::direct.task = TASK_MOVE_FROM_BUTTON;
-				Printer::feedrate = fTemp;
-				HAL::allowInterrupts();
+				if( true )
+				{
+					// we are printing at the moment - use direct steps
+					if( Printer::debugInfo() )
+					{
+						Com::printF( PSTR( "processButton(): extruder output: " ), (int)g_nManualSteps[E_AXIS] );
+						Com::printFLN( PSTR( " [steps]" ) );
+					}
+
+	#if DEBUG_DIRECT_MOVE
+					Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_OUTPUT: direct step" ) );
+	#endif // DEBUG_DIRECT_MOVE
+
+					HAL::forbidInterrupts();
+					Extruder::enable();
+					Printer::directPositionTargetSteps[E_AXIS] += g_nManualSteps[E_AXIS];
+					HAL::allowInterrupts();
+
+					if( Printer::debugInfo() )
+					{
+						Com::printF( PSTR( "processButton(): current manual E steps: " ), (int)Printer::directPositionTargetSteps[E_AXIS] );
+						Com::printFLN( PSTR( " [steps]" ) );
+					}
+				}		
+
+	#if DEBUG_DIRECT_MOVE
+				Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_OUTPUT: end" ) );
+	#endif // DEBUG_DIRECT_MOVE
 			}
-
-#if DEBUG_DIRECT_MOVE
-			Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_OUTPUT: end" ) );
-#endif // DEBUG_DIRECT_MOVE
 			break;
 		}
 		case UI_ACTION_RF_EXTRUDER_RETRACT:
-		{
-#if !EXTRUDER_ALLOW_COLD_MOVE
-			if( Extruder::current->tempControl.currentTemperatureC < UI_SET_MIN_EXTRUDER_TEMP )
-			{
-				// we do not allow to move the extruder in case it is not heated up enough
-				if( Printer::debugErrors() )
+		{			
+			if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+				//we are in the Mod menu
+				//so dont retract, change the speed of the print to a lower speed instead of retracting:
+				//limits handled by change-function!
+				Commands::changeFeedrateMultiply(Printer::feedrateMultiply - 1);
+			}else{
+				//we are sonewhere "normal"
+	#if !EXTRUDER_ALLOW_COLD_MOVE
+				if( Extruder::current->tempControl.currentTemperatureC < UI_SET_MIN_EXTRUDER_TEMP )
 				{
-					Com::printFLN( PSTR( "processButton(): extruder retract: aborted" ) );
-				}
-				showError( (void*)ui_text_extruder, (void*)ui_text_operation_denied );
-				break;
-			}
-#endif // !EXTRUDER_ALLOW_COLD_MOVE
-
-			// show that we are active
-			previousMillisCmd = HAL::timeInMilliseconds();
-
-			//if( Printer::processAsDirectSteps() )
-			if( true )
-			{
-				// we are printing at the moment - use direct steps
-				if( Printer::debugInfo() )
-				{
-					Com::printF( PSTR( "processButton(): extruder retract: " ), (int)g_nManualSteps[E_AXIS] );
-					Com::printFLN( PSTR( " [steps]" ) );
-				}
-
-#if DEBUG_DIRECT_MOVE
-				Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_RETRACT: direct step" ) );
-#endif // DEBUG_DIRECT_MOVE
-
-				HAL::forbidInterrupts();
-				Extruder::enable();
-				Printer::directPositionTargetSteps[E_AXIS] -= g_nManualSteps[E_AXIS];
-				HAL::allowInterrupts();
-
-				if( Printer::debugInfo() )
-				{
-					Com::printF( PSTR( "processButton(): current manual E steps: " ), (int)Printer::directPositionTargetSteps[E_AXIS] );
-					Com::printFLN( PSTR( " [steps]" ) );
-				}
-			}
-			else
-			{
-				// we are not printing at the moment - use direct moves
-				if( PrintLine::direct.stepsRemaining )
-				{
-					// we are moving already, there is nothing more to do
-#if DEBUG_DIRECT_MOVE
-					Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_RETRACT: busy" ) );
-#endif // DEBUG_DIRECT_MOVE
+					// we do not allow to move the extruder in case it is not heated up enough
+					if( Printer::debugErrors() )
+					{
+						Com::printFLN( PSTR( "processButton(): extruder retract: aborted" ) );
+					}
+					showError( (void*)ui_text_extruder, (void*)ui_text_operation_denied );
 					break;
 				}
+	#endif // !EXTRUDER_ALLOW_COLD_MOVE
 
-#if DEBUG_DIRECT_MOVE
-				Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_RETRACT: direct move" ) );
-#endif // DEBUG_DIRECT_MOVE
+				// show that we are active
+				previousMillisCmd = HAL::timeInMilliseconds();
 
-				HAL::forbidInterrupts();
-				float	fTemp = Printer::feedrate;
-				Printer::feedrate = 5;
-				Printer::directPositionTargetSteps[E_AXIS] = Printer::directPositionCurrentSteps[E_AXIS] - (long)(float(EXTRUDE_MAXLENGTH) * Extruder::current->stepsPerMM);
-				PrintLine::prepareDirectMove();
-				PrintLine::direct.task = TASK_MOVE_FROM_BUTTON;
-				Printer::feedrate = fTemp;
-				HAL::allowInterrupts();
+				if( true )
+				{
+					// we are printing at the moment - use direct steps
+					if( Printer::debugInfo() )
+					{
+						Com::printF( PSTR( "processButton(): extruder retract: " ), (int)g_nManualSteps[E_AXIS] );
+						Com::printFLN( PSTR( " [steps]" ) );
+					}
+
+	#if DEBUG_DIRECT_MOVE
+					Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_RETRACT: direct step" ) );
+	#endif // DEBUG_DIRECT_MOVE
+
+					HAL::forbidInterrupts();
+					Extruder::enable();
+					Printer::directPositionTargetSteps[E_AXIS] -= g_nManualSteps[E_AXIS];
+					HAL::allowInterrupts();
+
+					if( Printer::debugInfo() )
+					{
+						Com::printF( PSTR( "processButton(): current manual E steps: " ), (int)Printer::directPositionTargetSteps[E_AXIS] );
+						Com::printFLN( PSTR( " [steps]" ) );
+					}
+				}
+
+	#if DEBUG_DIRECT_MOVE
+				Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_RETRACT: end" ) );
+	#endif // DEBUG_DIRECT_MOVE
 			}
-
-#if DEBUG_DIRECT_MOVE
-			Com::printFLN( PSTR( "UI_ACTION_RF_EXTRUDER_RETRACT: end" ) );
-#endif // DEBUG_DIRECT_MOVE
 			break;
 		}
 #if FEATURE_PAUSE_PRINTING
@@ -11095,6 +11058,37 @@ void nextPreviousZAction( int8_t increment )
 	// show that we are active
 	previousMillisCmd = HAL::timeInMilliseconds();
 
+	if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+	
+		long nTemp = Printer::ZOffset; //um --> mm*1000
+		if(increment>0) nTemp += 10; //0.01mm schritte * 1000
+		else if(increment<0) nTemp -= 10;	
+			
+		if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
+		if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
+		
+		Printer::ZOffset = nTemp;
+		g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+		
+		if( Printer::debugInfo() )
+		{
+			Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
+			Com::printF( PSTR( " [um]" ) );
+			Com::printF( PSTR( " / " ), g_staticZSteps );
+			Com::printFLN( PSTR( " [steps]" ) );
+		}
+
+#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+		if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
+		{
+			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
+			EEPROM::updateChecksum();
+		}
+#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+		
+		return;
+	}
+	
 	moveMode = Printer::moveMode[Z_AXIS];
 	if( Printer::processAsDirectSteps() )
 	{

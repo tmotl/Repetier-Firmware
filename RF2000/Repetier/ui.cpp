@@ -2794,9 +2794,11 @@ void UIDisplay::nextPreviousAction(int8_t next)
 			break;
 		}
 		case UI_ACTION_ZOFFSET:
-		{
-			INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
-			g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+		{			
+			//INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
+			INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000),(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000));			
+			//g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+			g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
