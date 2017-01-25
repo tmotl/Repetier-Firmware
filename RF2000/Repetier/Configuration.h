@@ -94,16 +94,21 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 
 /** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
 #if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
-														// 1 = on, 0 = off
+// 1 = on, 0 = off
 #define FEATURE_SENSIBLE_PRESSURE		1
+// Max lift in [um]; Standard: 150um=0,15mm, darf nie 0 sein!! größer 0.2 macht normal keinen Sinn.
 #define FEATURE_PRINT_PRESSURE			1
 													
 #if FEATURE_SENSIBLE_PRESSURE
 	#define	SENSIBLE_PRESSURE_DIGIT_CHECKS				10										// MAximal auf 127 stellen, denn das wir mit char verglichen!!
-	#define	SENSIBLE_PRESSURE_MAX_OFFSET				100										// Max lift in [um]; Standard: 100um=0,10mm, darf nie 0 sein!!
+	//nachfolgend soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
+	#define	SENSIBLE_PRESSURE_MAX_OFFSET				150		
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
+
+/** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
+#define	Z_OFFSET_BUTTON_STEPS		5
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE	0													// 1 = on, 0 = off

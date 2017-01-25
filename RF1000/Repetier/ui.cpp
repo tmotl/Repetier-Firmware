@@ -1472,26 +1472,26 @@ void UIDisplay::parse(char *txt,bool ram)
 				
 				if(c2=='S')																				// %sS : State of the sensible offset
 				{
-#if FEATURE_HEAT_BED_Z_COMPENSATION
+#if FEATURE_SENSIBLE_PRESSURE
 				    if( Printer::doHeatBedZCompensation )
 					{
 						addInt((int)g_nSensiblePressureOffset,4);
 					}else{
 						addInt(0,4);	
 					}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+#endif // FEATURE_SENSIBLE_PRESSURE
 				}
 				
 				if(c2=='M')																				// %sM : State of the sensible offset
 				{
-#if FEATURE_HEAT_BED_Z_COMPENSATION
+#if FEATURE_SENSIBLE_PRESSURE
 				    if( Printer::doHeatBedZCompensation )
 					{
 						addInt((int)g_nSensiblePressureDigits,5);
 					}else{
 						addStringP(ui_text_off);				
 					}
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+#endif // FEATURE_SENSIBLE_PRESSURE
 				}
 				
 				if(c2=='1')																				// %s1 : current value of the strain gauge
@@ -2796,10 +2796,12 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		case UI_ACTION_ZOFFSET:
 		{			
 			//INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
-			INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000),(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000));			
-			//g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+			INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000),(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000));		
+		#if FEATURE_SENSIBLE_PRESSURE
 			g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-
+		#else	
+			g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+		#endif
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
 			EEPROM::updateChecksum();

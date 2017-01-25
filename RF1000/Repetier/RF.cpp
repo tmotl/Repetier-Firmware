@@ -5694,15 +5694,10 @@ void loopRF( void )
 									//um == mikrometer -> Offsetbereich beschränkt auf 0..0,10mm
 									if(g_nSensiblePressureOffset+step <= (long)g_nSensiblePressureOffsetMax){
 										g_nSensiblePressureOffset += step;
-										//Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
-										//Com::printFLN( PSTR( "[um]" ) );
 									}else{
 										g_nSensiblePressureOffset = (long)g_nSensiblePressureOffsetMax;
-										//Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
-										//Com::printFLN( PSTR( "[um] = MAX" ) );
 									}
 									g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-									//Com::printFLN( PSTR( "SensiblePressure(): g_staticZSteps = " ), g_staticZSteps );	
 								}
 							}else{
 								
@@ -5712,18 +5707,7 @@ void loopRF( void )
 							
 							Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );								
 							Com::printF( PSTR( " [digits], senseoffset = " ), g_nSensiblePressureOffset );							
-							Com::printFLN( PSTR( " [um]" ) );	
-							
-							/*if(g_nSensiblePressureOffset > 0){								
-								if( ((short)(-1*g_nSensiblePressureDigits*0.75) < nPressure) && (nPressure < (short)(g_nSensiblePressureDigits*0.8)) )
-								{
-									if(g_nSensiblePressureOffset - 1 >= 0){ //~2..3, sehr langsam wieder abbauen, wenn überhaupt.
-										g_nSensiblePressureOffset -= 1;
-										Com::printF( PSTR( "SensiblePressure(): sensible_offset = " ), g_nSensiblePressureOffset );
-										Com::printFLN( PSTR( "[um]" ) );										
-									}
-								}
-							}*/
+							Com::printFLN( PSTR( " [um]" ) );
 						}
 					}else{
 						// if sensible not active 
@@ -5769,12 +5753,12 @@ void loopRF( void )
 				g_nPressureSum	  = 0;
 				g_nPressureChecks = 0;
 				
-#if FEATURE_HEAT_BED_Z_COMPENSATION				
+#if FEATURE_SENSIBLE_PRESSURE				
 				//if not printing:
 				g_nSensiblePressureSum = 0;  //close down counters if function deactivated.
 				g_nSensiblePressureChecks = 0;
 				//offset muss bleiben! g_nSensiblePressureOffset != 0
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION	
+#endif // FEATURE_SENSIBLE_PRESSURE	
 				
 			}
 		}
@@ -11000,15 +10984,41 @@ void nextPreviousZAction( int8_t increment )
 		previousMillisCmd = HAL::timeInMilliseconds();
 	
 		long nTemp = Printer::ZOffset; //um --> mm*1000
-		if(increment>0) nTemp += 10; //0.01mm schritte * 1000
-		else if(increment<0) nTemp -= 10;	
-			
+		if(increment>0) nTemp += Z_OFFSET_BUTTON_STEPS; //0.01mm schritte * 1000
+		else if(increment<0) nTemp -= Z_OFFSET_BUTTON_STEPS;	
+		
+	HAL::forbidInterrupts();
+#if FEATURE_SENSIBLE_PRESSURE
+		/* IDEE: Wenn automatisches Offset und wir korrigieren dagegen, soll erst dieses abgebaut werden */
+		if(g_nSensiblePressureOffset > 0){ //aus: dann 0, an: dann > 0
+			if(increment<0){
+				//automatik hat das bett runtergefahren, wir fahren es mit negativem offset hoch.
+				//blöd: damit ist die automatik evtl. weiter am limit und kann nachfolgend nichts mehr tun.
+				//also erst ausgleichen! dann verändern.
+				if(g_nSensiblePressureOffset > Z_OFFSET_BUTTON_STEPS){
+					nTemp += Z_OFFSET_BUTTON_STEPS;
+					g_nSensiblePressureOffset -= Z_OFFSET_BUTTON_STEPS;
+				}else{
+					nTemp += g_nSensiblePressureOffset;
+					g_nSensiblePressureOffset = 0;
+				}
+				
+			}			
+		}
+		/* /IDEE: */
+#endif //FEATURE_SENSIBLE_PRESSURE
+					
 		if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
 		if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
 		
 		Printer::ZOffset = nTemp;
+#if FEATURE_SENSIBLE_PRESSURE
 		g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
-		
+#else
+		g_staticZSteps = long(( Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+#endif //FEATURE_SENSIBLE_PRESSURE
+	HAL::allowInterrupts();
+
 		if( Printer::debugInfo() )
 		{
 			Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
@@ -11017,13 +11027,13 @@ void nextPreviousZAction( int8_t increment )
 			Com::printFLN( PSTR( " [steps]" ) );
 		}
 
-#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+	#if FEATURE_AUTOMATIC_EEPROM_UPDATE
 		if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
 		{
 			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
 			EEPROM::updateChecksum();
 		}
-#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+	#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
 		
 		return;
 	}
@@ -13647,7 +13657,7 @@ void doEmergencyStop( char reason )
 	Printer::stepperDirection[X_AXIS] = 0;
 	Printer::stepperDirection[Y_AXIS] = 0;
 	Printer::stepperDirection[Z_AXIS] = 0;
-	Printer::stepperDirection[E_AXIS] = 0;
+	//Printer::stepperDirection[E_AXIS] = 0; //No: this was out of bounds :) Nibbels
 	HAL::allowInterrupts();
 
 	// we are not going to perform any further operations until the restart of the firmware

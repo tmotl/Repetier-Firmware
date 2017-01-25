@@ -204,15 +204,16 @@ void Commands::waitUntilEndOfAllMoves()
 
 void Commands::waitUntilEndOfAllBuffers()
 {
-    GCode *code;
+    GCode *code = NULL;
 
 #ifdef DEBUG_PRINT
     debugWaitLoop = 9;
 #endif
 
-	while(PrintLine::hasLines() || (code = GCode::peekCurrentCommand()) != NULL)
+	while(PrintLine::hasLines() || (code != NULL))
     {
-	GCode::readFromSerial();
+		GCode::readFromSerial();
+		code = GCode::peekCurrentCommand();
         UI_MEDIUM; // do check encoder
         if(code)
         {
@@ -237,7 +238,7 @@ void Commands::waitUntilEndOfAllBuffers()
             }
             else
 #endif
-                Commands::executeGCode(code);
+            Commands::executeGCode(code);
             code->popCurrentCommand();
         }
 		Commands::checkForPeriodicalActions();

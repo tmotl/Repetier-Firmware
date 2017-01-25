@@ -1205,13 +1205,20 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
     uint32_t temp_millis = HAL::timeInMilliseconds();
     uint32_t t1=temp_millis;
     uint32_t t2=temp_millis;
-    int32_t t_high;
-    int32_t t_low;
+    int32_t t_high = 0;
+    int32_t t_low = 0;
 
     int32_t bias=pidMax>>1;
     int32_t d = pidMax>>1;
     float Ku, Tu;
     float Kp, Ki, Kd;
+	/*warning wegen uninitialised KP KI KD*/
+	//to remove the warning, I fill those with at least somehow plausible data (V2 Standard Values)
+	Kp = HT2_PID_P;
+	Ki = HT2_PID_I;
+	Kd = HT2_PID_D;
+
+	
     float maxTemp=20, minTemp=20;
 
 	if( Printer::debugInfo() )
