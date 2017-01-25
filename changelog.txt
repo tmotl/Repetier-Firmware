@@ -1,3 +1,10 @@
+V RF.01.37.mod (2017-01-25)
+- Some bugfixes
+- Within the last updates the Printer got a new menu, wherein you can easily change the Z-Offset and controll the SenseOffset according your needs on the printers digital screen. This is called "Mod Menu"
+- Within the "Mod Menu" you can alter your printing speed with the Extrude and Retract-Buttons.
+- Within the "Mod Menu" you can alter your Z-Offset and easily push SenseOffset to your Z-Offset with the Z-Up and Z-Down Button.
+[At this point I get flawless results and total controll on the first layers height! Even if thermal expansion is still happening.]
+
 V RF.01.37.mod (2017-01-20) pulling changes to mod: https://github.com/RF1000/Repetier-Firmware/commit/fcfd9b8c11d85a5099f675351aae3502d67d1738
 - On some boards the watchdog could fire during the startup of the firmware, in which case the firmware ended in an endless restart loop.
 - The PWM speed for the fan of the RF1000 has been changed from 122 Hz to 15 Hz.
