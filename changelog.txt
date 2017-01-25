@@ -1,6 +1,6 @@
 V RF.01.37.mod (2017-01-25)
 - Some bugfixes
-- Within the last updates the Printer got a new menu, wherein you can easily change the Z-Offset and controll the SenseOffset according your needs on the printers digital screen. This is called "Mod Menu"
+- Within the last updates the Printer got a new menu (page 2), wherein you can easily change the Z-Offset and controll the SenseOffset according your needs on the printers digital screen. This is called "Mod Menu"
 - Within the "Mod Menu" you can alter your printing speed with the Extrude and Retract-Buttons.
 - Within the "Mod Menu" you can alter your Z-Offset and easily push SenseOffset to your Z-Offset with the Z-Up and Z-Down Button.
 [At this point I get flawless results and total controll on the first layers height! Even if thermal expansion is still happening.]
