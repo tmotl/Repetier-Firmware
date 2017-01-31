@@ -90,12 +90,12 @@ Feature called "SensiblePressure"
  You cannot activate the Feature if zCompensation is not active already.  
 
 ## SensibleViscosity  
-* M3939 Pn Ex Iy Rm
+* M3939 Pn Ex Iy Rm  
 P = max. test digits = 1000 or {1...12000} [digits]  
 E = max. test extrusion velocity = 5 or {0.05...maxStartFeedrate} [mm/s]  
-I = test velocity increment = 0.05 or {0.02...0.4} [mm/s] 
-optional:
-R = max. digit change needed to consider having a filled nozzle.  
+I = test velocity increment = 0.05 or {0.02...0.4} [mm/s]  
+optional:  
+R = max. digit change needed to consider having a filled nozzle. = 500 [digits] 
 
 Feature called "SensibleViscosity"  
  The printer will automaticly extrude into the thin air and messure the resulting force. 
