@@ -30,7 +30,7 @@ uint8_t			Printer::unitIsInches = 0;								///< 0 = Units are mm, 1 = units are
 //Stepper Movement Variables
 float			Printer::axisStepsPerMM[4] = {XAXIS_STEPS_PER_MM,YAXIS_STEPS_PER_MM,ZAXIS_STEPS_PER_MM,1}; ///< Number of steps per mm needed.
 float			Printer::invAxisStepsPerMM[4];							///< Inverse of axisStepsPerMM for faster conversion
-float			Printer::maxFeedrate[4] = {MAX_FEEDRATE_X, MAX_FEEDRATE_Y, MAX_FEEDRATE_Z}; ///< Maximum allowed feedrate.
+float			Printer::maxFeedrate[4] = {MAX_FEEDRATE_X, MAX_FEEDRATE_Y, MAX_FEEDRATE_Z, DIRECT_FEEDRATE_E}; ///< Maximum allowed feedrate. //DIRECT_FEEDRATE_E added by nibbels, wird aber überschrieben.
 float			Printer::homingFeedrate[3];
 
 #ifdef RAMP_ACCELERATION
@@ -397,6 +397,7 @@ void Printer::updateAdvanceFlags()
 } // updateAdvanceFlags
 
 
+// This is for untransformed move to coordinates in printers absolute Cartesian space
 void Printer::moveTo(float x,float y,float z,float e,float f)
 {
     if(x != IGNORE_COORDINATE)
@@ -415,7 +416,8 @@ void Printer::moveTo(float x,float y,float z,float e,float f)
 
 } // moveTo
 
-
+/** Move to transformed Cartesian coordinates, mapping real (model) space to printer space.
+*/
 void Printer::moveToReal(float x,float y,float z,float e,float f)
 {
     if(x == IGNORE_COORDINATE)

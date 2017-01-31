@@ -49,6 +49,9 @@ Removed all Compilerwarnings and Compilererrors within the original Firmware.
 Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
 
+_by Nibbels_:  
+M3939 Pn Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.
+
 _by Nibbels/Wessix_:  
 M3909 Pn Sm			- See "SensiblePressure"  
 
@@ -86,6 +89,27 @@ Feature called "SensiblePressure"
  Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.  
  You cannot activate the Feature if zCompensation is not active already.  
 
+## SensibleViscosity  
+* M3939 Pn Ex Iy Rm
+P = max. test digits = 1000 or {1...12000} [digits]  
+E = max. test extrusion velocity = 5 or {0.05...maxStartFeedrate} [mm/s]  
+I = test velocity increment = 0.05 or {0.02...0.4} [mm/s] 
+optional:
+R = max. digit change needed to consider having a filled nozzle.  
+
+Feature called "SensibleViscosity"  
+ The printer will automaticly extrude into the thin air and messure the resulting force. 
+ After every messurement the velocity of extrusion is increased.  
+ You will get a CSV-Output within your Console-Window (Repetierserver/Repetierhost/Octoprint/...) which you can easily copy and paste to some text file. Excel can then read the Data and you can put it into some Chart with 2 Clicks.
+ You might ask why you need this feature, but in case you know your Filament quite well you can compare these resulting chars to really see how your filament extrusion behaves under different circumstances or when your nozzle is or gets clogged.
+ For longer heated (my) ABS: http://www.rf1000.de/viewtopic.php?f=62&t=1549&p=16617#p16617
+ http://www.rf1000.de/download/file.php?id=4716&a.png
+ For the general viscosity of (my) ABS: http://www.rf1000.de/viewtopic.php?f=23&t=1620&p=16613#p16605
+ http://www.rf1000.de/download/file.php?id=4699&a.png
+ That is a clogged nozzle with the same ABS:
+ http://www.rf1000.de/download/file.php?id=4707&a.png
+ Have fun finally seeing your Filaments behaviour over time, temp, nozzles ;)
+ 
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
 ## !! 11.01.2017: Project is Work in Progress and untested changes are possible.
