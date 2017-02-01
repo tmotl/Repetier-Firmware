@@ -192,6 +192,7 @@ short 			g_nSensibleLastPressure		= 0;
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_EMERGENCY_STOP_ALL
+unsigned long	g_uLastZPressureTime_IgnoreUntil = 0;
 unsigned long	g_uLastZPressureTime		= 0;
 long			g_nZPressureSum				= 0;
 char			g_nZPressureChecks			= 0;
@@ -2228,14 +2229,20 @@ void fixKeramikLochInMatrix( void )
 
 void startViscosityTest( int maxdigits = 10000, float maxfeedrate = 5.0f, float incrementfeedrate = 0.05f, int refill_digit_limit = 500 )
 {	
-    Com::printFLN( PSTR( "startViscosityTest(): started" ) );	
-    Com::printFLN( PSTR( "Config: Refill NozzleDigitsDelta = " ) , refill_digit_limit );	
+    Com::printFLN( PSTR( "startViscosityTest(): started" ) );		
+	
+	if(refill_digit_limit > (int)(g_nEmergencyPauseDigitsMax*0.8) ) refill_digit_limit = (int)(g_nEmergencyPauseDigitsMax*0.2);
+	if(refill_digit_limit < 50) refill_digit_limit = 50;		
+    Com::printFLN( PSTR( "Config: Refill NozzleDigitsDelta = " ) , refill_digit_limit );
+	
 	if(maxdigits > (int)(g_nEmergencyPauseDigitsMax*0.8) ) maxdigits = (int)(g_nEmergencyPauseDigitsMax*0.8);
 	if(maxdigits < 1000) maxdigits = 1000;	
     Com::printFLN( PSTR( "Config: Test DigitsMax = " ) , maxdigits );	
+	
 	if(maxfeedrate > Extruder::current->maxStartFeedrate) maxfeedrate = Extruder::current->maxStartFeedrate;
 	if(maxfeedrate < 0.05) maxfeedrate = 0.05;	
     Com::printFLN( PSTR( "Config: Test FeedrateMax = " ) , maxfeedrate , 1);	
+	
 	if(incrementfeedrate > 0.4) incrementfeedrate = 0.4;
 	if(incrementfeedrate < 0.02) incrementfeedrate = 0.02;	
     Com::printFLN( PSTR( "Config: Test FeedrateIncrement = " ) , incrementfeedrate , 2 );
@@ -2341,56 +2348,57 @@ void startViscosityTest( int maxdigits = 10000, float maxfeedrate = 5.0f, float 
 
 
 /**************************************************************************************************************************************/
-/*
-void startMadeMessureMethod( float extrusion )
-{
+
+void startMadeMessureMethod( int maxdigits = 9000, float dz = -0.002f, float extrusion = 0.15f, float start_z_hoehe = 0.3 )
+{	
+    Com::printFLN( PSTR( "startMadeMessureMethod(): started" ) );			
 	
-    Com::printFLN( PSTR( "startMadeMessureMethod(): started" ) );
+	if(maxdigits > (int)(g_nEmergencyPauseDigitsMax*0.8) ) maxdigits = (int)(g_nEmergencyPauseDigitsMax*0.8);
+	if(maxdigits < 1000) maxdigits = 1000;		
+    Com::printFLN( PSTR( "Config: Test DigitsMax = " ) , maxdigits );	
 	
-	if(extrusion > 10.0f) extrusion = 10.0f;
-	if(extrusion < 0.1f) extrusion = 0.1f;
+	if(extrusion > 0.6) extrusion = 0.6;
+	if(extrusion < 0.075) extrusion = 0.075;	
+    Com::printF( PSTR( "Config: Test Extrusion = " ) , extrusion , 2);	
+    Com::printFLN( PSTR( " [mm/s]" ) );	
+	
+	if(dz > 0) dz = 0;
+	if(dz < -0.02) dz = -0.02;	//negativ!! < > 
+    Com::printF( PSTR( "Config: Test z-Decrement = " ) , dz , 3 );
+    Com::printFLN( PSTR( " [mm]" ) );
+	
+	if(start_z_hoehe > 5) start_z_hoehe = 5;
+	if(start_z_hoehe < 0.05) start_z_hoehe = 0.05;	
+    Com::printF( PSTR( "Config: Test z-Starthoehe = " ) , start_z_hoehe , 3 );
+    Com::printFLN( PSTR( " [mm] CMP" ) );
 	
 	
 	
     previousMillisCmd = HAL::timeInMilliseconds();
 	
-    if(Printer::doHeatBedZCompensation){
-		
-	}
-	else
-	{
+    if(!Printer::doHeatBedZCompensation){
 		Com::printFLN( PSTR( "ERROR::doHeatBedZCompensation:OFF" ) );
 		return;
-	}
-		
-	if( Printer::isHomed() )
-	{
-		
-	}
-	else
-	{
+	}		
+	if( !Printer::isHomed() ){
 		Com::printFLN( PSTR( "ERROR::isHomed:OFF" ) );
 		return;
 	}
-		
-#if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "MMM(): Homing and Z-Compensation checked!" ) );
-#endif // DEBUG_HEAT_BED_SCAN == 2
+	if( Extruder::current->tempControl.currentTemperatureC < 180.0f){		
+		Com::printFLN( PSTR( "ERROR::Temperature:OFF or <180.0°C = " ), Extruder::current->tempControl.currentTemperatureC );
+		return;
+	}
 	
 	//drive up the Bed ~3mm
-	float z_spacing = g_maxZCompensationSteps*Printer::invAxisStepsPerMM[Z_AXIS]*10;
+	float z_spacing = g_maxZCompensationSteps*Printer::invAxisStepsPerMM[Z_AXIS];
 	Printer::moveToReal( IGNORE_COORDINATE, IGNORE_COORDINATE, z_spacing , IGNORE_COORDINATE, Printer::homingFeedrate[Z_AXIS]);
     Commands::waitUntilEndOfAllMoves();
 	
 	//move to (x,y) = (0,0)
 	Printer::moveToReal( 0, 0, IGNORE_COORDINATE, IGNORE_COORDINATE, Printer::homingFeedrate[X_AXIS]);
     Commands::waitUntilEndOfAllMoves();
-	
 			
     previousMillisCmd = HAL::timeInMilliseconds();			
-#if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "MMM(): readIdlePressure" ) );
-#endif // DEBUG_HEAT_BED_SCAN == 2
 
 	//wait and test idle pressure
     HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
@@ -2399,63 +2407,30 @@ void startMadeMessureMethod( float extrusion )
 		HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
 		err = readIdlePressure( &g_nCurrentIdlePressure );		
 		if( err != 0 ) {
-			Com::printFLN( PSTR( "MMM(): the idle pressure could not be determined" ) );
-			return;
+			HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+			err = readIdlePressure( &g_nCurrentIdlePressure );		
+			if( err != 0 ) {
+				Com::printFLN( PSTR( "MMM(): the idle pressure could not be determined" ) );
+				return;
+			}
 		}
     }
 
-
-    g_nMinPressureIdle	  = g_nCurrentIdlePressure - SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA;
-    g_nMaxPressureIdle	  = g_nCurrentIdlePressure + SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA;
-
-#if DEBUG_HEAT_BED_SCAN == 2
-    Com::printF( PSTR( ", g_nMinPressureIdle = " ), g_nMinPressureIdle );
-    Com::printFLN( PSTR( ", g_nMaxPressureIdle = " ), g_nMaxPressureIdle );
-    Com::printFLN( PSTR( "PRESSURE IDLE = " ), g_nMaxPressureIdle );
-#endif // DEBUG_HEAT_BED_SCAN == 2
-
-#if DEBUG_HEAT_BED_SCAN == 2
-    Com::printFLN( PSTR( "MMM(): EXTRUSIONSTEST" ) );
-#endif // DEBUG_HEAT_BED_SCAN == 2
-
-	long extrudedigits = 0;
-	
+	long extrudedigits = 0;	
 	//REFILL EXTRUDER
-	Com::printFLN( PSTR( "Refill Extruder:" ), extrudedigits );
-	for(float e=0.1; e<=5; e+=0.05) { //iterate to fill extruder with filament.
-		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( 1.0f * Printer::axisStepsPerMM[E_AXIS] )* e , e, true, true ); //extrude slow until reaction.			
+	Com::printFLN( PSTR( "Replenish Hotend..." ) );
+	for(float e=0.1; e<=2; e+=0.05) { //iterate to fill extruder with filament.
+		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , Printer::axisStepsPerMM[E_AXIS] * e , e, true, true ); //extrude slow until reaction.			
 		extrudedigits = (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( 1.0f * Printer::axisStepsPerMM[E_AXIS] )* e , e, true, true ); //extrude slow until reaction.			
+		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , Printer::axisStepsPerMM[E_AXIS] * e , e, true, true ); //extrude slow until reaction.			
 		extrudedigits = (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
 		extrudedigits *= 0.5;
 		
-		Com::printFLN( PSTR( "Refill force = " ), extrudedigits );	
+		Com::printFLN( PSTR( "force = " ), extrudedigits );	
 		
-		if(extrudedigits < g_nMinPressureIdle - 400 || extrudedigits > g_nMinPressureIdle + 400) {  //400+ scheint n guter Wert fürs Füllen des Hotends nach nem Retract.
-			break;
-		}
-	}
-	
-	//TEST EXTRUDER
-	Com::printFLN( PSTR( "Test Filament:" ), extrudedigits );
-	for(float e=0.05; e<=6; e+=0.05) { //iterate all points	
-		//test extrusion speed and get average digits:
-		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( 1.0f * Printer::axisStepsPerMM[E_AXIS] )* e , e, true, true ); //extrude only. time should be constant!
-		extrudedigits = (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( 1.0f * Printer::axisStepsPerMM[E_AXIS] )* e , e, true, true ); //extrude only. time should be constant!
-		extrudedigits += (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( 1.0f * Printer::axisStepsPerMM[E_AXIS] )* e , e, true, true ); //extrude only. time should be constant!
-		extrudedigits += (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-		PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( 1.0f * Printer::axisStepsPerMM[E_AXIS] )* e , e, true, true ); //extrude only. time should be constant!
-		extrudedigits += (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-		extrudedigits *= 0.25;
-		
-		Com::printF( PSTR( "e [mm/s]=;" ), e );	
-		Com::printF( PSTR( "; digits [1]= ;" ), extrudedigits );
-		Com::printFLN( PSTR( ";" ) );
-		
-		if(extrudedigits < g_nMinPressureIdle - 10000 || extrudedigits > g_nMinPressureIdle + 10000) {
-			PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( -1 * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true ); //loose some force on dms
+		//800 ? n guter Wert fürs Füllen des Hotends nach nem Retract. Zu wenig = noch Luft in Nozzle, zu viel = materialverschwendung bei sehr viskosen materialien.
+		if(extrudedigits < g_nCurrentIdlePressure - 800 || extrudedigits > g_nCurrentIdlePressure + 800) {  
+			Com::printFLN( PSTR( "nozzle should be filled to capacity" ) );	
 			break;
 		}
 	}
@@ -2467,35 +2442,53 @@ void startMadeMessureMethod( float extrusion )
 	//move to (x,y) = (g_nScanXStartSteps,g_nScanYStartSteps)
     PrintLine::moveRelativeDistanceInSteps( g_nScanXStartSteps, 0, 0, 0, MAX_FEEDRATE_X, true, true );
     PrintLine::moveRelativeDistanceInSteps( 0, g_nScanYStartSteps, 0, 0, MAX_FEEDRATE_Y, true, true );
-	//move to start-z 0.3
-	Printer::moveToReal( IGNORE_COORDINATE, IGNORE_COORDINATE, 0.3, IGNORE_COORDINATE, Printer::homingFeedrate[Z_AXIS]);
+	//move to start-z start_z_hoehe
+	Printer::moveToReal( IGNORE_COORDINATE, IGNORE_COORDINATE, start_z_hoehe, IGNORE_COORDINATE, Printer::homingFeedrate[Z_AXIS]);
     Commands::waitUntilEndOfAllMoves();
 
-	int digits = 0;
-	float dz = -0.005;
+	int digits = 0;	
 	bool abort = false;
+	
+	long weg_x = 10 * Printer::axisStepsPerMM[X_AXIS];
+	long weg_y = 10 * Printer::axisStepsPerMM[Y_AXIS]; //weg 10, speed 10mm/s = extrudiert in 1s ist "extrusion"
+	long ext_e = (long)( extrusion * Printer::axisStepsPerMM[E_AXIS] );
+	
+	Com::printFLN( PSTR( "CSV-Logfile:START" ) );
+    Com::printF( PSTR( ";Idle Digits = ;" ), g_nCurrentIdlePressure );
+	//TEST EXTRUDER
+	Com::printFLN( PSTR( ";Testing Filament..." ) );
+	Com::printFLN( PSTR( ";Extruder Temperature [°C];z [mm];e [mm/s];digits [1];digits-idle [1]" ) );
+	
+	
 	
 	for(int loop = 0; loop < 4; loop++){
 		
 		//VERSETZEN
-		PrintLine::moveRelativeDistanceInSteps( 0, (long)( 2 * Printer::axisStepsPerMM[Y_AXIS] ), 0 , 0 , 10, true, true );
 		
-		for(long xx=g_nScanXStartSteps; xx<=g_nScanXMaxPositionSteps; xx+=g_nScanXStepSizeSteps) { //iterate all points
-			float z = (float)( Printer::queuePositionCurrentSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] ); //mit z-comp und in mm			
-			Com::printFLN( PSTR( "z mm = " ), z );			
+		g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
+		PrintLine::moveRelativeDistanceInSteps( 0, weg_y, 0 , ext_e , 10, true, true );
+		
+		for(long xx=g_nScanXStartSteps; xx<=g_nScanXMaxPositionSteps-weg_x; xx+=weg_x ) { //iterate all points
+			g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
+			float z = (float)( Printer::queuePositionCurrentSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] ); //mit z-comp und in mm
 			if (z+dz < 0.02){
 				abort = true;
 				PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( -1 * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true ); //loose some force on dms
 				break;
-			} 
+			} 			
 			
-			//PLIS X!!
-			PrintLine::moveRelativeDistanceInSteps( g_nScanXStepSizeSteps, 0, (long)( dz * Printer::axisStepsPerMM[Z_AXIS] ) , (long)( extrusion * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true );
+			//PLUS X!!
+			PrintLine::moveRelativeDistanceInSteps( weg_x, 0, (long)( dz * Printer::axisStepsPerMM[Z_AXIS] ) , ext_e, 10, true, true );
 			digits = (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-			Com::printFLN( PSTR( "digits = " ), digits );
 			
-			//Com::printFLN( PSTR( "xx mm = " ), (float)(xx*Printer::invAxisStepsPerMM[X_AXIS]) , 2 );
-			if(digits < g_nMinPressureIdle - 8000 || digits > g_nMinPressureIdle + 8000) {
+			Com::printF( PSTR( ";" ), Extruder::current->tempControl.currentTemperatureC, 1 ,true );	//true = dezimalkomma, nicht punkt. Wegen Excel.
+			Com::printF( PSTR( ";" ), z, 3 , true );	//true = dezimalkomma, nicht punkt. Wegen Excel.
+			Com::printF( PSTR( ";" ), extrusion, 3 , true );	//true = dezimalkomma, nicht punkt. Wegen Excel.
+			Com::printF( PSTR( ";" ), digits );
+			Com::printFLN( PSTR( ";" ), digits-g_nCurrentIdlePressure );			
+			previousMillisCmd = HAL::timeInMilliseconds();	
+			
+			if(digits < g_nCurrentIdlePressure - maxdigits || digits > g_nCurrentIdlePressure + maxdigits || digits < -maxdigits || digits > maxdigits) {
 				abort = true;
 				PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( -1 * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true ); //loose some force on dms
 				break;
@@ -2504,11 +2497,12 @@ void startMadeMessureMethod( float extrusion )
 		if(abort) break;
 		
 		//VERSETZEN
-		PrintLine::moveRelativeDistanceInSteps( 0, (long)( 2 * Printer::axisStepsPerMM[Y_AXIS] ), 0 , 0 , 10, true, true );
+		g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
+		PrintLine::moveRelativeDistanceInSteps( 0, weg_y , 0 , ext_e , 10, true, true );
 		
-		for(long xx=g_nScanXStartSteps; xx<=g_nScanXMaxPositionSteps; xx+=g_nScanXStepSizeSteps) { //iterate all points
-			float z = (float)( Printer::queuePositionCurrentSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] ); //mit z-comp und in mm			
-			Com::printFLN( PSTR( "z mm = " ), z );			
+		for(long xx=g_nScanXStartSteps; xx<=g_nScanXMaxPositionSteps-weg_x; xx+=weg_x) { //iterate all points
+			g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
+			float z = (float)( Printer::queuePositionCurrentSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] ); //mit z-comp und in mm	
 			if (z+dz < 0.02){
 				abort = true;
 				PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( -1 * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true ); //loose some force on dms
@@ -2516,22 +2510,32 @@ void startMadeMessureMethod( float extrusion )
 			} 
 			
 			//MINUS X!!
-			PrintLine::moveRelativeDistanceInSteps( -g_nScanXStepSizeSteps, 0, (long)( dz * Printer::axisStepsPerMM[Z_AXIS] ) , (long)( extrusion * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true );
+			PrintLine::moveRelativeDistanceInSteps( (long)( -weg_x ), 0, (long)( dz * Printer::axisStepsPerMM[Z_AXIS] ) , ext_e, 10, true, true );
 			digits = (int)readStrainGauge( ACTIVE_STRAIN_GAUGE );
-			Com::printFLN( PSTR( "digits = " ), digits );
 			
-			//Com::printFLN( PSTR( "xx mm = " ), (float)(xx*Printer::invAxisStepsPerMM[X_AXIS]) , 2 );
-			if(digits < g_nMinPressureIdle - 8000 || digits > g_nMinPressureIdle + 8000) {
+			Com::printF( PSTR( ";" ), Extruder::current->tempControl.currentTemperatureC, 1 ,true );	//true = dezimalkomma, nicht punkt. Wegen Excel.
+			Com::printF( PSTR( ";" ), z, 3 , true );	//true = dezimalkomma, nicht punkt. Wegen Excel.
+			Com::printF( PSTR( ";" ), extrusion, 3 , true );	//true = dezimalkomma, nicht punkt. Wegen Excel.
+			Com::printF( PSTR( ";" ), digits );
+			Com::printFLN( PSTR( ";" ), digits-g_nCurrentIdlePressure );
+			previousMillisCmd = HAL::timeInMilliseconds();	
+			
+			if(digits < g_nCurrentIdlePressure - maxdigits || digits > g_nCurrentIdlePressure + maxdigits || digits < -maxdigits || digits > maxdigits) {
 				abort = true;
 				PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( -1 * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true ); //loose some force on dms
 				break;
 			} 
 		}
-		if(abort) break;
-		
+		if(abort) break;		
 	}
-
+	Com::printFLN( PSTR( "CSV-Logfile:ENDE" ) );
+	Com::printFLN( PSTR( "Feel free to copy and save this Log-Output to some *.csv-File to view in Excel." ) );
 	
+	
+	PrintLine::moveRelativeDistanceInSteps( 0, 0, 0 , (long)( -1 * Printer::axisStepsPerMM[E_AXIS] ), 10, true, true ); //loose some force on dms
+	g_uLastZPressureTime_IgnoreUntil = 0;
+	
+	//lift z
     HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
 	PrintLine::moveRelativeDistanceInSteps( 0, 0, g_maxZCompensationSteps , 0, Printer::homingFeedrate[Z_AXIS], true, true );
 			
@@ -2545,11 +2549,11 @@ void startMadeMessureMethod( float extrusion )
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "MMM(): finished" ) );
 #endif // DEBUG_HEAT_BED_SCAN
-
-    g_nZScanZPosition = 0;
+	
+	outputObject();
+	
 	return;
 } // startMadeMessureMethod()
-*/
 
 /**************************************************************************************************************************************/
 /**************************************************************************************************************************************/
@@ -5788,7 +5792,6 @@ void loopRF( void )
 	nEntered ++;
 
 	uTime = HAL::timeInMilliseconds();
-	
 	if( g_uStartOfIdle )
 	{
 		if( (uTime - g_uStartOfIdle) > MINIMAL_IDLE_TIME )
@@ -6111,13 +6114,26 @@ void loopRF( void )
 
 				g_nZPressureSum	   = 0;
 				g_nZPressureChecks = 0;
-
-				if( (nPressure < EMERGENCY_STOP_DIGITS_MIN) ||
-					(nPressure > EMERGENCY_STOP_DIGITS_MAX) )
-				{
-					// the pressure is outside the allowed range, we must perform the emergency stop
-					doEmergencyStop( STOP_BECAUSE_OF_Z_BLOCK );
+				
+				if(g_uLastZPressureTime_IgnoreUntil < uTime){
+					if( (nPressure < EMERGENCY_STOP_DIGITS_MIN) ||
+						(nPressure > EMERGENCY_STOP_DIGITS_MAX) )
+					{
+						// the pressure is outside the allowed range, we must perform the emergency stop
+						doEmergencyStop( STOP_BECAUSE_OF_Z_BLOCK );
+					}
+				}else{
+					//Manchmal ist es bescheuert, wenn man das 5000er Limit hat. OutputObject z.B. bei einem Druck der mit kleiner Nozzle und Digits ~ 5000...9000
+					//	g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds() + 1000; setzt diese scharfe prüfung z.b. für 1s ausser kraft und lässt mehr zu.
+					//Das ist besser als Nutzer, die das Limit über die Config voll aushebeln.
+					if( (nPressure < EMERGENCY_PAUSE_DIGITS_MIN) ||
+						(nPressure > EMERGENCY_PAUSE_DIGITS_MAX) )
+					{
+						// the pressure is outside the allowed range, we must perform the emergency stop
+						doEmergencyStop( STOP_BECAUSE_OF_Z_BLOCK );
+					}
 				}
+				
 			}
 		}
 		else
@@ -6863,6 +6879,8 @@ void outputObject( void )
 
 	Commands::printCurrentPosition();
 
+	g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+10000;
+	
 #if FEATURE_MILLING_MODE
 	if( Printer::operatingMode == OPERATING_MODE_MILL )
 	{
@@ -6901,6 +6919,9 @@ void outputObject( void )
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
 
 	Commands::waitUntilEndOfAllMoves();
+	
+	g_uLastZPressureTime_IgnoreUntil = 0;
+	
     Commands::printCurrentPosition();
 	
 	// disable all steppers
@@ -10722,11 +10743,14 @@ void processCommand( GCode* pCommand )
 			}
 #else
 			case 3909: // 3909 [P]PressureDigits - configure the sensible pressure value threshold || by Wessix and Nibbels
+			{
 				Com::printFLN( PSTR( "M3909 is disabled : inactive Feature FEATURE_EMERGENCY_PAUSE || FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+			}
 			break;
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 			case 3939: // 3939 startViscosityTest - Testfunction to determine the digits over extrusion speed || by Nibbels
+			{
 				Com::printFLN( PSTR( "M3939 ViscosityTest starting ..." ) );
 				
 				int maxD = 10000;
@@ -10753,17 +10777,45 @@ void processCommand( GCode* pCommand )
 				Com::printFLN( PSTR( "M3939 RefillLimit Digits_in = " ) , maxRFill );
 				startViscosityTest( maxD, maxE, Inc, maxRFill ); //E ist float, constraint in funktion!
 				
-				Com::printFLN( PSTR( "M3939 Ended!" ) );
+				Com::printFLN( PSTR( "M3939 Ended!" ) );				
+			}
+			break;
+			
+			case 3940: // 3940 startMadeMessureMethod - Testfunction to determine the raise digits over closing in to the heatbed || by Nibbels
+			{
+				Com::printFLN( PSTR( "M3940 startMadeMessureMethod starting ..." ) );
+				
+				int maxD = 9000;
+				float dz = -0.002f;	
+				float extrusion = 0.15f;	
+				float init_z = 0.3f;		
+				
+				if (pCommand->hasP() ){		
+					maxD = (float)pCommand->P;
+				}
+				if (pCommand->hasZ() ){		
+					dz = (float)pCommand->Z;
+				}
+				if (pCommand->hasI() ){		
+					init_z = (float)pCommand->I;
+				}
+				if (pCommand->hasE() ){		
+					extrusion = (float)pCommand->E;
+				}
+				
+				Com::printFLN( PSTR( "M3940 [P] Max Digits_in = " ) , maxD );
+				Com::printFLN( PSTR( "M3940 [Z] z-Increment = " ) , dz , 3 );
+				Com::printFLN( PSTR( "M3940 [E] extrusion = " ) , extrusion , 2 );
+				Com::printFLN( PSTR( "M3940 [I] init_z = " ) , init_z , 2 );
+				
+				startMadeMessureMethod( maxD, dz, extrusion, init_z ); //constraint in funktion!
+				
+				Com::printFLN( PSTR( "M3940 Ended!" ) );
+			}
 			break;
 
 
-
-		}
-		
-		
-		
-		
-		
+		}		
 	}
 
 	return;
