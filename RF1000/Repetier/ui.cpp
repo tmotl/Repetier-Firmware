@@ -1485,7 +1485,7 @@ void UIDisplay::parse(char *txt,bool ram)
 				if(c2=='M')																				// %sM : State of the sensible offset
 				{
 #if FEATURE_SENSIBLE_PRESSURE
-				    if( Printer::doHeatBedZCompensation )
+				    if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
 					{
 						addInt((int)g_nSensiblePressureDigits,5);
 					}else{
@@ -2522,6 +2522,25 @@ void UIDisplay::okAction()
 
 void UIDisplay::rightAction()
 {
+#if FEATURE_SENSIBLE_PRESSURE
+	if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+		//we are in the Mod menu		
+		if(g_nSensiblePressureDigits == EMERGENCY_PAUSE_DIGITS_MAX * 0.8 || g_nSensiblePressureDigits == 32767){
+			//ist max, dann auf 0.
+			g_nSensiblePressureDigits = 0;			
+		}else if(g_nSensiblePressureDigits > EMERGENCY_PAUSE_DIGITS_MAX * 0.8 - 250 || g_nSensiblePressureDigits > 32767 - 250){	
+			//stößt oben an, hier noch check auf overflow:
+			if(EMERGENCY_PAUSE_DIGITS_MAX * 0.8 < 32767){
+				g_nSensiblePressureDigits = EMERGENCY_PAUSE_DIGITS_MAX * 0.8; //maximalstellung, das ist aber schon irre hoch. abhängig von messdose und maximaltragkraft vs. genauigkeit der zelle.
+			}else{
+				g_nSensiblePressureDigits = 32767; //die variable ist short, nie mehr rein als nötig ^^.
+			}
+		}else{
+			g_nSensiblePressureDigits += 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+		}
+		beep(4,4);
+	}else{
+#endif
 #if UI_HAS_KEYS==1
 	if( menu[menuLevel] == &ui_menu_xpos )
 	{
@@ -2565,8 +2584,10 @@ void UIDisplay::rightAction()
 		EEPROM::updateChecksum();
 #endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
 	}
-#endif // UI_HAS_KEYS==1
-
+#endif // UI_HAS_KEYS==1	
+#if FEATURE_SENSIBLE_PRESSURE	
+	}
+#endif
 } // rightAction
 
 
@@ -3532,17 +3553,44 @@ void UIDisplay::executeAction(int action)
 			}
 			case UI_ACTION_BACK:
 			{
-#if FEATURE_RGB_LIGHT_EFFECTS
-				if ( menuLevel == 0 )
-				{
-					Printer::RGBButtonBackPressed = 1;
-				}
-#endif // FEATURE_RGB_LIGHT_EFFECTS
+#if FEATURE_SENSIBLE_PRESSURE
+				if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+					//we are in the Mod menu
+					//verkleinern des Digit-Limits
+					if(g_nSensiblePressureDigits == 0){
+						if(EMERGENCY_PAUSE_DIGITS_MAX * 0.8 < 32767){
+							g_nSensiblePressureDigits = EMERGENCY_PAUSE_DIGITS_MAX * 0.8; //maximalstellung, das ist aber schon irre hoch. abhängig von messdose und maximaltragkraft vs. genauigkeit der zelle.
+						}else{
+							g_nSensiblePressureDigits = 32767; //die variable ist short, nie mehr rein als nötig ^^.
+						}
+					}else if(g_nSensiblePressureDigits < 250){
+						g_nSensiblePressureDigits = 0;
+					}else{
+						g_nSensiblePressureDigits -= 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+					}
+					beep(4,4);
+					skipBeep=true;
+				}else{
+#endif
 
-				if(menuLevel>0) menuLevel--;
-				Printer::setAutomount(false);
-				activeAction = 0;
-				g_nYesNo = 0;
+#if FEATURE_RGB_LIGHT_EFFECTS
+					if ( menuLevel == 0 )
+					{
+						Printer::RGBButtonBackPressed = 1;
+					}
+#endif // FEATURE_RGB_LIGHT_EFFECTS
+					if ( menuLevel == 1 && uid.menuPos[0] == 1 ){
+						//der würde in das modmenü zurückgehen, da sind aber die rechtst links tasten anders belegt, daher nicht da rein! sonst evtl. verstellen von DigitLimit.
+						uid.menuPos[0] = 0;
+					}
+					if(menuLevel>0) menuLevel--;
+					Printer::setAutomount(false);
+					activeAction = 0;
+					g_nYesNo = 0;
+				
+#if FEATURE_SENSIBLE_PRESSURE
+				}
+#endif
 				break;
 			}
 			case UI_ACTION_NEXT:

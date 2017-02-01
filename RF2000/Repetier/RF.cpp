@@ -2429,11 +2429,28 @@ void startMadeMessureMethod( int maxdigits = 9000, float dz = -0.002f, float ext
 		Com::printFLN( PSTR( "force = " ), extrudedigits );	
 		
 		//800 ? n guter Wert fürs Füllen des Hotends nach nem Retract. Zu wenig = noch Luft in Nozzle, zu viel = materialverschwendung bei sehr viskosen materialien.
-		if(extrudedigits < g_nCurrentIdlePressure - 800 || extrudedigits > g_nCurrentIdlePressure + 800) {  
+		if(extrudedigits < g_nCurrentIdlePressure - 1000 || extrudedigits > g_nCurrentIdlePressure + 1000) {  
 			Com::printFLN( PSTR( "nozzle should be filled to capacity" ) );	
 			break;
 		}
 	}
+	
+	//Idle Pressure could have been changed due to filling up extruder with filament.
+	//wait and test idle pressure
+    HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+    err = readIdlePressure( &g_nCurrentIdlePressure );
+    if( err != 0 ) {
+		HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+		err = readIdlePressure( &g_nCurrentIdlePressure );		
+		if( err != 0 ) {
+			HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+			err = readIdlePressure( &g_nCurrentIdlePressure );		
+			if( err != 0 ) {
+				Com::printFLN( PSTR( "MMM(): the idle pressure could not be determined" ) );
+				return;
+			}
+		}
+    }
 	
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "MMM(): MADENTEST" ) );
@@ -2466,7 +2483,7 @@ void startMadeMessureMethod( int maxdigits = 9000, float dz = -0.002f, float ext
 		//VERSETZEN
 		
 		g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
-		PrintLine::moveRelativeDistanceInSteps( 0, weg_y, 0 , ext_e , 10, true, true );
+		PrintLine::moveRelativeDistanceInSteps( 0, weg_y*0.2, 0 , ext_e*0.2 , 10, true, true );
 		
 		for(long xx=g_nScanXStartSteps; xx<=g_nScanXMaxPositionSteps-weg_x; xx+=weg_x ) { //iterate all points
 			g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
@@ -2498,7 +2515,7 @@ void startMadeMessureMethod( int maxdigits = 9000, float dz = -0.002f, float ext
 		
 		//VERSETZEN
 		g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
-		PrintLine::moveRelativeDistanceInSteps( 0, weg_y , 0 , ext_e , 10, true, true );
+		PrintLine::moveRelativeDistanceInSteps( 0, weg_y*0.2 , 0 , ext_e*0.2 , 10, true, true );
 		
 		for(long xx=g_nScanXStartSteps; xx<=g_nScanXMaxPositionSteps-weg_x; xx+=weg_x) { //iterate all points
 			g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+3000; //weaken the emergency_stop for some moments
@@ -2537,19 +2554,16 @@ void startMadeMessureMethod( int maxdigits = 9000, float dz = -0.002f, float ext
 	
 	//lift z
     HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+	//drive up the Bed ~3mm 
 	PrintLine::moveRelativeDistanceInSteps( 0, 0, g_maxZCompensationSteps , 0, Printer::homingFeedrate[Z_AXIS], true, true );
 			
-	//drive up the Bed ~3mm and Home to (x,y) = (0,0)
-	Printer::moveToReal( 0, 0, IGNORE_COORDINATE , IGNORE_COORDINATE, Printer::homingFeedrate[X_AXIS]);
-    Commands::waitUntilEndOfAllMoves();
-	
-    Commands::printCurrentPosition();
-    UI_STATUS_UPD( UI_TEXT_FIND_Z_ORIGIN_DONE );
+	//and Home to (x,y) = (0,0)
+	Printer::homeAxis(true,true,true);
+	Commands::printCurrentPosition();
 
 #if DEBUG_HEAT_BED_SCAN == 2
     Com::printFLN( PSTR( "MMM(): finished" ) );
 #endif // DEBUG_HEAT_BED_SCAN
-	
 	outputObject();
 	
 	return;
@@ -10883,6 +10897,7 @@ extern void processButton( int nAction )
 				//so dont retract, change the speed of the print to a lower speed instead of retracting:
 				//limits handled by change-function!
 				Commands::changeFeedrateMultiply(Printer::feedrateMultiply + 1);
+				beep(4,4);
 			}else{
 	#if !EXTRUDER_ALLOW_COLD_MOVE
 				if( Extruder::current->tempControl.currentTemperatureC < UI_SET_MIN_EXTRUDER_TEMP )
@@ -10939,6 +10954,7 @@ extern void processButton( int nAction )
 				//so dont retract, change the speed of the print to a lower speed instead of retracting:
 				//limits handled by change-function!
 				Commands::changeFeedrateMultiply(Printer::feedrateMultiply - 1);
+				beep(4,4);
 			}else{
 				//we are sonewhere "normal"
 	#if !EXTRUDER_ALLOW_COLD_MOVE
@@ -11398,7 +11414,7 @@ void nextPreviousZAction( int8_t increment )
 	
 	//DO NOT MOVE Z: ALTER Z-OFFSET
 	if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
-	
+		beep(4,4);
 		// show that we are active
 		previousMillisCmd = HAL::timeInMilliseconds();
 	
