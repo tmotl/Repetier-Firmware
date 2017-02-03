@@ -2538,7 +2538,7 @@ void UIDisplay::rightAction()
 		}else{
 			g_nSensiblePressureDigits += 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
 		}
-		beep(4,4);
+		beep(1,4);
 	}else{
 #endif
 #if UI_HAS_KEYS==1
@@ -3568,8 +3568,8 @@ void UIDisplay::executeAction(int action)
 					}else{
 						g_nSensiblePressureDigits -= 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
 					}
-					beep(4,4);
-					skipBeep=true;
+					beep(1,4);
+					//skipBeep=true;
 				}else{
 #endif
 

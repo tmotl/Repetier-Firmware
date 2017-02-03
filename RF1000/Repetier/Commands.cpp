@@ -762,7 +762,7 @@ void Commands::executeGCode(GCode *com)
             if(com->hasP()) codenum = com->P; // milliseconds to wait
             if(com->hasS()) codenum = com->S * 1000; // seconds to wait
             codenum += HAL::timeInMilliseconds();  // keep track of when we started waiting
-            while((uint32_t)(codenum-HAL::timeInMilliseconds())  < 2000000000 )
+            while((uint32_t)(codenum-HAL::timeInMilliseconds())  < 2000000000L )
             {
                 GCode::readFromSerial();
                 Commands::checkForPeriodicalActions();
@@ -1418,7 +1418,7 @@ void Commands::executeGCode(GCode *com)
 			}
 		    case 99:	// M99 S<time>
             {
-                millis_t wait = 10000;
+                millis_t wait = 10000L;
                 if(com->hasS())
                     wait = 1000*com->S;
                 if(com->hasX())
@@ -1433,7 +1433,7 @@ void Commands::executeGCode(GCode *com)
 				debugWaitLoop = 2;
 #endif // DEBUG_PRINT
 
-                while(wait-HAL::timeInMilliseconds() < 100000)
+                while(wait-HAL::timeInMilliseconds() < 100000L)
 		{
 			Printer::defaultLoopActions();
                 }

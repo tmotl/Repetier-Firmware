@@ -1,4 +1,12 @@
 V RF.01.37b.mod (2017-01-31)
+- Left-Right-Buttons will now change the M3909 Digits-Limit on the fly, when Z-Compensation is active. This will turn the function on and off as well. (really nice feature to adjust while printing the first Layer)
+- New Button_Sounds for "Mod Menu" (against Function-Mixup)
+- Some little fixes and improvements
+- Changed details on Feature "SensibleViscosity" -> M3939
+- Added Functionality for M3939.
+- Added quite undocumented M3940 for experimental use to see how a too close Nozzle affects material flow and therefore digits.
+
+V RF.01.37b.mod (2017-01-31)
 - Some little fixes 
 - Added new Feature "SensibleViscosity" -> M3939
 

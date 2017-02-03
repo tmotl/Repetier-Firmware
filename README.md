@@ -90,12 +90,14 @@ Feature called "SensiblePressure"
  You cannot activate the Feature if zCompensation is not active already.  
 
 ## SensibleViscosity  
-* M3939 Pn Ex Iy Rm  
-P = max. test digits = 1000 or {1...12000} [digits]  
+* M3939 Fn St1 Pt2   Ex Iy Rm  
+S = Starting Temperature for the Test in [°C]  
+P = Final Temperature for the Test in [°C]  
+F = max. test digits = 1000 or {1...12000} [digits]  
 E = max. test extrusion velocity = 5 or {0.05...maxStartFeedrate} [mm/s]  
-I = test velocity increment = 0.05 or {0.02...0.4} [mm/s]  
 optional:  
-R = max. digit change needed to consider having a filled nozzle. = 500 [digits] 
+I = test velocity increment = 0.1 or {0.02...0.4} [mm/s]  
+R = max. digit change needed to consider having a filled nozzle. = 800 [digits] 
 
 Feature called "SensibleViscosity"  
  The printer will automaticly extrude into the thin air and messure the resulting force. 
@@ -108,8 +110,11 @@ Feature called "SensibleViscosity"
  ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/610de7720945474590668b20c05d7652.png "Temperature ABS")  
  That is a clogged nozzle with the same ABS:
  ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/c00ac11b3a384994b37ce8bc3cf03bd9.png "Clogged Nozzle ABS")  
+ That is red PLA:
+ ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/2a3253c930794afc81e4fa4d4b2a4261.png "Clogged Nozzle ABS")  
+
  Have fun finally seeing your Filaments behaviour over time, temp, nozzles ;)  
  
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
-## !! 11.01.2017: Project is Work in Progress and untested changes are possible.
+## !! 03.02.2017: Project is Work in Progress and untested changes are possible.
