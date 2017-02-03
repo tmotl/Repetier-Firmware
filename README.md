@@ -88,12 +88,14 @@ Feature called "SensiblePressure"
  When the z-Compensation gets deactivated the SensiblePressure-function is deactivated as well.  
  Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.  
  You cannot activate the Feature if zCompensation is not active already.  
+ 
+ While Printing you can adjust or activate this feature with the "Left"- and "Right"-Button, while being in the "Mod-Menu" which is page 2 on the printers display.  
 
 ## SensibleViscosity  
 * M3939 Fn St1 Pt2   Ex Iy Rm  
 S = Starting Temperature for the Test in [°C]  
 P = Final Temperature for the Test in [°C]  
-F = max. test digits = 1000 or {1...12000} [digits]  
+F = max. test digits = 10000 or {1...12000} [digits]  
 E = max. test extrusion velocity = 5 or {0.05...maxStartFeedrate} [mm/s]  
 optional:  
 I = test velocity increment = 0.1 or {0.02...0.4} [mm/s]  
