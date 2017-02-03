@@ -14,6 +14,7 @@ For the mhier version, have a look at the upstream repository: https://github.co
 ## Version RF.01.37mod 
 
 See:  
+http://www.rf1000.de/viewtopic.php?f=74&t=1674 (Nibbels/Wessix SenseOffset-Thread)  
 http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882 (mhier Mod)  
 http://www.rf1000.de/viewtopic.php?f=7&t=1504&start=60#p16397 (added feature)  
 http://www.rf1000.de/viewtopic.php?f=7&t=1610 (rf1000s developement version thread to 1.35)  
