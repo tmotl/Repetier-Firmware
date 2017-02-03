@@ -146,6 +146,11 @@
 #define UI_ACTION_RIGHT						1129
 #define UI_ACTION_ZMODE						1130
 
+//Nibbels
+#define	UI_ACTION_FET1_OUTPUT				2001
+#define	UI_ACTION_FET2_OUTPUT				2002
+
+
 #define UI_ACTION_MENU_XPOS					4000
 #define UI_ACTION_MENU_YPOS					4001
 #define UI_ACTION_MENU_ZPOS					4002

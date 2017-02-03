@@ -114,6 +114,8 @@ List of placeholder:
 %lo : light state
 %li : Light: White/Color
 %ou : 230V output on/off
+%ol : FET1 output on/off
+%on : FET2 output on/off
 %OM : operating mode
 %OZ : z endstop type
 %z0 : Z Offset
@@ -240,7 +242,7 @@ for 2 row displays. You can add additional pages or change the default pages lik
 	#if UI_COLS<=16
 	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
 						"zO: %z0um zM: %HB",
-						"sO: %sSum@%sM",
+						"sO: %sSum @%sM",
 						"Z: %x2mm %sC");
 	#else	
 	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
@@ -507,6 +509,33 @@ UI_MENU_ACTIONCOMMAND(ui_menu_toggle_230V_output,UI_TEXT_230V_OUTPUT,UI_ACTION_2
 #define OUTPUT_230V_COUNT 0
 #endif // FEATURE_230V_OUTPUT
 
+#if FEATURE_CASE_LIGHT //Output X19 @RF2000/RF1000
+UI_MENU_ACTIONCOMMAND(ui_menu_light_mode,UI_TEXT_LIGHTS_ONOFF,UI_ACTION_LIGHTS_ONOFF);
+#define LIGHT_MODE_ENTRY ,&ui_menu_light_mode
+#define LIGHT_MODE_COUNT 1
+#else
+#define LIGHT_MODE_ENTRY
+#define LIGHT_MODE_COUNT 0
+#endif // FEATURE_CASE_LIGHT
+
+#if FEATURE_24V_FET_OUTPUTS
+UI_MENU_ACTIONCOMMAND(ui_menu_toggle_FET1_output,UI_TEXT_FET1_OUTPUT,UI_ACTION_FET1_OUTPUT);
+#define OUTPUT_FET1_ENTRY ,&ui_menu_toggle_FET1_output
+#define OUTPUT_FET1_COUNT 1
+#else
+#define OUTPUT_FET1_ENTRY
+#define OUTPUT_FET1_COUNT 0
+#endif // FEATURE_24V_FET_OUTPUTS
+
+#if FEATURE_24V_FET_OUTPUTS
+UI_MENU_ACTIONCOMMAND(ui_menu_toggle_FET2_output,UI_TEXT_FET2_OUTPUT,UI_ACTION_FET2_OUTPUT);
+#define OUTPUT_FET2_ENTRY ,&ui_menu_toggle_FET2_output
+#define OUTPUT_FET2_COUNT 1
+#else
+#define OUTPUT_FET2_ENTRY
+#define OUTPUT_FET2_COUNT 0
+#endif // FEATURE_24V_FET_OUTPUTS
+
 #if FEATURE_RESET_VIA_MENU
 UI_MENU_ACTION4C(ui_menu_quick_reset_ack,UI_ACTION_RF_RESET_ACK,UI_TEXT_RESET_ACK);
 UI_MENU_ACTIONSELECTOR(ui_menu_quick_reset,UI_TEXT_RESET,ui_menu_quick_reset_ack);
@@ -535,8 +564,8 @@ UI_MENU_ACTIONCOMMAND(ui_menu_quick_debug,"Write Debug",UI_ACTION_WRITE_DEBUG);
 #define DEBUG_PRINT_EXTRA
 #endif // DEBUG_PRINT
 
-#define UI_MENU_QUICK {UI_MENU_ADDCONDBACK &ui_menu_home_all,&ui_menu_quick_stop_print,&ui_menu_quick_stop_mill RGB_LIGHT_ENTRY BABY_ENTRY OUTPUT_OBJECT_ENTRY ,&ui_menu_quick_speedmultiply,&ui_menu_quick_flowmultiply,&ui_menu_quick_preheat_pla,&ui_menu_quick_preheat_abs,&ui_menu_quick_cooldown SET_TO_XY_ORIGIN_ENTRY, &ui_menu_quick_stopstepper PARK_ENTRY OUTPUT_230V_ENTRY RESET_VIA_MENU_ENTRY MENU_PSON_ENTRY DEBUG_PRINT_EXTRA }
-UI_MENU(ui_menu_quick,UI_MENU_QUICK,9+UI_MENU_BACKCNT+MENU_PSON_COUNT+DEBUG_PRINT_COUNT+SET_TO_XY_ORIGIN_COUNT+BABY_COUNT+OUTPUT_OBJECT_COUNT+PARK_COUNT+OUTPUT_230V_COUNT+RESET_VIA_MENU_COUNT+RGB_LIGHT_COUNT);
+#define UI_MENU_QUICK {UI_MENU_ADDCONDBACK &ui_menu_home_all,&ui_menu_quick_stop_print,&ui_menu_quick_stop_mill RGB_LIGHT_ENTRY BABY_ENTRY OUTPUT_OBJECT_ENTRY ,&ui_menu_quick_speedmultiply,&ui_menu_quick_flowmultiply,&ui_menu_quick_preheat_pla,&ui_menu_quick_preheat_abs,&ui_menu_quick_cooldown SET_TO_XY_ORIGIN_ENTRY, &ui_menu_quick_stopstepper PARK_ENTRY OUTPUT_230V_ENTRY LIGHT_MODE_ENTRY OUTPUT_FET1_ENTRY OUTPUT_FET2_ENTRY RESET_VIA_MENU_ENTRY MENU_PSON_ENTRY DEBUG_PRINT_EXTRA }
+UI_MENU(ui_menu_quick,UI_MENU_QUICK,9+UI_MENU_BACKCNT+MENU_PSON_COUNT+DEBUG_PRINT_COUNT+SET_TO_XY_ORIGIN_COUNT+BABY_COUNT+OUTPUT_OBJECT_COUNT+PARK_COUNT+OUTPUT_230V_COUNT+LIGHT_MODE_COUNT+OUTPUT_FET1_COUNT+OUTPUT_FET2_COUNT+RESET_VIA_MENU_COUNT+RGB_LIGHT_COUNT);
 
 /** \brief Fan menu */
 
@@ -648,15 +677,6 @@ UI_MENU_ACTIONCOMMAND(ui_menu_general_beeper,UI_TEXT_BEEPER,UI_ACTION_BEEPER);
 #define BEEPER_MODE_ENTRY	
 #endif // FEATURE_BEEPER
 
-#if FEATURE_CASE_LIGHT
-UI_MENU_ACTIONCOMMAND(ui_menu_light_mode,UI_TEXT_LIGHTS_ONOFF,UI_ACTION_LIGHTS_ONOFF);
-#define LIGHT_MODE_ENTRY ,&ui_menu_light_mode
-#define LIGHT_MODE_COUNT 1
-#else
-#define LIGHT_MODE_ENTRY
-#define LIGHT_MODE_COUNT 0
-#endif // FEATURE_CASE_LIGHT
-
 UI_MENU_ACTIONCOMMAND(ui_menu_z_mode,UI_TEXT_Z_MODE,UI_ACTION_ZMODE);
 
 #if FEATURE_MILLING_MODE
@@ -718,8 +738,8 @@ UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_extruder_offset_y,UI_TEXT_EXTRUDER_OFFSET_
 #define	EXTRUDER_OFFSET_TYPE_COUNT_XY 0
 #endif // NUM_EXTRUDER>1
 
-#define UI_MENU_GENERAL {UI_MENU_ADDCONDBACK &ui_menu_general_baud,&ui_menu_general_stepper_inactive,&ui_menu_general_max_inactive BEEPER_MODE_ENTRY LIGHT_MODE_ENTRY OPERATING_MODE_ENTRY,&ui_menu_z_mode Z_ENDSTOP_TYPE_ENTRY HOTEND_TYPE_ENTRY MILLER_TYPE_ENTRY EXTRUDER_OFFSET_TYPE_ENTRY_X EXTRUDER_OFFSET_TYPE_ENTRY_Y}
-UI_MENU(ui_menu_general,UI_MENU_GENERAL,4+UI_MENU_BACKCNT+BEEPER_MODE_COUNT+LIGHT_MODE_COUNT+OPERATING_MODE_COUNT+Z_ENDSTOP_TYPE_COUNT+HOTEND_TYPE_COUNT+MILLER_TYPE_COUNT+EXTRUDER_OFFSET_TYPE_COUNT_XY);
+#define UI_MENU_GENERAL {UI_MENU_ADDCONDBACK &ui_menu_general_baud,&ui_menu_general_stepper_inactive,&ui_menu_general_max_inactive BEEPER_MODE_ENTRY  OPERATING_MODE_ENTRY,&ui_menu_z_mode Z_ENDSTOP_TYPE_ENTRY HOTEND_TYPE_ENTRY MILLER_TYPE_ENTRY EXTRUDER_OFFSET_TYPE_ENTRY_X EXTRUDER_OFFSET_TYPE_ENTRY_Y}
+UI_MENU(ui_menu_general,UI_MENU_GENERAL,4+UI_MENU_BACKCNT+BEEPER_MODE_COUNT+OPERATING_MODE_COUNT+Z_ENDSTOP_TYPE_COUNT+HOTEND_TYPE_COUNT+MILLER_TYPE_COUNT+EXTRUDER_OFFSET_TYPE_COUNT_XY);
 
 /** \brief Configuration menu */
 UI_MENU_SUBMENU(ui_menu_conf_general, UI_TEXT_GENERAL,      ui_menu_general);

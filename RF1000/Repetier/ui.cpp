@@ -1170,6 +1170,22 @@ void UIDisplay::parse(char *txt,bool ram)
 				}
 #endif // FEATURE_230V_OUTPUT
 
+#if FEATURE_24V_FET_OUTPUTS
+				if(c2=='l')
+				{
+					addStringP(Printer::enableFET1?ui_text_on:ui_text_off);						// %ol : FET 1 X42 output on/off
+					break;
+				}
+#endif // FEATURE_24V_FET_OUTPUTS
+
+#if FEATURE_24V_FET_OUTPUTS
+				if(c2=='n')
+				{
+					addStringP(Printer::enableFET2?ui_text_on:ui_text_off);						// %on : FET 2 X44 output on/off
+					break;
+				}
+#endif // FEATURE_24V_FET_OUTPUTS
+
 				// Extruder output level
 				if(c2>='0' && c2<='9')																	// %o0..9 : Output level extruder 0..9 is % including %sign
 				{
@@ -3814,6 +3830,34 @@ void UIDisplay::executeAction(int action)
 				break;
 			}
 #endif // FEATURE_230V_OUTPUT
+
+#if FEATURE_24V_FET_OUTPUTS
+			case UI_ACTION_FET1_OUTPUT:
+			{
+				if( Printer::enableFET1 )	Printer::enableFET1 = 0;
+				else						Printer::enableFET1 = 1;
+				WRITE(FET1, Printer::enableFET1);
+
+#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+				HAL::eprSetByte( EPR_RF_FET1_MODE , Printer::enableFET1 );
+				EEPROM::updateChecksum();
+#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+				break;
+			}
+			
+			case UI_ACTION_FET2_OUTPUT:
+			{
+				if( Printer::enableFET2 )	Printer::enableFET2 = 0;
+				else						Printer::enableFET2 = 1;
+				WRITE(FET2, Printer::enableFET2);
+
+#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+				HAL::eprSetByte( EPR_RF_FET2_MODE , Printer::enableFET2 );
+				EEPROM::updateChecksum();
+#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+				break;
+			}
+#endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_MILLING_MODE
 			case UI_ACTION_OPERATING_MODE:
