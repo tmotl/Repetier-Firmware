@@ -60,18 +60,15 @@ M3909 Pn Sm			- See "SensiblePressure"
 * M3900				- Run a Z-Offset Scan at the specified Location.
 
 Configuration Options for M3900:  
-* M3901 Xn Ym Sy Px 
-
+* M3901 Xn Ym Sy Px  
 [X]/[Y] specifies the Location of the Scan within the original HBS-Locations.  
 X = {0..10}  
 Y = {0..13}  
-
 [S] specifies the learning rate of M3900  
 S= {100}  
 the Matrix will reloaded from the EEPROM at the begin of the scan.  
 S= {0..99}  
-the Matrix in RAM will be adjusted by 0% to 99% of the messured Offset. This is a great feature for multiple little corrections, in case you would not want to start allover or you cannot trust your first values 100% (you want to sum up corrections from different scanning-locations).
-
+the Matrix in RAM will be adjusted by 0% to 99% of the messured Offset. This is a great feature for multiple little corrections, in case you would not want to start allover or you cannot trust your first values 100% (you want to sum up corrections from different scanning-locations).  
 [P] ZOS learning linear distance weight  
 P = {0..100}  
 This is a configuration option to commit a scans offset to its surrounding area only.  
@@ -83,12 +80,12 @@ P = max. digits = {1...14999} [digits]
 S = max. SenseOffset = {1...200} [um]  
 
 Feature called "SensiblePressure"  
- The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
+ The printer will automaticly release pressure inbetween the nozzle and the heatbed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
  The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). The adjustment will not violate the "max. SenseOffset" restriction in order to avoid unwanted offsets (not caused by too close nozzle).  
- When choosing "max. SenseOffset" you should already know how much digits your printer normally has (Same Material, same Temperatures, same Speed, same Nozzle) and then add some plus 20% or plus 1000digits of force-tolerance.  
+ When choosing "max. SenseOffset" you should already know how much digits your printer normally has (Same material, same temperatures, same speed, same nozzle) and then add some plus 20% or plus 1000 digits of force-tolerance.  
  When the z-Compensation gets deactivated the SensiblePressure-function is deactivated as well.  
  Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.  
- You cannot activate the Feature if zCompensation is not active already.  
+ You cannot activate the feature if zCompensation is not active already.  
  
  While Printing you can adjust or activate this feature with the "Left"- and "Right"-Button, while being in the "Mod-Menu" which is page 2 on the printers display.  
 
@@ -105,18 +102,17 @@ R = max. digit change needed to consider having a filled nozzle. = 800 [digits]
 Feature called "SensibleViscosity"  
  The printer will automaticly extrude into the thin air and messure the resulting force. 
  After every messurement the velocity of extrusion is increased.  
- You will get a CSV-Output within your Console-Window (Repetierserver/Repetierhost/Octoprint/...) which you can easily copy and paste to some text file. Excel can then read the Data and you can put it into some Chart with 2 Clicks.
- You might ask why you need this feature, but in case you know your Filament quite well you can compare these resulting chars to really see how your filament extrusion behaves under different circumstances or when your nozzle is or gets clogged.
+ You will get a CSV-output within your Console-Window (Repetierserver/Repetierhost/Octoprint/...) which you can easily copy and paste to some text file. Excel can then read the data and you can put it into some chart with 2 clicks.
+ You might ask why you need this feature, but in case you know your filament quite well you can compare these resulting chars to really see how your filament extrusion behaves under different circumstances or when your nozzle is or gets clogged.
  For longer heated/boiled (my) ABS: http://www.rf1000.de/viewtopic.php?f=62&t=1549&p=16617#p16617  
- ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/3508699873f7431489d1df9344110e7f.png "Boiled ABS")  
+ ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/610de7720945474590668b20c05d7652.png "Boiled ABS")  
  For the general viscosity of (my) ABS: http://www.rf1000.de/viewtopic.php?f=23&t=1620&p=16613#p16605  
- ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/610de7720945474590668b20c05d7652.png "Temperature ABS")  
+ ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/3508699873f7431489d1df9344110e7f.png "Temperature ABS")  
  That is a clogged nozzle with the same ABS:
  ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/c00ac11b3a384994b37ce8bc3cf03bd9.png "Clogged Nozzle ABS")  
  That is red PLA:
  ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/2a3253c930794afc81e4fa4d4b2a4261.png "Clogged Nozzle ABS")  
-
- Have fun finally seeing your Filaments behaviour over time, temp, nozzles ;)  
+ Have fun finally seeing your filaments behaviour over time, temp, nozzles ;)  
  
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
