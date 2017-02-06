@@ -1,4 +1,12 @@
-V RF.01.37b.mod (2017-01-31)
+V RF.01.37d.mod (2017-02-06)
+- rearranged some Menu-Structure
+- Changed the RF2000-Location for RGB-Light to ->Configuration->General
+- Changed the Location of Preheat PLA and Preheat ABS to ->Extruder
+- Changed other Details in Menu
+- Added ZOS (mhiers Z-Offset-Scan) to ->Configuration->Z-Configuration
+- The ZOS (mhiers Z-Offset-Scan) now shows the minimal Z-Matrix-Offset on the printers display in row 4 after the scan
+
+V RF.01.37c.mod (2017-02-04)
 - Left-Right-Buttons will now change the M3909 Digits-Limit on the fly, when Z-Compensation is active. This will turn the function on and off as well. (really nice feature to adjust while printing the first Layer)
 - New Button_Sounds for "Mod Menu" (against Function-Mixup)
 - Some little fixes and improvements

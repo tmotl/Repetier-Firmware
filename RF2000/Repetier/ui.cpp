@@ -841,6 +841,7 @@ void UIDisplay::parse(char *txt,bool ram)
 			case 'H':
 			{
 				if(c2=='B')			addLong(g_nActiveHeatBed,1);										// %HB : active heat bed z matrix
+				else if(c2=='O')	addFloat((float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,3,0); // %HO : active heat bed min z offset in um
 				break;
 			}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION

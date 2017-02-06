@@ -2104,13 +2104,8 @@ void searchZOScan( void )
 
 				g_nZScanZPosition = 0;
 				g_ZOSScanStatus = 0;	
-				UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_DONE );
+				UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_OFFSET_MIN );
 				break;
-			}
-			default:
-			{
-				Com::printFLN( PSTR( "ZOS(): CASE DEFAULT SCHEISSE :D" ), g_nZScanZPosition );
-				abortSearchHeatBedZOffset();
 			}
 		}
 	return;
@@ -5303,7 +5298,7 @@ void outputCompensationMatrix( char format )
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 		Com::printF( PSTR( "offset = " ), g_offsetZCompensationSteps );
-		Com::printF( PSTR( " [steps] (= " ), (float)g_offsetZCompensationSteps / Printer::axisStepsPerMM[Z_AXIS] );
+		Com::printF( PSTR( " [steps] (= " ), (float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] );
 		Com::printFLN( PSTR( " [mm])" ) );
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -11361,6 +11356,9 @@ extern void processButton( int nAction )
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
 			startHeatBedScan();
+			//gehe zurück und zeige dem User was passiert.
+			uid.menuLevel = 0; 
+			uid.menuPos[0] = 1;
 			break;
 		}
 #if FEATURE_PRECISE_HEAT_BED_SCAN
@@ -11368,15 +11366,32 @@ extern void processButton( int nAction )
 		{
 			g_nHeatBedScanMode = HEAT_BED_SCAN_MODE_PLA;
 			startHeatBedScan();
+			//gehe zurück und zeige dem User was passiert.
+			uid.menuLevel = 0; 
+			uid.menuPos[0] = 1;
 			break;
 		}
 		case UI_ACTION_RF_SCAN_HEAT_BED_ABS:
 		{
 			g_nHeatBedScanMode = HEAT_BED_SCAN_MODE_ABS;
 			startHeatBedScan();
+			//gehe zurück und zeige dem User was passiert.
+			uid.menuLevel = 0; 
+			uid.menuPos[0] = 1;
 			break;
 		}
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
+		case UI_ACTION_RF_DO_MHIER_BED_SCAN:
+		{			
+			//macht an, wenn an, macht aus:			
+			startZOScan();
+			//gehe zurück und zeige dem User was passiert.
+			uid.menuLevel = 0; 
+			uid.menuPos[0] = 1;
+			//wartet nur wenn an:
+			//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
+			break;
+		}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
