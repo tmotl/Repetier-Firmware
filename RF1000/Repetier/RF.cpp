@@ -11358,7 +11358,7 @@ extern void processButton( int nAction )
 			startHeatBedScan();
 			//gehe zurück und zeige dem User was passiert.
 			uid.menuLevel = 0; 
-			uid.menuPos[0] = 1;
+			uid.menuPos[0] = 0;
 			break;
 		}
 #if FEATURE_PRECISE_HEAT_BED_SCAN
@@ -11368,7 +11368,7 @@ extern void processButton( int nAction )
 			startHeatBedScan();
 			//gehe zurück und zeige dem User was passiert.
 			uid.menuLevel = 0; 
-			uid.menuPos[0] = 1;
+			uid.menuPos[0] = 0;
 			break;
 		}
 		case UI_ACTION_RF_SCAN_HEAT_BED_ABS:
@@ -11377,7 +11377,7 @@ extern void processButton( int nAction )
 			startHeatBedScan();
 			//gehe zurück und zeige dem User was passiert.
 			uid.menuLevel = 0; 
-			uid.menuPos[0] = 1;
+			uid.menuPos[0] = 0;
 			break;
 		}
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
@@ -11387,7 +11387,7 @@ extern void processButton( int nAction )
 			startZOScan();
 			//gehe zurück und zeige dem User was passiert.
 			uid.menuLevel = 0; 
-			uid.menuPos[0] = 1;
+			uid.menuPos[0] = 0;
 			//wartet nur wenn an:
 			//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
 			break;
