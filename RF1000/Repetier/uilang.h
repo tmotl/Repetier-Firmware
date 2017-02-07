@@ -439,6 +439,8 @@
 #define UI_TEXT_CONFIGURATION			"Konfiguration"
 #define UI_TEXT_POSITION				"Position"
 #define UI_TEXT_EXTRUDER				"Extruder"
+#define	UI_TEXT_EXTRUDER_OFFSET_X2		"[mm]: %OE ", ""
+#define	UI_TEXT_EXTRUDER_OFFSET_Y2		"[mm]: %OF ", "" 
 #define UI_TEXT_SD_CARD					"SD Karte"
 #define UI_TEXT_DEBUGGING				"Debugging"
 #define UI_TEXT_HOME_ALL				"Home alle"
@@ -706,7 +708,7 @@
 #else
 	
 	#define	UI_TEXT_EXTRUDER_OFFSET_X		"Extr. Abstand X"
-	#define	UI_TEXT_EXTRUDER_OFFSET_Y		"Extr. Abstand Y"
+	#define	UI_TEXT_EXTRUDER_OFFSET_Y		"Extr. Abstand Y"	
 	#define UI_TEXT_SET_Z_ORIGIN			"Setze Z Urspr."
 	#define UI_TEXT_FIND_Z_ORIGIN			"Suche Z Urspr."
 	#define UI_TEXT_BED_TEMP				"Temp.Bett:%Eb\002C"
