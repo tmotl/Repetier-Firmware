@@ -11069,7 +11069,7 @@ void processCommand( GCode* pCommand )
 								Com::printFLN(PSTR("M3920 SilentMode was already set to ") , pCommand->S);
 							}else{
 								g_nSilentMode = pCommand->S;
-								Com::printFLN( PSTR( "M3920 SilentMode 0" ) );
+								Com::printFLN( PSTR( "M3920 SilentMode " ), g_nSilentMode );
 								motorCurrentControlInit();
 							}						
 						}else{
