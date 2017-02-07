@@ -11063,17 +11063,17 @@ void processCommand( GCode* pCommand )
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
-					if(com->hasS()){
-						if(com->S == 1 || com->S == 0){
-							if(com->S == g_nSilentMode){
-								Com::printFLN(PSTR("M3920 SilentMode was already set to ") , com->S);
+					if(pCommand->hasS()){
+						if(pCommand->S == 1 || pCommand->S == 0){
+							if(pCommand->S == g_nSilentMode){
+								Com::printFLN(PSTR("M3920 SilentMode was already set to ") , pCommand->S);
 							}else{
-								g_nSilentMode = com->S;
+								g_nSilentMode = pCommand->S;
 								Com::printFLN( PSTR( "M3920 SilentMode 0" ) );
 								motorCurrentControlInit();
 							}						
 						}else{
-							Com::printFLN(PSTR("M3920 SilentMode Parameter unknown : S1 oder S0 are valid. Got S") , com->S);
+							Com::printFLN(PSTR("M3920 SilentMode Parameter unknown : S1 oder S0 are valid. Got S") , pCommand->S);
 						}
 					}else{					
 						if(g_nSilentMode){
