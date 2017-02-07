@@ -1,3 +1,8 @@
+V RF.01.37e.mod (2017-02-07)
+- Fixed German Language error, thx Hobbyprinter
+- Added M3920 to lower Stepper Amp (experimental noise fix)
+- Fixed Display of Max-Digits within modmenu @RF1000, thx Wessix
+
 V RF.01.37d.mod (2017-02-06)
 - rearranged some Menu-Structure
 - Changed the RF2000-Location for RGB-Light to ->Configuration->General

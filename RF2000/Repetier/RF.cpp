@@ -181,6 +181,10 @@ long			g_nEmergencyPauseDigitsMin	= 0;
 long			g_nEmergencyPauseDigitsMax	= 0;
 #endif // FEATURE_EMERGENCY_PAUSE
 
+#if FEATURE_SILENT_MODE
+char			g_nSilentMode				= 0;
+#endif // FEATURE_SILENT_MODE
+
 #if FEATURE_SENSIBLE_PRESSURE
 /* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
 long			g_nSensiblePressureSum		= 0;
@@ -7415,7 +7419,12 @@ void pausePrint( void )
 
 void continuePrint( void )
 {
-	const unsigned short	uMotorCurrent[] = MOTOR_CURRENT;
+	#if FEATURE_SILENT_MODE
+		const unsigned short	uMotorCurrent[] = MOTOR_CURRENT;
+		const unsigned short	uMotorCurrentSilent[] = MOTOR_CURRENT_SILENT;
+	#else
+		const unsigned short	uMotorCurrent[] = MOTOR_CURRENT;
+	#endif // FEATURE_SILENT_MODE	
 	char					nPrinting		 = 0;
 
 	if( g_pauseStatus == PAUSE_STATUS_PAUSED )
@@ -7445,7 +7454,15 @@ void continuePrint( void )
 			if( nPrinting )
 			{
 				// process the extruder only in case we are in mode "print"
-				setExtruderCurrent( uMotorCurrent[E_AXIS] );
+				#if FEATURE_SILENT_MODE		
+					if(!g_nSilentMode){
+						setExtruderCurrent( uMotorCurrent[E_AXIS] );
+					}else{
+						setExtruderCurrent( uMotorCurrentSilent[E_AXIS] );
+					}
+				#else
+					setExtruderCurrent( uMotorCurrent[E_AXIS] );
+				#endif // FEATURE_SILENT_MODE	
 			}
 #endif // EXTRUDER_CURRENT_PAUSE_DELAY
 
@@ -7512,7 +7529,16 @@ void continuePrint( void )
 			{
 				// process the extruder only in case we are in mode "print"
 #if EXTRUDER_CURRENT_PAUSE_DELAY
-				setExtruderCurrent( uMotorCurrent[E_AXIS] );
+				//setExtruderCurrent( uMotorCurrent[E_AXIS] );
+				#if FEATURE_SILENT_MODE		
+					if(!g_nSilentMode){
+						setExtruderCurrent( uMotorCurrent[E_AXIS] );
+					}else{
+						setExtruderCurrent( uMotorCurrentSilent[E_AXIS] );
+					}
+				#else
+					setExtruderCurrent( uMotorCurrent[E_AXIS] );
+				#endif // FEATURE_SILENT_MODE
 #endif // EXTRUDER_CURRENT_PAUSE_DELAY
 
 				HAL::forbidInterrupts();
@@ -10695,7 +10721,7 @@ void processCommand( GCode* pCommand )
 				}
 				break;
 			}
-
+			
 			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
@@ -11030,6 +11056,42 @@ void processCommand( GCode* pCommand )
 			}
 			break;
 #endif // FEATURE_SENSIBLE_PRESSURE
+
+
+#if	FEATURE_SILENT_MODE // Auswahl der Motor-Current-Settings
+			case 3920: // 3920 Decide if MOTOR_CURRENT_SILENT or MOTOR_CURRENT
+			{
+				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
+				{
+					if(com->hasS()){
+						if(com->S == 1 || com->S == 0){
+							if(com->S == g_nSilentMode){
+								Com::printFLN(PSTR("M3920 SilentMode was already set to ") , com->S);
+							}else{
+								g_nSilentMode = com->S;
+								Com::printFLN( PSTR( "M3920 SilentMode 0" ) );
+								motorCurrentControlInit();
+							}						
+						}else{
+							Com::printFLN(PSTR("M3920 SilentMode Parameter unknown : S1 oder S0 are valid. Got S") , com->S);
+						}
+					}else{					
+						if(g_nSilentMode){
+							g_nSilentMode = 0;
+							Com::printFLN( PSTR( "M3920 SilentMode 0" ) );
+							motorCurrentControlInit();
+						}else{
+							g_nSilentMode = 1;		
+							Com::printFLN( PSTR( "M3920 SilentMode 1" ) );	
+							motorCurrentControlInit();			
+						}
+					}
+				}else{
+					Com::printFLN( PSTR("M3920 SilentMode ist for Printer-Mode only.") );
+				}
+				break;
+			}			
+#endif // FEATURE_SILENT_MODE
 
 			case 3939: // 3939 startViscosityTest - Testfunction to determine the digits over extrusion speed || by Nibbels
 			{
@@ -12298,8 +12360,14 @@ void setMotorCurrent( unsigned char driver, unsigned short level )
 
 
 void motorCurrentControlInit( void )
-{
-	const unsigned short	uMotorCurrent[] =  MOTOR_CURRENT;
+{	
+	#if FEATURE_SILENT_MODE
+		const unsigned short	uMotorCurrent[] = MOTOR_CURRENT;
+		const unsigned short	uMotorCurrentSilent[] = MOTOR_CURRENT_SILENT;
+	#else
+		const unsigned short	uMotorCurrent[] = MOTOR_CURRENT;
+	#endif // FEATURE_SILENT_MODE	
+	
 	unsigned char			i;
 
 	// configure all DRV8711
@@ -12308,7 +12376,15 @@ void motorCurrentControlInit( void )
 	// set all motor currents
 	for(i=0;i<DRV8711_NUM_CHANNELS;i++)
 	{
+	#if FEATURE_SILENT_MODE		
+		if(!g_nSilentMode){
+			setMotorCurrent( i+1, uMotorCurrent[i] );
+		}else{
+			setMotorCurrent( i+1, uMotorCurrentSilent[i] );
+		}
+	#else
 		setMotorCurrent( i+1, uMotorCurrent[i] );
+	#endif // FEATURE_SILENT_MODE		
 	}
 
 } // motorCurrentControlInit

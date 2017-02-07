@@ -4,6 +4,11 @@
 ; Wähle Extruder Rechts -> Wirkt sich auch auf mhier's Z-Offset-Scan aus!
 T1
 
+;--------------------------------------
+; Silence Mode activation: This is since 1.37e -> Reduction of Amps on the Steppers to prevent Noise and to risks lost Steps.
+;--------------------------------------
+M3920 S1
+
 ; Chiptuning
 ;--------------------------------------
 M201 X2000 Y2000 Z1000 ; Acceleration up to... Acc printing
@@ -81,7 +86,7 @@ G28 ; home all axes
 M3007 Z0.25 ; Minimale Höhe für Z-Kompensation festlegen Std:0.2mm
 ;M3008 Z3.0 ; Maximale Z-Kompensationshöhe festlegen Std:3.0mm
 M3001 ; activate Z-Compensation 
-M3909 P7000 S130 ; activate "SensiblePressure": Autocompensate thermal expansion if digits go higher than 7000.
+M3909 P6000 S180 ; activate "SensiblePressure": Autocompensate thermal expansion if digits go higher than 6000.
 M400 ; Warten bis Idle
 
 ; Startpositionierung

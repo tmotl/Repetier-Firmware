@@ -1492,9 +1492,9 @@ void UIDisplay::parse(char *txt,bool ram)
 #if FEATURE_SENSIBLE_PRESSURE
 				    if( Printer::doHeatBedZCompensation )
 					{
-						addInt((int)g_nSensiblePressureOffset,4);
+						addInt((int)g_nSensiblePressureOffset,3);
 					}else{
-						addInt(0,4);	
+						addInt(0,3);	
 					}
 #endif // FEATURE_SENSIBLE_PRESSURE
 				}

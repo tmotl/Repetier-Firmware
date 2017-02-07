@@ -585,6 +585,9 @@ extern	float			g_ZOSlearningGradient;
 extern	long			g_min_nZScanZPosition;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
+#if FEATURE_SILENT_MODE
+extern	char			g_nSilentMode;
+#endif // FEATURE_SILENT_MODE
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
 extern	char			g_nWorkPartScanStatus;
