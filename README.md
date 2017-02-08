@@ -52,6 +52,7 @@ Upgraded the Firmware to the latest RF.01.37 (2017-01-20)
 
 _by Nibbels_:  
 M3939 Pn Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.
+M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm			- See "SensiblePressure"  
@@ -120,6 +121,17 @@ Feature called "SensibleViscosity"
 
  Have fun finally seeing your Filaments behaviour over time, temp, nozzles ;)  
  
+## SilentMode   
+* M3920 Sb  
+S = {0,1} Switch to SilentMode or back to normal stepper current and unhome your printer.  
+
+This Feature might be handy if you want to predefine another set of stepper current, but you dont want to have this lower values all the time. 
+
+If you make your current too low you might risk "lost steps". The Motor cannot stand the applied force and you might get shifted Layers (X,Y). If that is the case you should lower your acceleration or rise up the current again.
+
+If you can lower your current, you will have a huge improvement on stepper temperature and noise production as well. The tone of your steppers might sound deeper and will not be such a pain as the original (milling like-) configuration.
+You should not include M3920 when your z-Compensation is active. This MCode will shut down z-Compensation and unhome your Printer. You would have to re-home your axes and activate z-Compensation again. I put this code to the beginning of my startcodes.
+
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
 ## !! 03.02.2017: Project is Work in Progress and untested changes are possible.
