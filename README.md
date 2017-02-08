@@ -51,8 +51,8 @@ Included some Fixes the original developers of the branch "repetier/Repetier-Fir
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
 
 _by Nibbels_:  
-M3939 Pn Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.
-M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)
+M3939 Pn Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
+M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm			- See "SensiblePressure"  
