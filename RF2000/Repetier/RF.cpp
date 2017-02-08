@@ -11070,6 +11070,11 @@ void processCommand( GCode* pCommand )
 							}else{
 								g_nSilentMode = pCommand->S;
 								Com::printFLN( PSTR( "M3920 SilentMode " ), g_nSilentMode );
+								Printer::setAllSteppersDisabled(); //unhome, you should only switch mode while not homed btw with z-Compensation off.
+								Printer::disableXStepper();
+								Printer::disableYStepper();
+								Printer::disableZStepper();
+								Extruder::disableAllExtruders();
 								motorCurrentControlInit();
 							}						
 						}else{
@@ -11079,10 +11084,20 @@ void processCommand( GCode* pCommand )
 						if(g_nSilentMode){
 							g_nSilentMode = 0;
 							Com::printFLN( PSTR( "M3920 SilentMode 0" ) );
+							Printer::setAllSteppersDisabled(); //unhome, you should only switch mode while not homed btw with z-Compensation off.
+							Printer::disableXStepper();
+							Printer::disableYStepper();
+							Printer::disableZStepper();
+							Extruder::disableAllExtruders();
 							motorCurrentControlInit();
 						}else{
 							g_nSilentMode = 1;		
 							Com::printFLN( PSTR( "M3920 SilentMode 1" ) );	
+							Printer::setAllSteppersDisabled(); //unhome, you should only switch mode while not homed btw with z-Compensation off.
+							Printer::disableXStepper();
+							Printer::disableYStepper();
+							Printer::disableZStepper();
+							Extruder::disableAllExtruders();
 							motorCurrentControlInit();			
 						}
 					}
