@@ -11030,7 +11030,7 @@ void processCommand( GCode* pCommand )
 					}
 					
 					if (pCommand->hasS() ){						
-						if ( pCommand->S > 0 && pCommand->S <= 200 )
+						if ( pCommand->S > 0 && pCommand->S <= 300 )
 						{
 							//max darf nie 0 werden!! div/0 bei zeile ~5600
 							g_nSensiblePressureOffsetMax = (short)pCommand->S;

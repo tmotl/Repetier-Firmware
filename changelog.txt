@@ -1,3 +1,8 @@
+V RF.01.37e.mod (2017-02-13)
+- Increased SilentMode stepper amps for x,y by +10%
+- Increased M3909's standard max offset to 180 um
+- Increased M3909's max offset configuration limit to 300 um
+
 V RF.01.37e.mod (2017-02-07)
 - Fixed German Language error, thx Hobbyprinter
 - Added M3920 to lower Stepper Amp (experimental noise fix)

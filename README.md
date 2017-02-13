@@ -51,7 +51,7 @@ Included some Fixes the original developers of the branch "repetier/Repetier-Fir
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
 
 _by Nibbels_:  
-M3939 Pn Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
+M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
 M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
 
 _by Nibbels/Wessix_:  
@@ -83,7 +83,7 @@ You can activate the ZOS (mhiers Z-Offset-Scan) within ->Configuration->Z-Config
 ## SensiblePressure  
 * M3909 Pn Sm  
 P = max. digits = {1...14999} [digits]  
-S = max. SenseOffset = {1...200} [um]  
+S = max. SenseOffset = {1...300} std.: 180 [um]  
 
 Feature called "SensiblePressure"  
  The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
