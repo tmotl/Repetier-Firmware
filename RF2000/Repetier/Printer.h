@@ -207,6 +207,7 @@ public:
 #endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_CASE_FAN
+	static bool	ignoreFanOn;
 	static unsigned long	prepareFanOff;
 	static unsigned long	fanOffDelay;
 #endif // FEATURE_CASE_FAN

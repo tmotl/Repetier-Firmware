@@ -9260,6 +9260,9 @@ void processCommand( GCode* pCommand )
 #if FEATURE_CASE_FAN && !CASE_FAN_ALWAYS_ON
 			case 3120:	// M3120 - turn on the case fan
 			{
+				//disable fan-temp-ignore to original state // Nibbels
+				Printer::ignoreFanOn = false;
+				
 				// enable the case fan
 				Printer::prepareFanOff = 0;
 				WRITE( CASE_FAN_PIN, 1 );
@@ -9281,6 +9284,12 @@ void processCommand( GCode* pCommand )
 					Printer::fanOffDelay *= 1000;	// convert from [s] to [ms]
 				}
 
+				if( pCommand->hasP() )
+				{
+					// the fan should be disabled even if the print starts // temp > fan on temp // Nibbels
+					Printer::ignoreFanOn = true;
+				}
+				
 				if( Printer::fanOffDelay )
 				{
 					// we are going to disable the case fan after the delay

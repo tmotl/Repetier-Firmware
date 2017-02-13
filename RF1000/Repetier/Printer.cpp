@@ -209,8 +209,9 @@ char			Printer::enableFET3;
 #endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_CASE_FAN
-unsigned long	Printer::prepareFanOff;
-unsigned long	Printer::fanOffDelay;
+bool	Printer::ignoreFanOn = false;
+unsigned long	Printer::prepareFanOff = 0;
+unsigned long	Printer::fanOffDelay = 0;
 #endif // FEATURE_CASE_FAN
 
 #if FEATURE_TYPE_EEPROM
