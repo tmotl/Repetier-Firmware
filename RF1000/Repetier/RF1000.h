@@ -1025,7 +1025,7 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_UP_FAST_STEPS				long(-ZAXIS_STEPS_PER_MM / 40)											// [steps]
 #define HEAT_BED_SCAN_UP_SLOW_STEPS				long(-ZAXIS_STEPS_PER_MM / 200)											// [steps]
 #define HEAT_BED_SCAN_DOWN_SLOW_STEPS			long(ZAXIS_STEPS_PER_MM / 80)											// [steps]
-#define HEAT_BED_SCAN_DOWN_FAST_STEPS			long(ZAXIS_STEPS_PER_MM / 4)											// [steps]
+#define HEAT_BED_SCAN_DOWN_FAST_STEPS			long(ZAXIS_STEPS_PER_MM / 2)											// [steps]
 #define	HEAT_BED_SCAN_FAST_STEP_DELAY_MS		5																		// [ms]
 #define	HEAT_BED_SCAN_SLOW_STEP_DELAY_MS		100																		// [ms]
 #define HEAT_BED_SCAN_IDLE_DELAY_MS				250																		// [ms]

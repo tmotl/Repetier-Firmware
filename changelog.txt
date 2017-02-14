@@ -1,3 +1,6 @@
+V RF.01.37e.mod (2017-02-14)
+- changed HEAT_BED_SCAN_DOWN_FAST_STEPS from 0.25 to 0.5mm to avoid scan aborted on 25°C-Scans.
+
 V RF.01.37e.mod (2017-02-13)
 - Increased SilentMode stepper amps for x,y by +10%
 - Increased M3909's standard max offset to 180 um
