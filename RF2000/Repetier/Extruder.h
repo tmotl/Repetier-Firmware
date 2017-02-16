@@ -430,6 +430,12 @@ extern TemperatureController heatedBedController;
 #define NUM_TEMPERATURE_LOOPS NUM_EXTRUDER
 #endif // HAVE_HEATED_BED
 
+#if RESERVE_ANALOG_INPUTS
+extern TemperatureController optTempController;
+#endif // RESERVE_ANALOG_INPUTS
+
+
+
 #define TEMP_INT_TO_FLOAT(temp)		((float)(temp)/(float)(1<<CELSIUS_EXTRA_BITS))
 #define TEMP_FLOAT_TO_INT(temp)		((int)((temp)*(1<<CELSIUS_EXTRA_BITS)))
 

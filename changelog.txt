@@ -1,3 +1,10 @@
+V RF.01.37e.mod (2017-02-16)
+- Added Thermistor "NTC 3950 100k Ohm" as table 15 (good fit) / table 14 (not as good fit)
+- Added Thermistor "PT100 E3D" as table 13
+- Added RF2000 RESERVE_ANALOG_INPUTS=1 to ANALOG_INPUTS
+- Added RF2000 reserve sensor to printTemperatures() (choosing RESERVE_ANALOG_SENSOR_TYPE 15)
+- Added M3941 to show reserve temperature
+
 V RF.01.37e.mod (2017-02-14)
 - changed HEAT_BED_SCAN_DOWN_FAST_STEPS from 0.25 to 0.5mm to avoid scan aborted on 25°C-Scans.
 

@@ -362,6 +362,13 @@ void Commands::printTemperatures(bool showRaw)
     }
 #endif // NUM_EXTRUDER
 
+#if RESERVE_ANALOG_INPUTS
+	TemperatureController* act = &optTempController;			
+	act->updateCurrentTemperature();
+    Com::printF(Com::tSpaceT, RESERVE_SENSOR_INDEX);			
+    Com::printF(Com::tColon,act->currentTemperatureC);	
+#endif // RESERVE_ANALOG_INPUTS
+
 #if FEATURE_PRINT_PRESSURE
 	Com::printF(Com::tF);
 	Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));

@@ -11207,43 +11207,20 @@ void processCommand( GCode* pCommand )
 				
 				Com::printFLN( PSTR( "M3940 Ended!" ) );
 			}
-			break;
+			break;			
 			
-			/*
-			case 3941: // 3941 startTempViscosityMethod - Testfunction to determine the raise of possible velocity at defined digits over temperature || by Nibbels
+#if RESERVE_ANALOG_INPUTS
+			case 3941: // 3941 reading optional temperature port X35 - Testfunction || by Nibbels
 			{
-				Com::printFLN( PSTR( "M3941 startMadeMessureMethod starting ..." ) );
-				//M3941 X1 Y0.7 Z0.1
-				int maxD = 2000;		
-				float Kp = 1.0f;
-				float Ki = 0.7f;	
-				float Kd = 0.01f;		
-								
-				if (pCommand->hasX() ){		
-					Kp = (float)pCommand->X;
-				}				
-				if (pCommand->hasY() ){		
-					Ki = (float)pCommand->Y;
-				}				
-				if (pCommand->hasZ() ){		
-					Kd = (float)pCommand->Z;
-				}
-								
-				if (pCommand->hasP() ){		
-					maxD = (float)pCommand->P;
-				}
-							
-				Com::printFLN( PSTR( "M3941 [P] Max Digits_in = " ) , maxD );
-				Com::printFLN( PSTR( "M3941 [X] Kp = " ) , Kp , 5 );
-				Com::printFLN( PSTR( "M3941 [Y] Ki = " ) , Ki , 5 );
-				Com::printFLN( PSTR( "M3941 [Z] Kd = " ) , Kd , 5 );
-				
-				startTempViscosityMethod( maxD , Kp , Ki , Kd );
-				
+				Com::printFLN( PSTR( "M3941 TempReader starting ..." ) );	
+				TemperatureController* act = &optTempController;			
+				act->updateCurrentTemperature();				
+				Com::printFLN( PSTR( "Opt Temp: " ) , act->currentTemperatureC , 2 );			
 				Com::printFLN( PSTR( "M3941 Ended!" ) );
 			}
 			break;
-			*/
+#endif // RESERVE_ANALOG_INPUTS
+
 		}		
 	}
 

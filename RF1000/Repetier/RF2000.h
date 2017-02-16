@@ -600,6 +600,7 @@ A good start is 30 lower then the optimal value. You need to leave room for cool
 
 /** \brief Analog pin of analog sensor to read temperature of heated bed.  */
 #define RESERVE_ANALOG_TEMP_PIN				TEMP_3_PIN
+#define RESERVE_ANALOG_SENSOR_TYPE			15 //Thermistor NTC 3950 100k Ohm
 
 #define RESERVE_ANALOG_INPUTS				1
 #define RESERVE_SENSOR_INDEX				EXT0_ANALOG_INPUTS+EXT1_ANALOG_INPUTS+BED_ANALOG_INPUTS
@@ -693,7 +694,7 @@ can set it on for safety. */
 
 
 /** \brief number of analog input signals. Normally 1 for each temperature sensor */
-#define ANALOG_INPUTS (EXT0_ANALOG_INPUTS+EXT1_ANALOG_INPUTS+BED_ANALOG_INPUTS)
+#define ANALOG_INPUTS (EXT0_ANALOG_INPUTS+EXT1_ANALOG_INPUTS+BED_ANALOG_INPUTS+RESERVE_ANALOG_INPUTS)
 
 #if ANALOG_INPUTS>0
 /** \brief Channels are the MUX-part of ADMUX register */
