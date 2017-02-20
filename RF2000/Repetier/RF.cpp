@@ -1847,6 +1847,8 @@ void searchZOScan( void )
 					Com::printFLN( PSTR( "ZOS(): Reusing existing zMatrix" ) );
 					if(g_ZCompensationMatrix[1][1] > 0) {
 						Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix is >0!" ) );
+						Com::printFLN( PSTR( "ZOS(): FIX::Z-Schraube weiter rausdrehen, neuer HBS-Scan." ) );
+						Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );						
 						Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
 						loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
 					}
@@ -1854,6 +1856,8 @@ void searchZOScan( void )
 				// safety check on the current matrix			
 				if(g_ZCompensationMatrix[1][1] > 0) {
 				  Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix is >0!" ) );
+				  Com::printFLN( PSTR( "ZOS(): FIX::Z-Schraube weiter rausdrehen, neuer HBS-Scan." ) );
+				  Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );		
 				  abortSearchHeatBedZOffset();
 				  break;
 				}			
@@ -2074,9 +2078,10 @@ void searchZOScan( void )
 				if(overnull) {
 				  // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is bigger than z=zero
 				  Com::printFLN( PSTR( "ZOS(): ERROR::At least one measured correction is z>0!" ) );
+				  Com::printFLN( PSTR( "ZOS(): FIX::Z-Schraube etwas weiter rausdrehen." ) );
+				  Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );	
 				  Com::printFLN( PSTR( "ZOS(): FIX::Clean Hotend-Nozzle" ) );
 				  Com::printFLN( PSTR( "ZOS(): FIX::Scrape off Filament-Popel from Scan-Position :)" ) );
-				  Com::printFLN( PSTR( "ZOS(): FIX::Improve Z-Endstop!" ) );
 				  Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
 				  loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
 				  abortSearchHeatBedZOffset();
