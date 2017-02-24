@@ -75,7 +75,10 @@ void Commands::checkForPeriodicalActions()
 
     if(!executePeriodical) return;
     executePeriodical=0;
-    Extruder::manageTemperatures();
+
+	g_uLastCommandLoop = HAL::timeInMilliseconds();
+
+	Extruder::manageTemperatures();
     if(--counter250ms==0)
     {
         if(manageMonitor<=1+NUM_EXTRUDER)
@@ -181,10 +184,6 @@ void Commands::waitUntilEndOfAllMoves()
 
 	while( bWait )
 	{
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
 		GCode::keepAlive( Processing );
@@ -215,10 +214,6 @@ void Commands::waitUntilEndOfAllBuffers()
 
 	while(PrintLine::hasLines() || (code = GCode::peekCurrentCommand()) != NULL)
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		GCode::readFromSerial();
         UI_MEDIUM; // do check encoder
         if(code)
@@ -744,12 +739,10 @@ void Commands::executeGCode(GCode *com)
             if(com->hasP()) codenum = com->P; // milliseconds to wait
             if(com->hasS()) codenum = com->S * 1000; // seconds to wait
             codenum += HAL::timeInMilliseconds();  // keep track of when we started waiting
+
             while((uint32_t)(codenum-HAL::timeInMilliseconds())  < 2000000000 )
             {
-#if FEATURE_WATCHDOG
-				HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-                GCode::readFromSerial();
+				GCode::readFromSerial();
                 Commands::checkForPeriodicalActions();
 				GCode::keepAlive( Processing );
             }
@@ -1155,10 +1148,6 @@ void Commands::executeGCode(GCode *com)
 					millis_t currentTime;
 					do
 					{
-#if FEATURE_WATCHDOG
-						HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 						currentTime = HAL::timeInMilliseconds();
 						if( (currentTime - printedTime) > 1000 )   //Print Temp Reading every 1 second while heating up.
 						{
@@ -1200,7 +1189,7 @@ void Commands::executeGCode(GCode *com)
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 				}
 
-				showIdle();
+				g_uStartOfIdle	  = HAL::timeInMilliseconds();
 				previousMillisCmd = HAL::timeInMilliseconds();
 				break;
 			}
@@ -1244,10 +1233,6 @@ void Commands::executeGCode(GCode *com)
 					codenum = HAL::timeInMilliseconds();
 					while(heatedBedController.currentTemperatureC+TEMP_TOLERANCE < heatedBedController.targetTemperatureC)
 					{
-#if FEATURE_WATCHDOG
-						HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 						if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
 						{
 							printTemperatures();
@@ -1263,7 +1248,7 @@ void Commands::executeGCode(GCode *com)
 #endif // HAVE_HEATED_BED
 				}
 
-				showIdle();
+				g_uStartOfIdle	  = HAL::timeInMilliseconds();
 				previousMillisCmd = HAL::timeInMilliseconds();
 				break;
 			}
@@ -1277,10 +1262,6 @@ void Commands::executeGCode(GCode *com)
 						codenum = HAL::timeInMilliseconds();
 						while(!allReached)
 						{
-#if FEATURE_WATCHDOG
-							HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 							allReached = true;
 							if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
 							{
@@ -1293,7 +1274,7 @@ void Commands::executeGCode(GCode *com)
 							for( uint8_t h=0; h<NUM_TEMPERATURE_LOOPS; h++ )
 							{
 								TemperatureController *act = tempController[h];
-								if( act->targetTemperatureC > 30 && fabs( act->targetTemperatureC-act->currentTemperatureC ) > 1 )
+								if( act->targetTemperatureC > 30 && fabs( act->targetTemperatureC-act->currentTemperatureC ) > TEMP_TOLERANCE )
 								{
 									allReached = false;
 								}
@@ -1433,10 +1414,6 @@ void Commands::executeGCode(GCode *com)
 
                 while(wait-HAL::timeInMilliseconds() < 100000)
 				{
-#if FEATURE_WATCHDOG
-					HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 					Printer::defaultLoopActions();
                 }
                 if(com->hasX())

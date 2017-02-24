@@ -603,7 +603,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
         if(unitIsInches)
             feedrate = com->F * 0.0042333f * (float)feedrateMultiply;  // Factor is 25.5/60/100
         else
-            feedrate = com->F * (float)feedrateMultiply * 0.00016666666f;
+            feedrate = com->F * 0.00016666666f * (float)feedrateMultiply;
     }
 
     if(!Printer::isPositionAllowed(x,y,z))
@@ -1109,12 +1109,6 @@ void Printer::setup()
 	enableCaseLight = CASE_LIGHTS_DEFAULT_ON;
 #endif // FEATURE_CASE_LIGHT
 
-#if FEATURE_230V_OUTPUT
-	enable230VOutput = OUTPUT_230V_DEFAULT_ON;
-	SET_OUTPUT(OUTPUT_230V_PIN);
-	WRITE(OUTPUT_230V_PIN, enable230VOutput);
-#endif // FEATURE_230V_OUTPUT
-
 #if FEATURE_24V_FET_OUTPUTS
 	enableFET1 = FET1_DEFAULT_ON;
 	enableFET2 = FET2_DEFAULT_ON;
@@ -1162,19 +1156,17 @@ void Printer::setup()
 	    Com::printFLN(Com::tStart);
 	}
 
-#if FEATURE_WATCHDOG
-	if( Printer::debugInfo() )
-	{
-	    Com::printFLN(Com::tStartWatchdog);
-	}
-    HAL::startWatchdog();
-#endif // FEATURE_WATCHDOG
-
 	UI_INITIALIZE;
 
     HAL::showStartReason();
     Extruder::initExtruder();
     EEPROM::init(); // Read settings from eeprom if wanted
+
+#if FEATURE_230V_OUTPUT
+	enable230VOutput = OUTPUT_230V_DEFAULT_ON;
+	SET_OUTPUT(OUTPUT_230V_PIN);
+	WRITE(OUTPUT_230V_PIN, enable230VOutput);
+#endif // FEATURE_230V_OUTPUT
 
 #if FEATURE_CASE_LIGHT
     SET_OUTPUT(CASE_LIGHT_PIN);
@@ -1239,6 +1231,14 @@ void Printer::setup()
 		}
 	}
 #endif // FEATURE_RGB_LIGHT_EFFECTS
+
+#if FEATURE_WATCHDOG
+	if( Printer::debugInfo() )
+	{
+	    Com::printFLN(Com::tStartWatchdog);
+	}
+    HAL::startWatchdog();
+#endif // FEATURE_WATCHDOG
 
 } // setup
 
@@ -1674,7 +1674,7 @@ void Printer::homeAxis(bool xaxis,bool yaxis,bool zaxis) // home non-delta print
 	{
 		uid.unlock();
 	}
-	showIdle();
+	g_uStartOfIdle = HAL::timeInMilliseconds();
     Commands::printCurrentPosition();
 
 } // homeAxis
@@ -1848,7 +1848,7 @@ void Printer::performZCompensation( void )
 				// set the direction only in case it is not set already
 				prepareBedDown();
 				stepperDirection[Z_AXIS] = 1;
-				//HAL::delayMicroseconds( 1 );
+				//return;
 			}
 			startZStep( 1 );
 			endZCompensationStep = 1;
@@ -1868,7 +1868,7 @@ void Printer::performZCompensation( void )
 				// set the direction only in case it is not set already
 				prepareBedUp();
 				stepperDirection[Z_AXIS] = -1;
-				//HAL::delayMicroseconds( 1 );
+				//return;
 			}
 			startZStep( -1 );
 			endZCompensationStep = -1;

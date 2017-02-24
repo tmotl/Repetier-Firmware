@@ -20,6 +20,11 @@
 #include <compat/twi.h>
 
 
+#if FEATURE_WATCHDOG
+unsigned char	g_bPingWatchdog		= 0;
+#endif // FEATURE_WATCHDOG
+
+
 HAL::HAL()
 {
 } // HAL
@@ -761,7 +766,11 @@ long				stepperWait  = 0;
 ISR(TIMER1_COMPA_vect)
 {
 #if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
+	if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
+	{
+		// ping the watchdog only in case the mainloop is still being called
+		HAL::pingWatchdog();
+	}
 #endif // FEATURE_WATCHDOG
 
     if(insideTimer1) return;
@@ -899,11 +908,6 @@ ISR(PWM_TIMER_VECTOR)
     PWM_OCR += 64;
 
 
-
-#if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 	if(pwm_count_heater == 0)
     {
 #if EXT0_HEATER_PIN>-1
@@ -1040,10 +1044,6 @@ ISR(PWM_TIMER_VECTOR)
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
     HAL::allowInterrupts();
-
-#if FEATURE_WATCHDOG
-	HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
 
 	counterPeriodical++; // Approximate a 100ms timer
     if(counterPeriodical>=(int)(F_CPU/40960))

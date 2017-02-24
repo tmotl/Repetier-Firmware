@@ -566,6 +566,9 @@ extern const char	ui_text_sensor_error[]			PROGMEM;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
 
 
+extern	unsigned long	g_uLastCommandLoop;
+extern	unsigned long	g_uStartOfIdle;
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 extern	long			g_offsetZCompensationSteps;	// this is the minimal distance between the heat bed and the extruder at the moment when the z-min endstop is hit
 extern	long			g_minZCompensationSteps;

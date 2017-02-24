@@ -437,10 +437,6 @@ void GCode::readFromSerial()
     }
     while(HAL::serialByteAvailable() && commandsReceivingWritePosition < MAX_CMD_SIZE)    // consume data until no data or buffer full
     {
-#if FEATURE_WATCHDOG
-	    HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
         timeOfLastDataPacket = time;
 
 		if( !commandsReceivingWritePosition )
@@ -590,16 +586,8 @@ void GCode::readFromSD()
 
     while( sd.filesize > sd.sdpos && commandsReceivingWritePosition < MAX_CMD_SIZE)    // consume data until no data or buffer full
     {
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
-
 		timeOfLastDataPacket = HAL::timeInMilliseconds();
         int n = sd.file.read();
-
-#if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
 
 		if(n==-1)
         {
@@ -612,10 +600,6 @@ void GCode::readFromSD()
             // Second try in case of recoverable errors
             sd.file.seekSet(sd.sdpos);
             n = sd.file.read();
-
-#if FEATURE_WATCHDOG
-			HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
 
 			if(n==-1)
             {

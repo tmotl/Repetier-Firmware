@@ -839,6 +839,13 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 /** \brief Configuration of the external watchdog
 The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it was triggered, the value of WATCHDOG_TIMEOUT should be less than half of this time. */
 #define WATCHDOG_TIMEOUT					10													// [ms]
+#define	WATCHDOG_MAIN_LOOP_TIMEOUT			10000												// [ms]
+
+/** \brief Longer-lasting operations shall call our periodical actions at least each defined time interval */
+#define	PERIODICAL_ACTIONS_CALL_INTERVAL	10													// [ms]
+
+/** \brief The display shows that the device is idle after no new commands were processed for longer than the minimal idle time */
+#define	MINIMAL_IDLE_TIME					500													// [ms]
 
 /** \brief If enabled you can select the distance your filament gets retracted during a M140 command, after a given temperature is reached. */
 #define RETRACT_DURING_HEATUP				true
@@ -864,10 +871,6 @@ Set the value to 0: Normal computation, just clip output to EXT0_PID_MAX if comp
 Set value to 1: Scale PID by EXT0_PID_MAX/256 and then clip to EXT0_PID_MAX.
 If your EXT0_PID_MAX is low, you should prefer the second method. */
 #define SCALE_PID_TO_MAX					0
-
-/** \brief speed of the PWM signal, 0 = 15.25Hz, 1 = 30.51Hz, 2 = 61.03Hz, 3 = 122.06Hz */
-#define HEATER_PWM_SPEED					1
-#define COOLER_PWM_SPEED					3
 
 /** \brief Temperature range for target temperature to hold in M109 command. 5 means +/-5 degC
 Uncomment define to force the temperature into the range for given watchperiod. */
