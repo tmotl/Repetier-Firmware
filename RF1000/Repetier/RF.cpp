@@ -6277,7 +6277,7 @@ void loopRF( void )
 								/*
 								Z-OFFSETs :: Mir sind aktuell folgende Offsets in Z bekannt:
 									long Printer::ZOffset;  														== OFFSET IN MENÜ / M3006 in [um]	
-									g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;	== OFFSET-STEPS errechnet aus Printer::ZOffset
+									g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;	== OFFSET-STEPS errechnet aus Printer::ZOffset -> Und NEU zusätzlich aus SenseOffset
 									g_offsetZCompensationSteps														== OFFSET AUS zMATRIX (Minimaler Bett-Hotend-Abstand)
 									nNeededZCompensation															== In der Z-Compensations-Funktion: Das ist der Matrixanteil an exaktem Punkt x/y
 									
@@ -10884,9 +10884,10 @@ void processCommand( GCode* pCommand )
 							}else if(hochrunter > 0.0f){
 								Com::printFLN( PSTR( "M3902: Duese-Bett-Abstand wird groesser gemacht. "), hochrunter );
 							}else{
-								Com::printFLN( PSTR( "M3902: Duese-Bett-Abstand bleibt gleich. "), hochrunter );
+								Com::printFLN( PSTR( "M3902: Duese-Bett-Abstand bleibt gleich. Das Offset wird in die Matrix verrechnet und genullt."), hochrunter );
 							}
-							Com::printFLN( PSTR( "M3902: +Z heisst Bett hoch/weniger Abstand, -Z heisst Bett runter/mehr Abstand. ") );
+							Com::printFLN( PSTR( "M3902: -Z heisst Bett hoch/weniger Abstand, +Z heisst Bett runter/mehr Abstand. ") );
+							Com::printFLN( PSTR( "M3902: Bei Z=0 ändert sich nichts, doch es wird das aktuelle Offset in die Matrix verrechnet. ") );
 							Com::printFLN( PSTR( "#############################################################################") );
 							
 							// determine the minimal distance between extruder and heat bed
@@ -10894,15 +10895,24 @@ void processCommand( GCode* pCommand )
 							Com::printFLN( PSTR( "M3902: Alt::Min. Bett-Hotend Abstand [Steps] = " ), -1*(int)g_offsetZCompensationSteps );
 							
 							long hochrunterSteps = long(hochrunter * Printer::axisStepsPerMM[Z_AXIS]); //axissteps ist auch float
+														
 							Com::printFLN( PSTR( "M3902: Veraenderung Z [mm] = "), hochrunter );
 							Com::printFLN( PSTR( "M3902: Veraenderung Z [Steps] = " ), hochrunterSteps );
+							
+							if(hochrunter == 0.00f){
+								//wenn Z=0.0 soll alles so bleibenk aber das Offset ins Matrix-Offset reingerechnet und genullt werden.
+								//das Offset muss negativ eingehen, denn wenn die Matrix "weniger tief" ist, bleibt die Düse weiter weg vom Bett.
+								hochrunterSteps = long((Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000); //offset-stepps neu berechnen!							
+								Com::printFLN( PSTR( "M3902: Veraenderung = zOffset --> zMatrix; Offset = 0;" ) );
+							}	
+							
 							//das ist ein negativer wert! Je mehr Abstand, desto negativer. Positiv verboten.
-							if(g_offsetZCompensationSteps - hochrunterSteps > 0){
-								Com::printF( PSTR( "M3902: Fehler::Z-Matrix wuerde positiv werden. Das waere eine Kollision um " ), -1*(int)(g_offsetZCompensationSteps - hochrunterSteps) );
-								Com::printFLN( PSTR( " [Steps] bzw. " ), -1*Printer::invAxisStepsPerMM[Z_AXIS]*(float)(g_offsetZCompensationSteps - hochrunterSteps),2 );
+							if(g_offsetZCompensationSteps + hochrunterSteps > 0){
+								Com::printF( PSTR( "M3902: Fehler::Z-Matrix wuerde positiv werden. Das waere eine Kollision um " ), (int)(g_offsetZCompensationSteps + hochrunterSteps) );
+								Com::printFLN( PSTR( " [Steps] bzw. " ), Printer::invAxisStepsPerMM[Z_AXIS]*(float)(g_offsetZCompensationSteps + hochrunterSteps),2 );
 								Com::printFLN( PSTR( " [mm]" ) );
 							}else{
-								Com::printFLN( PSTR( "M3902: Ok::Min. Bett-Extruder Restabstand = " ), -1*(int)(g_offsetZCompensationSteps) );
+								Com::printFLN( PSTR( "M3902: Neu::Min. Bett-Extruder Restabstand = " ), -1*(int)(g_offsetZCompensationSteps) );
 								
 								short	x;
 								short	y;
@@ -10913,13 +10923,18 @@ void processCommand( GCode* pCommand )
 								{
 									for( y=1; y<=g_uZMatrixMax[Y_AXIS]; y++ )
 									{
-										g_ZCompensationMatrix[x][y] -= deltaZ;	
+										g_ZCompensationMatrix[x][y] += deltaZ;	
 										if(g_ZCompensationMatrix[x][y] > 0) overflow = true; //overflow oder kollision, kann einfach nicht sein und abfrage ist kurz.
 									}
 								}
 								if(overflow){
 									Com::printFLN( PSTR( "M3901: ERROR::Some type of Overflow or positiv Matrix::ReLoading zMatrix from EEPROM to RAM" ) );
 									loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+								}else{
+									if(hochrunter == 0.00f){
+										Printer::ZOffset = 0; //offset um nullen
+										g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000; //offset-stepps neu berechnen
+									}	
 								}
 							}
 							

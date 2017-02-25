@@ -1,3 +1,10 @@
+V RF.01.37e.mod (2017-02-25)
+- Fixed some +-twist within MCode M3902 Zn for better understanding and z-Offset compatibility. (Adjusting zMatrix internal offset)
+- Added new Option to M3902 Zn:
+If you type M3902 Z0.00 or M3902 Z0 the command will add the active zOffset to the zMatrix and turn the zOffset to zero. This adds no Offset, it shifts the Offset from the zOffset to your Matrix. You can then save your zMatrix to Position [n] with M3902 S[n].
+An Offset of 1 um (micron) will typically adjust your printers hotend-V2-distance by +1°C printing temperature.
+Thathow you can easily adjust your zMatrix to the printing temperature you need.
+
 V RF.01.37e.mod (2017-02-20)
 - Added better error description to mhier scan. (Text and http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016)
 

@@ -44,15 +44,15 @@ Disabled Milling-Mode! If you need it, activate it within the configuration file
 M3901 Xn Ym Px Sy	- to configure M3900 (X-Y-Pos, Learning-Factor, linear distance weight.)  
 M3902 R1			- to fix a single HeatBeds Hole within the HBS Matrix.  
 M3902 Zn.n			- to add an Offset to the Matrix. n.n = {-0.2 .. 0.2} [mm]  
-M3902 Sn 			- to save the active Matrix to position n = {1..9}  
-M3903				- to configure a very slow heat bed temperature decrease  
+M3902 Z0			- to shift your active zOffset to the zMatrix. The M3006 zOffset will be zero afterwards. The zMatrix is altered within Ram and might be saved to EEPROM[n] with M3902 S[n] afterwards.
+M3902 Sn 			- to save the active Matrix to position n = {1..9}
+M3902 Z0 S1			- to shift the zOffset to your zMatrix and save the Matrix at position 1. This is an example to show that the options of M3902 can be combined.
+M3903 Pt Smin		- to configure a very slow and stepwise heat bed temperature decrease. One step lasts t seconds. The end temperature will be `min` °C
+M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
+M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
 Removed all Compilerwarnings and Compilererrors within the original Firmware.  
 Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
-
-_by Nibbels_:  
-M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
-M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm			- See "SensiblePressure"  
@@ -131,6 +131,9 @@ If you make your current too low you might risk "lost steps". The Motor cannot s
 
 If you can lower your current, you will have a huge improvement on stepper temperature and noise production as well. The tone of your steppers might sound deeper and will not be such a pain as the original (milling like-) configuration.
 You should not include M3920 when your z-Compensation is active. This MCode will shut down z-Compensation and unhome your Printer. You would have to re-home your axes and activate z-Compensation again. I put this code to the beginning of my startcodes.
+
+## Wessix`s help video:
+[![ScreenShot](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/d7b7fade0c7343eeb67b680339478894.png)](http://youtu.be/iu9Nft7SXD8)
 
 ## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
 see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
