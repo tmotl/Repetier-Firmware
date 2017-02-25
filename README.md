@@ -44,10 +44,10 @@ Disabled Milling-Mode! If you need it, activate it within the configuration file
 M3901 Xn Ym Px Sy	- to configure M3900 (X-Y-Pos, Learning-Factor, linear distance weight.)  
 M3902 R1			- to fix a single HeatBeds Hole within the HBS Matrix.  
 M3902 Zn.n			- to add an Offset to the Matrix. n.n = {-0.2 .. 0.2} [mm]  
-M3902 Z0			- to shift your active zOffset to the zMatrix. The M3006 zOffset will be zero afterwards. The zMatrix is altered within Ram and might be saved to EEPROM[n] with M3902 S[n] afterwards.
-M3902 Sn 			- to save the active Matrix to position n = {1..9}
-M3902 Z0 S1			- to shift the zOffset to your zMatrix and save the Matrix at position 1. This is an example to show that the options of M3902 can be combined.
-M3903 Pt Smin		- to configure a very slow and stepwise heat bed temperature decrease. One step lasts t seconds. The end temperature will be `min` °C
+M3902 Z0			- to shift your active zOffset to the zMatrix. The M3006 zOffset will be zero afterwards. The zMatrix is altered within Ram and might be saved to EEPROM[n] with M3902 S[n] afterwards.  
+M3902 Sn 			- to save the active Matrix to position n = {1..9}  
+M3902 Z0 S1			- to shift the zOffset to your zMatrix and save the Matrix at position 1. This is an example to show that the options of M3902 can be combined.  
+M3903 Pt Smin		- to configure a very slow and stepwise heat bed temperature decrease. One step lasts t seconds. The end temperature will be `min` °C  
 M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
 M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
 Removed all Compilerwarnings and Compilererrors within the original Firmware.  
