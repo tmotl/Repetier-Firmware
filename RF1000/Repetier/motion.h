@@ -72,8 +72,8 @@ private:
     float				minSpeed;
     float				distance;
     ticks_t				fullInterval;				///< interval at full speed in ticks/step.
-    uint16_t			accelSteps;					///< How much steps does it take, to reach the plateau.
-    uint16_t			decelSteps;					///< How much steps does it take, to reach the end speed.
+    uint32_t 			accelSteps;					///< How much steps does it take, to reach the plateau.
+    uint32_t 			decelSteps;					///< How much steps does it take, to reach the end speed.
     uint32_t			accelerationPrim;			///< Acceleration along primary axis
     uint32_t			fAcceleration;				///< accelerationPrim*262144/F_CPU
     speed_t				vMax;						///< Maximum reached speed in steps/s.
@@ -192,7 +192,7 @@ public:
         return flags & FLAG_NOMINAL;
     } // isNominalMove
 
-    inline bool setNominalMove()
+    inline void setNominalMove()
     {
         flags |= FLAG_NOMINAL;
     } // setNominalMove
@@ -384,7 +384,6 @@ public:
             if(advanceTarget<advanceEnd)
                 advanceTarget = advanceEnd;
         }
-
         long h = HAL::mulu16xu16to32(v,advanceL);
         int tred = ((advanceTarget + h) >> 16);
 
@@ -412,11 +411,13 @@ public:
         HAL::allowInterrupts();
 #endif // ENABLE_QUADRATIC_ADVANCE
 #endif // USE_ADVANCE
+		(void)max_loops;
+		(void)accelerate;
     } // updateAdvanceSteps
 
     inline bool moveDecelerating()
     {
-        if(stepsRemaining <= decelSteps)
+        if(stepsRemaining <= static_cast<int32_t>(decelSteps))
         {
             if (!(flags & FLAG_DECELERATING))
             {

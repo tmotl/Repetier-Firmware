@@ -30,7 +30,7 @@ uint8_t			Printer::unitIsInches = 0;								///< 0 = Units are mm, 1 = units are
 //Stepper Movement Variables
 float			Printer::axisStepsPerMM[4] = {XAXIS_STEPS_PER_MM,YAXIS_STEPS_PER_MM,ZAXIS_STEPS_PER_MM,1}; ///< Number of steps per mm needed.
 float			Printer::invAxisStepsPerMM[4];							///< Inverse of axisStepsPerMM for faster conversion
-float			Printer::maxFeedrate[4] = {MAX_FEEDRATE_X, MAX_FEEDRATE_Y, MAX_FEEDRATE_Z}; ///< Maximum allowed feedrate.
+float			Printer::maxFeedrate[4] = {MAX_FEEDRATE_X, MAX_FEEDRATE_Y, MAX_FEEDRATE_Z, DIRECT_FEEDRATE_E}; ///< Maximum allowed feedrate. //DIRECT_FEEDRATE_E added by nibbels, wird aber überschrieben.
 float			Printer::homingFeedrate[3];
 
 #ifdef RAMP_ACCELERATION
@@ -46,10 +46,10 @@ unsigned long	Printer::maxTravelAccelerationStepsPerSquareSecond[4];
 uint8_t			Printer::relativeCoordinateMode = false;				///< Determines absolute (false) or relative Coordinates (true).
 uint8_t			Printer::relativeExtruderCoordinateMode = false;		///< Determines Absolute or Relative E Codes while in Absolute Coordinates mode. E is always relative in Relative Coordinates mode.
 
-long			Printer::queuePositionLastSteps[4];
-float			Printer::queuePositionLastMM[3];
-float			Printer::queuePositionCommandMM[3];
-long			Printer::queuePositionTargetSteps[4];
+volatile long	Printer::queuePositionLastSteps[4];
+volatile float	Printer::queuePositionLastMM[3];
+volatile float	Printer::queuePositionCommandMM[3];
+volatile long	Printer::queuePositionTargetSteps[4];
 float			Printer::originOffsetMM[3] = {0,0,0};
 uint8_t			Printer::flag0 = 0;
 uint8_t			Printer::flag1 = 0;
@@ -72,7 +72,7 @@ unsigned long	Printer::stepNumber;									///< Step number in current move.
 long			Printer::advanceExecuted;								///< Executed advance steps
 #endif // ENABLE_QUADRATIC_ADVANCE
 
-int				Printer::advanceStepsSet;
+volatile int	Printer::advanceStepsSet;
 #endif // USE_ADVANCE
 
 float			Printer::minimumSpeed;									///< lowest allowed speed to keep integration error small
@@ -83,7 +83,7 @@ float			Printer::lengthMM[3];
 float			Printer::minMM[3];
 float			Printer::feedrate;										///< Last requested feedrate.
 int				Printer::feedrateMultiply;								///< Multiplier for feedrate in percent (factor 1 = 100)
-unsigned int	Printer::extrudeMultiply;								///< Flow multiplier in percdent (factor 1 = 100)
+int				Printer::extrudeMultiply;								///< Flow multiplier in percdent (factor 1 = 100)
 float			Printer::maxJerk;										///< Maximum allowed jerk in mm/s
 float			Printer::maxZJerk;										///< Maximum allowed jerk in z direction in mm/s
 float			Printer::extruderOffset[2];								///< offset for different extruder positions.
@@ -125,30 +125,31 @@ int				debugWaitLoop = 0;
 #endif // DEBUG_PRINT
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-char			Printer::doHeatBedZCompensation;
+volatile char	Printer::doHeatBedZCompensation;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
-char			Printer::doWorkPartZCompensation;
-long			Printer::staticCompensationZ;
+volatile char	Printer::doWorkPartZCompensation;
+volatile long	Printer::staticCompensationZ;
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 
-long			Printer::queuePositionCurrentSteps[3];
-char			Printer::stepperDirection[3];
+volatile long	Printer::queuePositionCurrentSteps[3];
+volatile char	Printer::stepperDirection[3];
 char			Printer::blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
-long			Printer::currentZSteps;
+volatile long	Printer::currentZSteps;
 #endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-long			Printer::compensatedPositionTargetStepsZ;
-long			Printer::compensatedPositionCurrentStepsZ;
-char			Printer::endZCompensationStep;
+volatile long	Printer::compensatedPositionTargetStepsZ;
+volatile long	Printer::compensatedPositionCurrentStepsZ;
+
+volatile char	Printer::endZCompensationStep;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-long			Printer::directPositionTargetSteps[4];
+volatile long	Printer::directPositionTargetSteps[4];
 long			Printer::directPositionCurrentSteps[4];
 long			Printer::directPositionLastSteps[4];
 char			Printer::waitMove;
@@ -208,8 +209,9 @@ char			Printer::enableFET3;
 #endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_CASE_FAN
-unsigned long	Printer::prepareFanOff;
-unsigned long	Printer::fanOffDelay;
+bool	Printer::ignoreFanOn = false;
+unsigned long	Printer::prepareFanOff = 0;
+unsigned long	Printer::fanOffDelay = 0;
 #endif // FEATURE_CASE_FAN
 
 #if FEATURE_TYPE_EEPROM
@@ -278,9 +280,13 @@ void Printer::constrainDirectDestinationCoords()
 
 bool Printer::isPositionAllowed(float x,float y,float z)
 {
-    if(isNoDestinationCheck())  return true;
+	if(isNoDestinationCheck())  return true;
     bool allowed = true;
-
+	//Nibbels 11.01.17: Die Funktion ist so wie sie ist etwas unnötig und prüft nix... blende warnings aus.
+	(void)x;
+	(void)y;
+	(void)z;
+	
     if(!allowed)
 	{
         Printer::updateCurrentPosition(true);
@@ -392,6 +398,7 @@ void Printer::updateAdvanceFlags()
 } // updateAdvanceFlags
 
 
+// This is for untransformed move to coordinates in printers absolute Cartesian space
 void Printer::moveTo(float x,float y,float z,float e,float f)
 {
     if(x != IGNORE_COORDINATE)
@@ -410,7 +417,8 @@ void Printer::moveTo(float x,float y,float z,float e,float f)
 
 } // moveTo
 
-
+/** Move to transformed Cartesian coordinates, mapping real (model) space to printer space.
+*/
 void Printer::moveToReal(float x,float y,float z,float e,float f)
 {
     if(x == IGNORE_COORDINATE)
@@ -1193,7 +1201,9 @@ void Printer::setup()
 #endif // SDSUPPORT
 
 	g_nActiveHeatBed = (char)readWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, EEPROM_OFFSET_ACTIVE_HEAT_BED_Z_MATRIX );
+#if FEATURE_MILLING_MODE
 	g_nActiveWorkPart = (char)readWord24C256( I2C_ADDRESS_EXTERNAL_EEPROM, EEPROM_OFFSET_ACTIVE_WORK_PART_Z_MATRIX );
+#endif // FEATURE_MILLING_MODE
 
 	if (Printer::ZMode == Z_VALUE_MODE_SURFACE)
 	{
@@ -1745,7 +1755,7 @@ bool Printer::processAsDirectSteps( void )
 
 void Printer::resetDirectPosition( void )
 {
-	char	axis;
+	unsigned char	axis;
 
 
 	// we may have to update our x/y/z queue positions - there is no need/sense to update the extruder queue position
@@ -1773,7 +1783,7 @@ void Printer::resetDirectPosition( void )
 	return;
 
 } // resetDirectPosition
-#endif FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
+#endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION

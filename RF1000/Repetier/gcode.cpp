@@ -339,7 +339,7 @@ void GCode::executeFString(FSTRINGPARAM(cmd))
 
         // Send command into command buffer
         buf[buflen]=0;
-        if(code.parseAscii((char *)buf,false) && (code.params & 518))   // Success
+        if(code.parseAscii((char *)buf) && (code.params & 518))   // Success
         {
 #ifdef DEBUG_PRINT
 			debugWaitLoop = 7;
@@ -386,7 +386,7 @@ void GCode::executeString(char *cmd)
 
         // Send command into command buffer
         buf[buflen]=0;
-        if(code.parseAscii((char *)buf,false) && (code.params & 518))   // Success
+        if(code.parseAscii((char *)buf) && (code.params & 518))   // Success
         {
 #ifdef DEBUG_PRINT
 			debugWaitLoop = 7;
@@ -472,7 +472,7 @@ void GCode::readFromSerial()
             if(commandsReceivingWritePosition == binaryCommandSize)
             {
                 GCode *act = &commandsBuffered[bufferWriteIndex];
-				if(act->parseBinary(commandReceiving,true))
+				if(act->parseBinary(commandReceiving))
 				{
 					// Success
                     act->checkAndPushCommand();
@@ -519,7 +519,7 @@ void GCode::readFromSerial()
                     continue;
                 }
                 GCode *act = &commandsBuffered[bufferWriteIndex];
-                if(act->parseAscii((char *)commandReceiving,true))
+                if(act->parseAscii((char *)commandReceiving))
 				{
 					// Success
 					act->checkAndPushCommand();
@@ -586,22 +586,20 @@ void GCode::readFromSD()
 
     while( sd.filesize > sd.sdpos && commandsReceivingWritePosition < MAX_CMD_SIZE)    // consume data until no data or buffer full
     {
-		timeOfLastDataPacket = HAL::timeInMilliseconds();
+	timeOfLastDataPacket = HAL::timeInMilliseconds();
         int n = sd.file.read();
-
 		if(n==-1)
         {
-			if( Printer::debugErrors() )
-			{
+	if( Printer::debugErrors() )
+		{
 	            Com::printFLN(Com::tSDReadError);
-			}
-            UI_ERROR("SD Read Error");
+		}
+        UI_ERROR("SD Read Error");
 
-            // Second try in case of recoverable errors
-            sd.file.seekSet(sd.sdpos);
-            n = sd.file.read();
-
-			if(n==-1)
+        // Second try in case of recoverable errors
+        sd.file.seekSet(sd.sdpos);
+        n = sd.file.read();
+	if(n==-1)
             {
 				if( Printer::debugErrors() )
 				{
@@ -628,7 +626,7 @@ void GCode::readFromSD()
             if(commandsReceivingWritePosition==binaryCommandSize)
             {
                 GCode *act = &commandsBuffered[bufferWriteIndex];
-                if(act->parseBinary(commandReceiving,false))
+                if(act->parseBinary(commandReceiving))
                 {
 					// Success, silently ignore illegal commands
 					pushCommand();
@@ -666,7 +664,7 @@ void GCode::readFromSD()
 				//Com::printFLN(PSTR("<<<"));
 
 				GCode *act = &commandsBuffered[bufferWriteIndex];
-                if(act->parseAscii((char *)commandReceiving,false))
+                if(act->parseAscii((char *)commandReceiving))
                 {   
                     // Success
                     pushCommand();
@@ -709,7 +707,7 @@ void GCode::readFromSD()
 
 /** \brief Converts a binary uint8_tfield containing one GCode line into a GCode structure.
 	Returns true if checksum was correct. */
-bool GCode::parseBinary(uint8_t *buffer,bool fromSerial)
+bool GCode::parseBinary(uint8_t *buffer)
 {
     unsigned int sum1=0,sum2=0; // for fletcher-16 checksum
     // first do fletcher-16 checksum tests see
@@ -856,9 +854,9 @@ bool GCode::parseBinary(uint8_t *buffer,bool fromSerial)
 
 
 /** \brief Converts a ascii GCode line into a GCode structure. */
-bool GCode::parseAscii(char *line,bool fromSerial)
+bool GCode::parseAscii(char *line)
 {
-    bool has_checksum = false;
+    //bool has_checksum = false;
     char *pos;
 
 

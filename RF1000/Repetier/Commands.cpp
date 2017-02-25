@@ -206,15 +206,16 @@ void Commands::waitUntilEndOfAllMoves()
 
 void Commands::waitUntilEndOfAllBuffers()
 {
-    GCode *code;
+    GCode *code = NULL;
 
 #ifdef DEBUG_PRINT
     debugWaitLoop = 9;
 #endif
 
-	while(PrintLine::hasLines() || (code = GCode::peekCurrentCommand()) != NULL)
+	while(PrintLine::hasLines() || (code != NULL))
     {
 		GCode::readFromSerial();
+		code = GCode::peekCurrentCommand();
         UI_MEDIUM; // do check encoder
         if(code)
         {
@@ -239,7 +240,7 @@ void Commands::waitUntilEndOfAllBuffers()
             }
             else
 #endif
-                Commands::executeGCode(code);
+            Commands::executeGCode(code);
             code->popCurrentCommand();
         }
 		Commands::checkForPeriodicalActions();
@@ -248,6 +249,25 @@ void Commands::waitUntilEndOfAllBuffers()
 
 } // waitUntilEndOfAllBuffers
 
+/** \brief Waits until M3900 is finished. */
+void Commands::waitUntilEndOfZOS()
+{
+	char	bWait = 0;
+
+	if( g_ZOSScanStatus )		bWait = 1;
+
+	while( bWait )
+	{
+		GCode::readFromSerial();
+        Commands::checkForPeriodicalActions();
+		GCode::keepAlive( Processing );
+        UI_MEDIUM;
+		
+		bWait = 0;
+		if( g_ZOSScanStatus )		bWait = 1;
+	}
+
+} // waitUntilEndOfZOS
 
 void Commands::printCurrentPosition()
 {
@@ -343,6 +363,18 @@ void Commands::printTemperatures(bool showRaw)
         }
     }
 #endif // NUM_EXTRUDER
+
+#if RESERVE_ANALOG_INPUTS
+	TemperatureController* act = &optTempController;			
+	act->updateCurrentTemperature();
+    Com::printF(Com::tSpaceT, RESERVE_SENSOR_INDEX);			
+    Com::printF(Com::tColon,act->currentTemperatureC);	
+#endif // RESERVE_ANALOG_INPUTS
+
+#if FEATURE_PRINT_PRESSURE
+	Com::printF(Com::tF);
+	Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
+#endif //FEATURE_PRINT_PRESSURE
 
     Com::println();
 
@@ -744,7 +776,7 @@ void Commands::executeGCode(GCode *com)
             {
 				GCode::readFromSerial();
                 Commands::checkForPeriodicalActions();
-				GCode::keepAlive( Processing );
+		GCode::keepAlive( Processing );
             }
             break;
 		}
@@ -1397,7 +1429,7 @@ void Commands::executeGCode(GCode *com)
 			}
 		    case 99:	// M99 S<time>
             {
-                millis_t wait = 10000;
+                millis_t wait = 10000L;
                 if(com->hasS())
                     wait = 1000*com->S;
                 if(com->hasX())
@@ -1412,9 +1444,9 @@ void Commands::executeGCode(GCode *com)
 				debugWaitLoop = 2;
 #endif // DEBUG_PRINT
 
-                while(wait-HAL::timeInMilliseconds() < 100000)
-				{
-					Printer::defaultLoopActions();
+                while(wait-HAL::timeInMilliseconds() < 100000L)
+		{
+			Printer::defaultLoopActions();
                 }
                 if(com->hasX())
                     Printer::enableXStepper();
@@ -1735,10 +1767,28 @@ void Commands::executeGCode(GCode *com)
 				break;
 			}
 #endif // USE_ADVANCE
-
+#if FEATURE_CASE_LIGHT
+// Idee und Teilcode und Vorarbeit von WESSIX 
+			//Code schaltet X19, nicht zwingend das licht! 
+		        case 355: // M355  - Turn case light on/off / Turn X19 on and off.
+			 	if(com->hasS()){
+					if(com->S == 1 || com->S == 0){
+						Printer::enableCaseLight = com->S;
+					}else{
+	            				Com::printFLN(PSTR("M355 Param Error S=0||1"));
+					}
+				}else{
+			    		if( Printer::enableCaseLight )  Printer::enableCaseLight = 0;
+			    		else Printer::enableCaseLight = 1;
+				}
+				WRITE(CASE_LIGHT_PIN, Printer::enableCaseLight);
+	            		Com::printFLN(PSTR("M355: X19 set to "),Printer::enableCaseLight);
+				break;
+// Ende Idee und Teilcode von WESSIX 
+#endif // FEATURE_CASE_LIGHT
 			case 400:	// M400 - Finish all moves
 			{
-	            Commands::waitUntilEndOfAllMoves();
+	            		Commands::waitUntilEndOfAllMoves();
 		        break;
 			}
 
@@ -1757,7 +1807,6 @@ void Commands::executeGCode(GCode *com)
 
 			case 908:	// M908 - Control digital trimpot directly.
 			{
-				uint8_t channel,current;
 				if(com->hasP() && com->hasS())
 					setMotorCurrent((uint8_t)com->P, (unsigned int)com->S);
 		        break;

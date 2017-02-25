@@ -1,15 +1,115 @@
-V RF.01.37 (2017-01-20)
+V RF.01.37e.mod (2017-02-20)
+- Added better error description to mhier scan. (Text and http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016)
+
+V RF.01.37e.mod (2017-02-16)
+- Added Thermistor "NTC 3950 100k Ohm" as table 15 (good fit) / table 14 (not as good fit)
+- Added Thermistor "PT100 E3D" as table 13
+- Added RF2000 RESERVE_ANALOG_INPUTS=1 to ANALOG_INPUTS
+- Added RF2000 reserve sensor to printTemperatures() (choosing RESERVE_ANALOG_SENSOR_TYPE 15)
+- Added M3941 to show reserve temperature
+
+V RF.01.37e.mod (2017-02-14)
+- changed HEAT_BED_SCAN_DOWN_FAST_STEPS from 0.25 to 0.5mm to avoid scan aborted on 25Â°C-Scans.
+
+V RF.01.37e.mod (2017-02-13)
+- Increased SilentMode stepper amps for x,y by +10%
+- Increased M3909's standard max offset to 180 um
+- Increased M3909's max offset configuration limit to 300 um
+
+V RF.01.37e.mod (2017-02-07)
+- Fixed German Language error, thx Hobbyprinter
+- Added M3920 to lower Stepper Amp (experimental noise fix)
+- Fixed Display of Max-Digits within modmenu @RF1000, thx Wessix
+
+V RF.01.37d.mod (2017-02-06)
+- rearranged some Menu-Structure
+- Changed the RF2000-Location for RGB-Light to ->Configuration->General
+- Changed the Location of Preheat PLA and Preheat ABS to ->Extruder
+- Changed other Details in Menu
+- Added ZOS (mhiers Z-Offset-Scan) to ->Configuration->Z-Configuration
+- The ZOS (mhiers Z-Offset-Scan) now shows the minimal Z-Matrix-Offset on the printers display in row 4 after the scan
+
+V RF.01.37c.mod (2017-02-04)
+- Left-Right-Buttons will now change the M3909 Digits-Limit on the fly, when Z-Compensation is active. This will turn the function on and off as well. (really nice feature to adjust while printing the first Layer)
+- New Button_Sounds for "Mod Menu" (against Function-Mixup)
+- Some little fixes and improvements
+- Changed details on Feature "SensibleViscosity" -> M3939
+- Added Functionality for M3939.
+- Added quite undocumented M3940 for experimental use to see how a too close Nozzle affects material flow and therefore digits.
+
+V RF.01.37b.mod (2017-01-31)
+- Some little fixes 
+- Added new Feature "SensibleViscosity" -> M3939
+
+V RF.01.37.mod (2017-01-25)
+- Some bugfixes
+- Within the last updates the Printer got a new menu (page 2), wherein you can easily change the Z-Offset and controll the SenseOffset according your needs on the printers digital screen. This is called "Mod Menu"
+- Within the "Mod Menu" you can alter your printing speed with the Extrude and Retract-Buttons.
+- Within the "Mod Menu" you can alter your Z-Offset and easily push SenseOffset to your Z-Offset with the Z-Up and Z-Down Button.
+[At this point I get flawless results and total controll on the first layers height! Even if thermal expansion is still happening.]
+
+V RF.01.37.mod (2017-01-20) pulling changes to mod: https://github.com/RF1000/Repetier-Firmware/commit/fcfd9b8c11d85a5099f675351aae3502d67d1738
 - On some boards the watchdog could fire during the startup of the firmware, in which case the firmware ended in an endless restart loop.
-- M116 uses TEMP_TOLERANCE instead of "1" in order to judge whether the target temperature has been reached.
 - The PWM speed for the fan of the RF1000 has been changed from 122 Hz to 15 Hz.
   - The PWM speed for the fan of the RF2000 remains unchanged at 122 Hz.
 - Directly after the start of the firmware, wrong values could be shown for the current temperatures of the heat bed and of the extruder.
 - After a restart of the firmware, the menu of the RF2000 could show that the 230 V plug is on although it is always turned off during the start of the firmware.
 
-V RF.01.35 (2016-12-23)
+V RF.01.35d.mod (2017-01-16)
+- added a new Feature called "SensiblePressure" 
+It is a pressure-sense-function ment for the first layer. Wessix told me about this idea.
+Syntax: M3909 P[max.digits] S[max.offset]
+The printer will adjust the heat-bed if z < g_minZCompensationSteps, whenever the digits rise atop [max.digits]. 
+The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). the adjustment will not violate the [max.offset] restriction in order to avoid  unwanted offsets (not caused by too close nozzle).
+When choosing [max.digits] you should already know how much digits your printer normally has (Same Material, same Temperatures) and then add some 20%+.
+When the z-Compensation gets deactivated the pressure-sense-function is deactivated as well.
+Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.
+You cannot activate the Feature if zCompensation is not active already.
+
+- M3902 Z-0.02 ;will add an offset to the zMatrix
+- M3902 R1 ;will now repair/smoothen the zMatrix at its lowest extrema (change of syntax)
+- M3902 S2 ;will save the currently chosen (see M3009) zMatrix to "zMatrix-2" in EEPROM
+- added volatile Markers to variable definitions on several variables which could be changed by an interrupt.
+- see http://barrgroup.com/Embedded-Systems/How-To/C-Volatile-Keyword
+
+V RF.01.35c.mod
+- ZOS-Bugfix
+- Message Cleanup for ZOS
+- Sidejob-and-Wait-Strategy for ZOS
+- Included StarTonys Fan-Mod http://www.rf1000.de/viewtopic.php?f=7&t=1638
+
+V RF.01.35c
+- Changed ZOS Strategy to a "switch"-Type triggered by loopRF for better communication.
+- ZOS Message cleanup
+- ZOS now reloads Matrix on +z-Matrix-Entry
+- Fixed almost all Compiler-Warnings
+- Fixed missing Init-Value fÃ¼r "enable" in Extruder::
+
+V RF.01.35b
+- Fix for several compiler warnings and wrong init-values.
+- Fix for several //comments after #defines
+- Fix for several redeclarations of #defines
+
+V RF.01.35a
+- Fix fÃ¼r pins.h according to rf_42
+- Source: http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16000
+
+V RF.01.35 (2016-12-23) by RF1000
 - In case the heat bed scan is started and the extruder is warmer than the target temperature, the firmware waits until the extruder has cooled down.
 - Review of all calls to the watchdog in order to avoid situations where the heaters could remain constantly on because of a hang of the firmware.
 - "Printer Ready" could be shown too early (= at any moment in the middle of the printing). Typically this information was shown only for a short moment of time.
+
+V RF.01.33 mod_c by Nibbels
+- Added M3903 S[Temp] P[s] for a stepwise HeatBed target temperature decrease
+
+V RF.01.33 mod by mhier
+- Z-Scan to compensate Offset for RF1000 by mhier
+- merge of RF1000 to RF2000 by Nibbels
+- Added Parameters to add offsets to existing zMatrix by Nibbels
+- Added Parameter to give more weight to added near offsets by Nibbels
+- Added M3902 for fixing bad headbeds with holes by Nibbels
+- Added M3901 for G-Code configuration of mhier's scan by Nibbels
+- fixed M116's temperature range. (@2017-01-20 pulled by RF1000 to official 1.37)
 
 V RF.01.33 (2016-08-17)
 - The emergency stop because of too high pressure values from the strain gauge stops all axes (instead of only the z-axis) now.
@@ -75,7 +175,7 @@ V RF.01.21 (2016-05-18)
 - The maximal length in x direction has been changed to 230 mm for the milling mode.
 - M3006 and M3146 support the Z parameter now which allows to configure the static z-offset in [mm].
 - M3007 and M3008 support the Z parameter now which allows to configure the z-compensation scope in [mm].
-- The codepage of all .cpp and .h files has been changed so that also characters like ° and µ can be used without warnings from the Arduino IDE.
+- The codepage of all .cpp and .h files has been changed so that also characters like Â° and Âµ can be used without warnings from the Arduino IDE.
 - Improved description of all RF-specific M-codes within RF.h.
 - M3013 P1 and M3153 P1 can be used now in order to output the z-offsets from the current z-compensation matrix in [mm] (instead of the default unit [steps]).
 - The firmware has sent "Start" via USB instead of "start" after its startup, which could cause problems with applications like OctoPrint.
@@ -131,7 +231,7 @@ V RF.01.10 (2015-12-14)
   - The speed of x/y/z movements which are performed via the hardware buttons and via the menu has been improved.
   - In case "Unload Filament" or "Load Filament" are called via the menu and the extruder is cold at the moment, the extruder is heated up before the requested operation is performed.
   - The minimal and maximal strain gauge digits which trigger the emergency pause can be configured via M3075 Ss Pp now.
-  - The status text could show "Heating Extruder" even in case the setpoint temperature after M109 was 0°.
+  - The status text could show "Heating Extruder" even in case the setpoint temperature after M109 was 0Â°.
   - The "Position Extruder" menu items could allow to move the cold extruder.
   - The two present "Position Z" menus could show a slightly different behavior when the Z position was close to the z-max endstop.
   - In case the z-max endstop is reached through a manual movement of the z-axis (either via the hardware buttons or via the menu), the z axis moves a short distance upwards automatically in order to free the z-endstop again.
@@ -171,7 +271,7 @@ V 0.91.59 (2015-08-21)
 
 V 0.91.57 (2015-08-13)
 - Changing of the precision of the xxx_STEPS_PER_MM from long to float.
-- Changing of MIN_EXTRUDER_TEMP from 160 to 120 °C (because a temperature of 120 °C can be used perfectly in order to remove/pull out the filament from the extruder).
+- Changing of MIN_EXTRUDER_TEMP from 160 to 120 Â°C (because a temperature of 120 Â°C can be used perfectly in order to remove/pull out the filament from the extruder).
 - Adding of the AUTOMATIC_EEPROM_UPDATE, which allows to choose whether the EEPROM shall be updated directly after each change within the menu or only after "Store to EEPROM" has been called.
 - Redefinition of SUPPORT_CURA to ALLOW_EXTENDED_COMMUNICATION.
   - Via this new define, all non-standard communication/messages from the firmware to the USB host can be disabled. Some applications/print servers may require to disable these non-standard messages.
@@ -206,7 +306,7 @@ V 0.91.53 (2015-02-25)
 - Improved clean-up after the end/abort of a print from the SD card.
   - Previous versions of the firmware might have performed a small additional move into x and/or y-direction after the output of the object.
 - In case the to-be-processed G-code from the SD card contained a non-ASCII character, the interpreter could switch from ASCII to binary - and as a result, it was not able to interpret the following G-code(s) properly.
-- All micro (µ) signs have been replaced through a standard-u in order to avoid problems which occurred at some platforms.
+- All micro (Âµ) signs have been replaced through a standard-u in order to avoid problems which occurred at some platforms.
 - Removing of the support for M26, M92 and M251.
 - M30 (delete file) can not be used anymore while the printing/milling from the SD card is in progress.
 - Pausing via the menu of the RF1000 now works in the same way as the pausing via the hardware buttons.
@@ -242,7 +342,7 @@ V 0.91.49 (2014-12-22)
   - In operating mode "mill", the "Find Z=0" menu item can be used in order move the work bed upwards automatically until the current work part hits the current tool.
   - This position is used in order to set the origin in z-direction (Z=0).
   - FIND_Z_ORIGIN_SCRIPT can be used in order to configure a series of G-codes which is executed after the z-origin has been found.
- - Adding of M3006, which allows to specify the manual z-offset in [µm].
+ - Adding of M3006, which allows to specify the manual z-offset in [Âµm].
   - M3004 has been discarded (it allowed to specify the manual z-offset in [steps] previously).
 - Adding of M3130, which allows to start/stop the search of the z-origin.
   - Calling of M3130 is identical to call of "Find Z=0" from the menu of the RF1000.

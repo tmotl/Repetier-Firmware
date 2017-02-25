@@ -537,7 +537,7 @@ void PrintLine::calculateQueueMove(float axis_diff[],uint8_t pathOptimize)
         float advlin = fabs(speedE)*Extruder::current->advanceL*0.001*Printer::axisStepsPerMM[E_AXIS];
         advanceL = (uint16_t)((65536L*advlin)/vMax);						// advanceLscaled = (65536*vE*k2)/vMax
 
-#ifdef ENABLE_QUADRATIC_ADVANCE;
+#ifdef ENABLE_QUADRATIC_ADVANCE
         advanceFull = 65536*Extruder::current->advanceK * speedE * speedE;	// Steps*65536 at full speed
         long steps = (HAL::U16SquaredToU32(vMax))/(accelerationPrim<<1);	// v^2/(2*a) = steps needed to accelerate from 0-vMax
         advanceRate = advanceFull/steps;
@@ -758,7 +758,7 @@ void PrintLine::calculateDirectMove(float axis_diff[],uint8_t pathOptimize)
     {
         float advlin = fabs(speedE)*Extruder::current->advanceL*0.001*Printer::axisStepsPerMM[E_AXIS];
         advanceL = (uint16_t)((65536L*advlin)/vMax);						// advanceLscaled = (65536*vE*k2)/vMax
-#ifdef ENABLE_QUADRATIC_ADVANCE;
+#ifdef ENABLE_QUADRATIC_ADVANCE
         advanceFull = 65536*Extruder::current->advanceK * speedE * speedE;	// Steps*65536 at full speed
         long steps = (HAL::U16SquaredToU32(vMax))/(accelerationPrim<<1);	// v^2/(2*a) = steps needed to accelerate from 0-vMax
         advanceRate = advanceFull/steps;
@@ -853,7 +853,7 @@ void PrintLine::updateTrapezoids()
 	}
 
     // Now ignore enough segments to gain enough time for path planning
-    int32_t timeleft = 0;
+    millis_t timeleft = 0;
 
     // Skip as many stored moves as needed to gain enough time for computation
     millis_t minTime = 4500L * RMath::min(MOVE_CACHE_SIZE,10);
@@ -1008,11 +1008,11 @@ void PrintLine::updateStepsParameter()
 #endif // ENABLE_QUADRATIC_ADVANCE
 #endif // USE_ADVANCE
 
-    if(accelSteps+decelSteps >= stepsRemaining)		// can't reach limit speed
+    if(static_cast<int32_t>(accelSteps + decelSteps) >= stepsRemaining)		// can't reach limit speed
     {
-        uint16_t red = (accelSteps+decelSteps + 2 - stepsRemaining) >> 1;
-        accelSteps = accelSteps-RMath::min(accelSteps,red);
-        decelSteps = decelSteps-RMath::min(decelSteps,red);
+        uint32_t red = (accelSteps + decelSteps - stepsRemaining) >> 1;
+        accelSteps = accelSteps - RMath::min(static_cast<int32_t>(accelSteps), static_cast<int32_t>(red));
+        decelSteps = decelSteps - RMath::min(static_cast<int32_t>(decelSteps), static_cast<int32_t>(red));
     }
     setParameterUpToDate();
 
@@ -1092,7 +1092,7 @@ void PrintLine::forwardPlanner(uint8_t first)
 {
     PrintLine *act;
     PrintLine *next = &lines[first];
-    float vmaxRight;
+    //float vmaxRight;
     float leftSpeed = next->startSpeed;
 
 
@@ -1249,7 +1249,7 @@ void PrintLine::waitForXFreeLines(uint8_t b)
 {
     while(linesCount+b>MOVE_CACHE_SIZE)		// wait for a free entry in movement cache
     {
-		GCode::readFromSerial();
+	GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
     }
 
@@ -1280,16 +1280,16 @@ void PrintLine::arc(float *position, float *target, float *offset, float radius,
     // plan_set_acceleration_manager_enabled(false); // disable acceleration management for the duration of the arc
     float center_axis0 = position[0] + offset[0];
     float center_axis1 = position[1] + offset[1];
-    float linear_travel = 0;				// target[axis_linear] - position[axis_linear];
+    //float linear_travel = 0;				// target[axis_linear] - position[axis_linear];
     float extruder_travel = (Printer::queuePositionTargetSteps[E_AXIS]-Printer::queuePositionLastSteps[E_AXIS])*Printer::invAxisStepsPerMM[E_AXIS];
     float r_axis0 = -offset[0];				// Radius vector from center to current location
     float r_axis1 = -offset[1];
     float rt_axis0 = target[0] - center_axis0;
     float rt_axis1 = target[1] - center_axis1;
-    long xtarget = Printer::queuePositionTargetSteps[X_AXIS];
-    long ytarget = Printer::queuePositionTargetSteps[Y_AXIS];
-    long ztarget = Printer::queuePositionTargetSteps[Z_AXIS];
-    long etarget = Printer::queuePositionTargetSteps[E_AXIS];
+    //long xtarget = Printer::queuePositionTargetSteps[X_AXIS];
+    //long ytarget = Printer::queuePositionTargetSteps[Y_AXIS];
+    //long ztarget = Printer::queuePositionTargetSteps[Z_AXIS];
+    //long etarget = Printer::queuePositionTargetSteps[E_AXIS];
 
     // CCW angle between position and target from circle center. Only one atan2() trig computation required.
     float angular_travel = atan2(r_axis0*rt_axis1-r_axis1*rt_axis0, r_axis0*rt_axis0+r_axis1*rt_axis1);
@@ -1320,7 +1320,7 @@ void PrintLine::arc(float *position, float *target, float *offset, float radius,
       if (invert_feed_rate) { feed_rate *= segments; }
     */
     float theta_per_segment = angular_travel/segments;
-    float linear_per_segment = linear_travel/segments;
+    //float linear_per_segment = linear_travel/segments;
     float extruder_per_segment = extruder_travel/segments;
 
     /* Vector rotation by transformation matrix: r is the original vector, r_T is the rotated vector,
@@ -1412,7 +1412,7 @@ void PrintLine::arc(float *position, float *target, float *offset, float radius,
 /**
   Processes the moves from the queue and moves the stepper motors one step. If the last step is reached, the next movement from the queue is started.
   The function must be called from a timer loop. It returns the time for the next call. */
-long queueError;
+volatile long queueError;
 long PrintLine::performQueueMove()
 {
 	if(cur == NULL)
@@ -2349,7 +2349,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 		if( Printer::operatingMode == OPERATING_MODE_PRINT )
 		{
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-			if( g_nHeatBedScanStatus )
+			if( g_nHeatBedScanStatus || g_ZOSScanStatus )
 			{
 				// we are not idle because the heat bed scan is going on at the moment
 				nIdle = 0;
@@ -2368,7 +2368,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 		}
 #else
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-		if( g_nHeatBedScanStatus )
+		if( g_nHeatBedScanStatus || g_ZOSScanStatus )
 		{
 			// we are not idle because the heat bed scan is going on at the moment
 			nIdle = 0;

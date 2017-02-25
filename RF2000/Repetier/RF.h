@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -56,6 +56,8 @@
 
 #define UI_ACTION_RF_MAX_SINGLE				1600
 
+//Nibbels 
+#define	UI_ACTION_RF_DO_MHIER_BED_SCAN		1550 
 
 /*
 // ##########################################################################################
@@ -565,6 +567,8 @@ extern const char	ui_text_sensor_error[]			PROGMEM;
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
 
+extern	unsigned long	g_uLastCommandLoop;
+extern	unsigned long	g_uStartOfIdle;
 
 extern	unsigned long	g_uLastCommandLoop;
 extern	unsigned long	g_uStartOfIdle;
@@ -574,10 +578,19 @@ extern	long			g_offsetZCompensationSteps;	// this is the minimal distance betwee
 extern	long			g_minZCompensationSteps;
 extern	long			g_maxZCompensationSteps;
 extern	long			g_diffZCompensationSteps;
-extern	unsigned char	g_nHeatBedScanStatus;
+extern	volatile unsigned char	g_nHeatBedScanStatus;
 extern	char			g_nActiveHeatBed;
+//ZOS:
+extern	volatile unsigned char	g_ZOSScanStatus;
+extern	long			g_ZOSTestPoint[2];
+extern	float			g_ZOSlearningRate;
+extern	float			g_ZOSlearningGradient;
+extern	long			g_min_nZScanZPosition;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
+#if FEATURE_SILENT_MODE
+extern	char			g_nSilentMode;
+#endif // FEATURE_SILENT_MODE
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
 extern	char			g_nWorkPartScanStatus;
@@ -593,7 +606,7 @@ extern	unsigned char	g_uZMatrixMax[2];
 extern	long			g_nZScanZPosition;
 
 #if FEATURE_PRECISE_HEAT_BED_SCAN
-extern	char			g_nHeatBedScanMode;			// 1 = PLA, 2 = ABS
+extern	char			g_nHeatBedScanMode;			// 0 = oldScan, 1 = PLA, 2 = ABS
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
 extern	long			g_nScanXStepSizeMm;
@@ -625,30 +638,39 @@ extern	unsigned long	g_nManualSteps[4];
 
 #if FEATURE_PAUSE_PRINTING
 extern	long			g_nPauseSteps[4];
-extern	long			g_nContinueSteps[4];
-extern	char			g_pauseStatus;
-extern	char			g_pauseMode;
-extern	unsigned long	g_uPauseTime;
-extern	char			g_pauseBeepDone;
+extern	volatile long	g_nContinueSteps[4];
+extern	volatile char	g_pauseStatus;
+extern	volatile char	g_pauseMode;
+extern	volatile unsigned long	g_uPauseTime;
+extern	volatile char	g_pauseBeepDone;
 #endif // FEATURE_PAUSE_PRINTING
 
+#if FEATURE_SENSIBLE_PRESSURE
+/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
+extern long				g_nSensiblePressureSum;
+extern char				g_nSensiblePressureChecks;
+extern short			g_nSensiblePressureDigits;
+extern short			g_nSensiblePressureOffsetMax;
+extern short			g_nSensiblePressureOffset;
+extern short 			g_nSensibleLastPressure;
+#endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_FIND_Z_ORIGIN
-extern	char			g_nFindZOriginStatus;
+extern	volatile char	g_nFindZOriginStatus;
 extern	long			g_nZOriginPosition[3];
 extern	int				g_nZOriginSet;
 #endif // FEATURE_FIND_Z_ORIGIN
 
 
 #if FEATURE_TEST_STRAIN_GAUGE
-extern	char			g_nTestStrainGaugeStatus;
+extern	volatile char	g_nTestStrainGaugeStatus;
 #endif // FEATURE_TEST_STRAIN_GAUGE
 
 
 #if DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
-extern	long			g_nLastZCompensationPositionSteps[3];
-extern	long			g_nLastZCompensationTargetStepsZ;
-extern	long			g_nZCompensationUpdates;
+extern	volatile long	g_nLastZCompensationPositionSteps[3];
+extern	volatile long	g_nLastZCompensationTargetStepsZ;
+extern	volatile long	g_nZCompensationUpdates;
 extern	long			g_nDelta[2];
 extern	long			g_nStepSize[2];
 extern	long			g_nTempXFront;
@@ -659,7 +681,7 @@ extern	short			g_nMatrix[4];
 extern	long			g_nZDeltaMin;
 extern	long			g_nZDeltaMax;
 extern	long			g_nZCompensationUpdateTime;
-extern	long			g_nZCompensationDelayMax;
+extern volatile long	g_nZCompensationDelayMax;
 extern	long			g_nTooFast;
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION || DEBUG_WORK_PART_Z_COMPENSATION
 
@@ -680,9 +702,9 @@ extern unsigned char	g_uRGBIdleB;
 extern unsigned char	g_uRGBManualR;
 extern unsigned char	g_uRGBManualG;
 extern unsigned char	g_uRGBManualB;
-extern unsigned char	g_uRGBCurrentR;
-extern unsigned char	g_uRGBCurrentG;
-extern unsigned char	g_uRGBCurrentB;
+extern volatile unsigned char	g_uRGBCurrentR;
+extern volatile unsigned char	g_uRGBCurrentG;
+extern volatile unsigned char	g_uRGBCurrentB;
 extern unsigned char	g_uRGBTargetR;
 extern unsigned char	g_uRGBTargetG;
 extern unsigned char	g_uRGBTargetB;
@@ -704,6 +726,13 @@ extern void startHeatBedScan( void );
 
 // scanHeatBed()
 extern void scanHeatBed( void );
+
+// searchZOScan()
+extern void startZOScan( void );
+extern void searchZOScan( void );
+
+// abortSearchHeatBedZOffset()
+extern void abortSearchHeatBedZOffset( void );
 
 // testExtruderTemperature()
 extern short testExtruderTemperature( void );
@@ -751,16 +780,16 @@ extern short testIdlePressure( void );
 extern short readAveragePressure( short* pnAveragePressure );
 
 // moveZUpFast()
-extern short moveZUpFast( void );
+extern short moveZUpFast( bool execRunStandardTasks=true );
 
 // moveZDownSlow()
-extern short moveZDownSlow( void );
+extern short moveZDownSlow( bool execRunStandardTasks=true );
 
 // moveZUpSlow()
-extern short moveZUpSlow( short* pnContactPressure, char* pnRetry );
+extern short moveZUpSlow( short* pnContactPressure, bool execRunStandardTasks=true );
 
 // moveZDownFast()
-extern short moveZDownFast( void );
+extern short moveZDownFast( bool execRunStandardTasks=true );
 
 // moveZ()
 extern int moveZ( int nSteps );

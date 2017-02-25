@@ -23,13 +23,19 @@
 // this file contains all definitions which are specific to the RF1000 hardware
 #define UI_PRINTER_NAME						"RF1000"
 
+// ##########################################################################################
+// ##	Nibbels Kram Config
+// ##########################################################################################
+
+#define	FEATURE_BEDTEMP_DECREASE				1													// 1 = on, 0 = off
+#define	FEATURE_SILENT_MODE						1													// 1 = on, 0 = off activate with GCode -> Switch Stepper Current to Silent Profile
 
 // ##########################################################################################
 // ##	main hardware configuration
 // ##########################################################################################
 
 /** \brief Allows to use the device for milling */
-#define	FEATURE_MILLING_MODE				1													// 1 = on, 0 = off
+#define	FEATURE_MILLING_MODE				0													// 1 = on, 0 = off
 
 
 #if FEATURE_MILLING_MODE
@@ -372,8 +378,8 @@ The codes are only executed for multiple extruder when changing the extruder. */
 // ##	Configuration of the 2. extruder
 // ##########################################################################################
 
-#define EXT1_X_OFFSET						(33.9 * XAXIS_STEPS_PER_MM)		// [steps]
-#define EXT1_Y_OFFSET						( 0.1 * YAXIS_STEPS_PER_MM)		// [steps]
+#define EXT1_X_OFFSET						(int32_t)(33.9 * XAXIS_STEPS_PER_MM)		// [steps]
+#define EXT1_Y_OFFSET						(int32_t)( 0.1 * YAXIS_STEPS_PER_MM)		// [steps]
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
 #define EXT1_STEPS_PER_MM					(8.75 * RF_MICRO_STEPS)
@@ -696,6 +702,7 @@ can set it on for safety. */
 
 /** \brief Motor Current setting */
 #define MOTOR_CURRENT						{150,150,126,126,126}								// Values 0-255 (126 = ~2A), order: driver 1 (x), driver 2 (y), driver 3 (z), driver 4 (extruder 1), driver 5 (reserved)
+#define MOTOR_CURRENT_SILENT				{110,110,90,90,90}
 
 /** \brief number of analog input signals. Normally 1 for each temperature sensor */
 #define ANALOG_INPUTS (EXT0_ANALOG_INPUTS+EXT1_ANALOG_INPUTS+BED_ANALOG_INPUTS)
@@ -1019,7 +1026,7 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_UP_FAST_STEPS				long(-ZAXIS_STEPS_PER_MM / 40)											// [steps]
 #define HEAT_BED_SCAN_UP_SLOW_STEPS				long(-ZAXIS_STEPS_PER_MM / 200)											// [steps]
 #define HEAT_BED_SCAN_DOWN_SLOW_STEPS			long(ZAXIS_STEPS_PER_MM / 80)											// [steps]
-#define HEAT_BED_SCAN_DOWN_FAST_STEPS			long(ZAXIS_STEPS_PER_MM / 4)											// [steps]
+#define HEAT_BED_SCAN_DOWN_FAST_STEPS			long(ZAXIS_STEPS_PER_MM / 2)											// [steps]
 #define	HEAT_BED_SCAN_FAST_STEP_DELAY_MS		5																		// [ms]
 #define	HEAT_BED_SCAN_SLOW_STEP_DELAY_MS		100																		// [ms]
 #define HEAT_BED_SCAN_IDLE_DELAY_MS				250																		// [ms]

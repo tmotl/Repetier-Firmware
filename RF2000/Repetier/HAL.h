@@ -116,6 +116,8 @@ typedef uint8_t		flag8_t;
   Modified to use only 1 queue with fixed length by Repetier
 */
 
+#undef SERIAL_RX_BUFFER_SIZE
+//undef fix gegen compiler warning   
 #define SERIAL_RX_BUFFER_SIZE	128
 #define SERIAL_RX_BUFFER_MASK	127
 #define SERIAL_TX_BUFFER_SIZE	 64
@@ -574,13 +576,11 @@ public:
     static inline void allowInterrupts()
     {
         sei();
-
     } // allowInterrupts
 
     static inline void forbidInterrupts()
     {
         cli();
-
 	} // forbidInterrupts
 
     static inline unsigned long timeInMilliseconds()

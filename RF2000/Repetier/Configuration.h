@@ -68,13 +68,6 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Enables automatic compensation in z direction for the operationg mode "print" */
 #define FEATURE_HEAT_BED_Z_COMPENSATION		1													// 1 = on, 0 = off
 
-/** \brief Enables the precise heat bed scan */
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-
-#define FEATURE_PRECISE_HEAT_BED_SCAN		1													// 1 = on, 0 = off
-
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
 /** \brief Allows/disallows to override Z-min via G0 and G1 */
 #define FEATURE_Z_MIN_OVERRIDE_VIA_GCODE	1													// 1 = on, 0 = off
 
@@ -90,6 +83,32 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #define FEATURE_EMERGENCY_PAUSE				1													// 1 = on, 0 = off
 
 #endif // FEATURE_PAUSE_PRINTING
+
+/** \brief Enables the precise heat bed scan */
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+
+// 1 = on, 0 = off
+#define FEATURE_PRECISE_HEAT_BED_SCAN		1
+
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+/** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
+#if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
+// 1 = on, 0 = off
+#define FEATURE_SENSIBLE_PRESSURE		1
+// Max lift in [um]; Standard: 150um=0,15mm, darf nie 0 sein!! größer 0.2 macht normal keinen Sinn.
+#define FEATURE_PRINT_PRESSURE			1
+													
+#if FEATURE_SENSIBLE_PRESSURE
+	#define	SENSIBLE_PRESSURE_DIGIT_CHECKS				10										// MAximal auf 127 stellen, denn das wir mit char verglichen!!
+	//nachfolgend soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
+	#define	SENSIBLE_PRESSURE_MAX_OFFSET				180		
+#endif // FEATURE_SENSIBLE_PRESSURE
+
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
+
+/** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
+#define	Z_OFFSET_BUTTON_STEPS		5
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE	0													// 1 = on, 0 = off
@@ -152,8 +171,8 @@ is always running and is not hung up for some unknown reason. */
 /** \brief Allows to use the service interval */
 #define	FEATURE_SERVICE_INTERVAL			0													// 1 = on, 0 = off
 
-/** \brief Allows to use the case light */
-#define FEATURE_CASE_LIGHT					0													// 1 = on, 0 = off
+/** \brief Allows to use the case light @ X19 */
+#define FEATURE_CASE_LIGHT					1													// 1 = on, 0 = off
 
 /** \brief Allows to control up to 3 servos
 Servos are controlled by a pulse width normally between 500 and 2500 with 1500ms in center position. 0 turns servo off.
@@ -177,7 +196,7 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 // ##########################################################################################
 
 /** \brief Enables debug outputs which are used mainly for the development */
-#define DEBUG_SHOW_DEVELOPMENT_LOGS			0													// 1 = on, 0 = off
+#define DEBUG_SHOW_DEVELOPMENT_LOGS			1													// 1 = on, 0 = off
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION 
@@ -186,7 +205,7 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 #define DEBUG_HEAT_BED_Z_COMPENSATION		0													// 1 = on, 0 = off
 
 /** \brief Enables debug outputs from the heat bed scan */
-#define DEBUG_HEAT_BED_SCAN					0													// 0 = off, 1 = on, 2 = on with more debug outputs
+#define DEBUG_HEAT_BED_SCAN					2													// 0 = off, 1 = on, 2 = on with more debug outputs
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -681,7 +700,7 @@ Values must be in range 1..255 */
 #define	BEEPER_ACCEPT_SET_POSITION_SEQUENCE		100,2
 #define	BEEPER_SERVICE_INTERVALL_SEQUNCE		100,3
 #define	BEEPER_ALIGN_EXTRUDERS_SEQUNCE			50,5
-#define BEEPER_WRONG_FIRMWARE_SEQUNCE			1000,4
+#define BEEPER_WRONG_FIRMWARE_SEQUNCE			255,16
 
 /** \brief Values used for preheat */
 #define UI_SET_PRESET_HEATED_BED_TEMP_PLA	60
@@ -702,7 +721,7 @@ Values must be in range 1..255 */
 #define UI_SET_EXTRUDER_RETRACT_DISTANCE	3													// [mm]
 #define COOLDOWN_THRESHOLD					40													// [°C]
 
-#define	SHOW_DEBUGGING_MENU					0													// 1 = show, 0 = hide
+#define	SHOW_DEBUGGING_MENU					1													// 1 = show, 0 = hide
 
 #define SPEED_MIN_MILLIS					300
 #define SPEED_MAX_MILLIS					50
@@ -800,7 +819,7 @@ we use blocks of 2 kByte size for the structure of our EEPROM
 #if FEATURE_ENABLE_Z_SAFETY
 
 /** \brief Specifies the maximal steps which can be moved into z-direction after the z-endstop has been reached */
-#define	Z_OVERRIDE_MAX						(ZAXIS_STEPS_PER_MM / 2)
+#define	Z_OVERRIDE_MAX						(ZAXIS_STEPS_PER_MM * 1)
 
 #endif // FEATURE_ENABLE_Z_SAFETY
 
@@ -846,7 +865,7 @@ The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it 
 
 /** \brief The display shows that the device is idle after no new commands were processed for longer than the minimal idle time */
 #define	MINIMAL_IDLE_TIME					500													// [ms]
-
+	
 /** \brief If enabled you can select the distance your filament gets retracted during a M140 command, after a given temperature is reached. */
 #define RETRACT_DURING_HEATUP				true
 
@@ -951,9 +970,9 @@ and it is elsewise difficult to know, what your reprap is currently doing. */
 #define CASE_FAN_ALWAYS_ON					0													// 1 = always on, 0 = automatic switching and switching via G-Code
 
 /** \brief Defines the default behavior of the Position X/Y/Z menus */
-#define DEFAULT_MOVE_MODE_X					MOVE_MODE_SINGLE_MOVE
-#define DEFAULT_MOVE_MODE_Y					MOVE_MODE_SINGLE_MOVE
-#define DEFAULT_MOVE_MODE_Z					MOVE_MODE_SINGLE_MOVE
+#define DEFAULT_MOVE_MODE_X					MOVE_MODE_SINGLE_STEPS
+#define DEFAULT_MOVE_MODE_Y					MOVE_MODE_SINGLE_STEPS
+#define DEFAULT_MOVE_MODE_Z					MOVE_MODE_SINGLE_STEPS
 
 /** \brief Defines the default z scale */
 #define DEFAULT_Z_SCALE_MODE				Z_VALUE_MODE_Z_MIN

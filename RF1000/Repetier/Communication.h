@@ -332,12 +332,12 @@ public:
 	static void printF(FSTRINGPARAM(text),const char *msg);
 	static void printF(FSTRINGPARAM(text),int32_t value);
 	static void printF(FSTRINGPARAM(text),uint32_t value);
-	static void printF(FSTRINGPARAM(text),float value,uint8_t digits=2);
+	static void printF(FSTRINGPARAM(text),float value,uint8_t digits=2,bool komma_as_dot=false);
 	static void printFLN(FSTRINGPARAM(text),int value);
 	static void printFLN(FSTRINGPARAM(text),int32_t value);
 	static void printFLN(FSTRINGPARAM(text),uint32_t value);
 	static void printFLN(FSTRINGPARAM(text),const char *msg);
-	static void printFLN(FSTRINGPARAM(text),float value,uint8_t digits=2);
+	static void printFLN(FSTRINGPARAM(text),float value,uint8_t digits=2,bool komma_as_dot=false);
 	static void printArrayFLN(FSTRINGPARAM(text),float *arr,uint8_t n=4,uint8_t digits=2);
 	static void printArrayFLN(FSTRINGPARAM(text),long *arr,uint8_t n=4);
 	static void print(long value);
@@ -345,7 +345,7 @@ public:
 	static inline void print(int value) {print((int32_t)value);}
 	static void print(const char *text);
 	static inline void print(char c) {HAL::serialWriteByte(c);}
-	static void printFloat(float number, uint8_t digits);
+	static void printFloat(float number, uint8_t digits, bool komma_as_dot=false);
 	static inline void println() {HAL::serialWriteByte('\r');HAL::serialWriteByte('\n');}
 
 }; // Com

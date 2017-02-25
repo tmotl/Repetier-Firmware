@@ -101,7 +101,7 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     int32_t		xOffset;
     int32_t		yOffset;
     float		stepsPerMM;					///< Steps per mm.
-    uint8_t		enablePin;					///< Pin to enable extruder stepper motor.
+    int8_t		enablePin;					///< Pin to enable extruder stepper motor.
     uint8_t		enableOn;
     float		maxFeedrate;				///< Maximum feedrate in mm/s.
     float		maxAcceleration;			///< Maximum acceleration in mm/s^2.
@@ -110,7 +110,7 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     int16_t		watchPeriod;				///< Time in seconds, a M109 command will wait to stabalize temperature
     int16_t		waitRetractTemperature;		///< Temperature to retract the filament when waiting for heatup
     int16_t		waitRetractUnits;			///< Units to retract the filament when waiting for heatup
-	int8_t		stepperDirection;
+	volatile int8_t	stepperDirection;
 
 #ifdef USE_ADVANCE
 #ifdef ENABLE_QUADRATIC_ADVANCE
@@ -400,7 +400,11 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 #endif // STEPPER_ON_DELAY
 
     } // enable
-
+#if  FEATURE_BEDTEMP_DECREASE
+  static uint8_t decreaseHeatedBedInterval;  ///< Current Decrease Interval (0..255s)
+  static uint32_t decreaseHeatedBedTimeStamp;   ///< Current Decrease last Timestamp
+  static float decreaseHeatedBedMinimum;   ///< Minimal Temp
+#endif // FEATURE_BEDTEMP_DECREASE
 
     static void manageTemperatures();
     static void disableCurrentExtruderMotor();
@@ -410,6 +414,9 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     static void initExtruder();
     static void initHeatedBed();
     static void setHeatedBedTemperature(float temp_celsius,bool beep = false);
+#if FEATURE_BEDTEMP_DECREASE
+	static void decreaseHeatedBedTemperature(float min_temperatureInCelsius);
+#endif // FEATURE_BEDTEMP_DECREASE
     static float getHeatedBedTemperature();
     static void setTemperatureForExtruder(float temp_celsius,uint8_t extr,bool beep = false);
 
@@ -422,6 +429,12 @@ extern TemperatureController heatedBedController;
 #else
 #define NUM_TEMPERATURE_LOOPS NUM_EXTRUDER
 #endif // HAVE_HEATED_BED
+
+#if RESERVE_ANALOG_INPUTS
+extern TemperatureController optTempController;
+#endif // RESERVE_ANALOG_INPUTS
+
+
 
 #define TEMP_INT_TO_FLOAT(temp)		((float)(temp)/(float)(1<<CELSIUS_EXTRA_BITS))
 #define TEMP_FLOAT_TO_INT(temp)		((int)((temp)*(1<<CELSIUS_EXTRA_BITS)))

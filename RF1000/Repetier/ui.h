@@ -146,6 +146,11 @@
 #define UI_ACTION_RIGHT						1129
 #define UI_ACTION_ZMODE						1130
 
+//Nibbels
+#define	UI_ACTION_FET1_OUTPUT				2001
+#define	UI_ACTION_FET2_OUTPUT				2002
+
+
 #define UI_ACTION_MENU_XPOS					4000
 #define UI_ACTION_MENU_YPOS					4001
 #define UI_ACTION_MENU_ZPOS					4002
@@ -207,7 +212,6 @@ extern	char	g_nYesNo;
 extern	char	g_nContinueButtonPressed;
 extern	char	g_nServiceRequest;
 extern	char	g_nPrinterReady;
-
 
 // Key codes
 #define UI_KEYS_INIT_CLICKENCODER_LOW(pinA,pinB)		SET_INPUT(pinA);SET_INPUT(pinB); PULLUP(pinA,HIGH);PULLUP(pinB,HIGH);
@@ -344,11 +348,11 @@ public:
     void*				messageLine2;
     void*				messageLine3;
     void*				messageLine4;
-    uint16_t			activeAction;				// action for ok/next/previous
-    uint16_t			lastAction;
+    int			activeAction;				// action for ok/next/previous
+    int			lastAction;
     millis_t			lastSwitch;					// Last time display switched pages
     millis_t			lastRefresh;
-    uint16_t			lastButtonAction;
+    int			lastButtonAction;
     millis_t			lastButtonStart;
     millis_t			nextRepeat;					// Time of next autorepeat
     millis_t			lastNextPrev;				// for increasing speed settings
@@ -423,7 +427,7 @@ void initializeLCD();
 #define UI_HAS_KEYS						  1		// 1 = Some keys attached
 #define UI_HAS_BACK_KEY					  1
 #define UI_DISPLAY_TYPE					  1		// 1 = LCD Display with 4 bit data bus
-#define UI_DISPLAY_CHARSET				  1
+//#define UI_DISPLAY_CHARSET				  1
 #define UI_COLS							 16
 #define UI_ROWS							  4
 #define UI_DELAYPERCHAR					320
@@ -471,7 +475,9 @@ void ui_check_keys(int &action)
 } // ui_check_keys
 
 inline void ui_check_slow_encoder() {}
-void ui_check_slow_keys(int &action) {}
+void ui_check_slow_keys(int &action) {
+	(void)action;
+}
 #endif // UI_MAIN
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 
@@ -480,7 +486,7 @@ void ui_check_slow_keys(int &action) {}
 #define UI_HAS_KEYS						  1		// 1 = Some keys attached
 #define UI_HAS_BACK_KEY					  1
 #define UI_DISPLAY_TYPE					  1		// 1 = LCD Display with 4 bit data bus
-#define UI_DISPLAY_CHARSET				  1
+//#define UI_DISPLAY_CHARSET				  1
 #define UI_COLS							 20
 #define UI_ROWS							  4
 #define UI_DELAYPERCHAR					320
@@ -528,7 +534,9 @@ void ui_check_keys(int &action)
 } // ui_check_keys
 
 inline void ui_check_slow_encoder() {}
-void ui_check_slow_keys(int &action) {}
+void ui_check_slow_keys(int &action) {
+	(void)action;
+}
 #endif // UI_MAIN
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 

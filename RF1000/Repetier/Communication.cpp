@@ -436,18 +436,18 @@ void Com::printFLN(FSTRINGPARAM(text),uint32_t value)
 } // printFLN
 
 
-void Com::printFLN(FSTRINGPARAM(text),float value,uint8_t digits)
+void Com::printFLN(FSTRINGPARAM(text),float value,uint8_t digits,bool komma_as_dot)
 {
     printF(text);
-    printFloat(value,digits);
+    printFloat(value,digits,komma_as_dot);
     println();
 } // printFLN
 
 
-void Com::printF(FSTRINGPARAM(text),float value,uint8_t digits)
+void Com::printF(FSTRINGPARAM(text),float value,uint8_t digits,bool komma_as_dot)
 {
     printF(text);
-    printFloat(value,digits);
+    printFloat(value,digits,komma_as_dot);
 } // printF
 
 
@@ -507,7 +507,7 @@ void Com::printArrayFLN(FSTRINGPARAM(text),int32_t *arr,uint8_t n)
 } // printArrayFLN
 
 
-void Com::printFloat(float number, uint8_t digits)
+void Com::printFloat(float number, uint8_t digits, bool komma_as_dot)
 {
 	if (isnan(number))
 	{
@@ -542,8 +542,8 @@ void Com::printFloat(float number, uint8_t digits)
 	printNumber(int_part);
 
 	// Print the decimal point, but only if there are digits beyond
-	if (digits > 0)
-		print('.');
+	if (digits > 0 && komma_as_dot) print(',');
+	if (digits > 0 && !komma_as_dot) print('.');
 
 	// Extract digits from the remainder one at a time
 	while (digits-- > 0)

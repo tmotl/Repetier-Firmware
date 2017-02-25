@@ -396,6 +396,7 @@ void HAL::analogStart()
     /* ADCW must be read once, otherwise the next result is wrong. */
     uint dummyADCResult;
     dummyADCResult = ADCW;
+	(void)dummyADCResult;
     // Enable interrupt driven conversion loop
     uint8_t channel = pgm_read_byte(&osAnalogInputChannels[osAnalogInputPos]);
 
@@ -759,7 +760,7 @@ inline void setTimer(uint32_t delay)
 
 
 volatile uint8_t	insideTimer1 = 0;
-long				stepperWait  = 0;
+long __attribute__((used)) stepperWait  = 0;
 
 /** \brief Timer interrupt routine to drive the stepper motors.
 */
@@ -818,7 +819,7 @@ ISR(TIMER1_COMPA_vect)
 
 	if(Printer::allowQueueMove())
     {
-        setTimer(PrintLine::performQueueMove());
+        setTimer(PrintLine::performQueueMove()); //hier drin volatile markieren??
 
 		DEBUG_MEMORY;
 	    insideTimer1 = 0;
@@ -907,8 +908,7 @@ ISR(PWM_TIMER_VECTOR)
     static uint8_t pwm_cooler_pos_set[NUM_EXTRUDER];
     PWM_OCR += 64;
 
-
-	if(pwm_count_heater == 0)
+   if(pwm_count_heater == 0)
     {
 #if EXT0_HEATER_PIN>-1
         if((pwm_heater_pos_set[0] = (pwm_pos[0] & HEATER_PWM_MASK))>0) WRITE(EXT0_HEATER_PIN,!HEATER_PINS_INVERTED);
@@ -1044,7 +1044,7 @@ ISR(PWM_TIMER_VECTOR)
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
     HAL::allowInterrupts();
-
+	
 	counterPeriodical++; // Approximate a 100ms timer
     if(counterPeriodical>=(int)(F_CPU/40960))
     {
@@ -1122,6 +1122,7 @@ ISR(PWM_TIMER_VECTOR)
     pwm_count_cooler += COOLER_PWM_STEP;
     pwm_count_heater += HEATER_PWM_STEP;
 
+	(void)pwm_cooler_pos_set;
 } // ISR(PWM_TIMER_VECTOR)
 
 

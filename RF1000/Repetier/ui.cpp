@@ -35,14 +35,13 @@ extern const int8_t encoder_table[16] PROGMEM ;
 #endif // BEEPER_TYPE==2 && defined(UI_HAS_I2C_KEYS) && UI_I2C_KEY_ADDRESS!=BEEPER_ADDRESS
 
 #if UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
-long	g_nAutoReturnTime		 = 0;
+millis_t g_nAutoReturnTime		 = 0;
 #endif // UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
 
 char	g_nYesNo				 = 0;		// 0 = no, 1 = yes
 char	g_nContinueButtonPressed = 0;
 char	g_nServiceRequest		 = 0;
 char	g_nPrinterReady			 = 0;
-
 
 void beep(uint8_t duration,uint8_t count)
 {
@@ -507,7 +506,7 @@ void slideIn(uint8_t row,FSTRINGPARAM(text))
     for(i=UI_COLS-1; i>=0; i--)
     {
         uid.printRow(row,empty,printCols,i);
-		HAL::delayMilliseconds(10);
+	HAL::delayMilliseconds(10);
     }
 
 } // slideIn
@@ -593,7 +592,7 @@ void UIDisplay::initialize()
 
 
 #if UI_DISPLAY_TYPE==1 || UI_DISPLAY_TYPE==2 || UI_DISPLAY_TYPE==3
-void UIDisplay::createChar(uint8_t location,const uint8_t PROGMEM charmap[])
+void UIDisplay::createChar(uint8_t location,const uint8_t charmap[])
 {
     location &= 0x7; // we only have 8 locations 0-7
     lcdCommand(LCD_SETCGRAMADDR | (location << 3));
@@ -791,7 +790,7 @@ void UIDisplay::parse(char *txt,bool ram)
 
     while(col<MAX_COLS)
     {
-		char c=(ram ? *(txt++) : pgm_read_byte(txt++));
+	char c=(ram ? *(txt++) : pgm_read_byte(txt++));
         if(c==0) break; // finished
         if(c!='%')
         {
@@ -842,6 +841,7 @@ void UIDisplay::parse(char *txt,bool ram)
 			case 'H':
 			{
 				if(c2=='B')			addLong(g_nActiveHeatBed,1);										// %HB : active heat bed z matrix
+				else if(c2=='O')	addFloat((float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,3,0); // %HO : active heat bed min z offset in um
 				break;
 			}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
@@ -1171,6 +1171,22 @@ void UIDisplay::parse(char *txt,bool ram)
 				}
 #endif // FEATURE_230V_OUTPUT
 
+#if FEATURE_24V_FET_OUTPUTS
+				if(c2=='l')
+				{
+					addStringP(Printer::enableFET1?ui_text_on:ui_text_off);						// %ol : FET 1 X42 output on/off
+					break;
+				}
+#endif // FEATURE_24V_FET_OUTPUTS
+
+#if FEATURE_24V_FET_OUTPUTS
+				if(c2=='n')
+				{
+					addStringP(Printer::enableFET2?ui_text_on:ui_text_off);						// %on : FET 2 X44 output on/off
+					break;
+				}
+#endif // FEATURE_24V_FET_OUTPUTS
+
 				// Extruder output level
 				if(c2>='0' && c2<='9')																	// %o0..9 : Output level extruder 0..9 is % including %sign
 				{
@@ -1470,7 +1486,31 @@ void UIDisplay::parse(char *txt,bool ram)
 					}
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
 				}
-
+				
+				if(c2=='S')																				// %sS : State of the sensible offset
+				{
+#if FEATURE_SENSIBLE_PRESSURE
+				    if( Printer::doHeatBedZCompensation )
+					{
+						addInt((int)g_nSensiblePressureOffset,3);
+					}else{
+						addInt(0,3);	
+					}
+#endif // FEATURE_SENSIBLE_PRESSURE
+				}
+				
+				if(c2=='M')																				// %sM : State of the sensible offset
+				{
+#if FEATURE_SENSIBLE_PRESSURE
+				    if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
+					{
+						addInt((int)g_nSensiblePressureDigits,5);
+					}else{
+						addStringP(ui_text_off);				
+					}
+#endif // FEATURE_SENSIBLE_PRESSURE
+				}
+				
 				if(c2=='1')																				// %s1 : current value of the strain gauge
 				{
 					addInt(readStrainGauge(I2C_ADDRESS_STRAIN_GAUGE),5);
@@ -1875,14 +1915,14 @@ uint8_t nFilesOnCard;
 void UIDisplay::updateSDFileCount()
 {
     dir_t* p = NULL;
-    byte offset = menuTop[menuLevel];
+    //byte offset = menuTop[menuLevel];
     SdBaseFile *root = sd.fat.vwd();
 
     root->rewind();
     nFilesOnCard = 0;
     while ((p = root->getLongFilename(p, NULL, 0, NULL)))
     {
-		if (! (DIR_IS_FILE(p) || DIR_IS_SUBDIR(p)))
+	if (! (DIR_IS_FILE(p) || DIR_IS_SUBDIR(p)))
             continue;
         if (folderLevel>=SD_MAX_FOLDER_DEPTH && DIR_IS_SUBDIR(p) && !(p->name[0]=='.' && p->name[1]=='.'))
             continue;
@@ -1896,8 +1936,8 @@ void UIDisplay::updateSDFileCount()
 
 void getSDFilenameAt(byte filePos,char *filename)
 {
-    dir_t* p;
-    byte c=0;
+    dir_t* p = NULL;
+    //byte c=0;
     SdBaseFile *root = sd.fat.vwd();
 
     root->rewind();
@@ -1966,7 +2006,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
 
     while (r+offset<nFilesOnCard+1 && r<UI_ROWS && (p = root->getLongFilename(p, tempLongFilename, 0, NULL)))
     {
-		// done if past last used entry
+	// done if past last used entry
         // skip deleted entry and entries for . and  ..
         // only list subdirectories and files
         if ((DIR_IS_FILE(p) || DIR_IS_SUBDIR(p)))
@@ -2028,7 +2068,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
 void UIDisplay::refreshPage()
 {
     uint8_t r;
-    uint8_t mtype;
+    uint8_t mtype = 0;
     char cache[UI_ROWS][MAX_COLS+1];
     adjustMenuPos();
 
@@ -2063,7 +2103,7 @@ void UIDisplay::refreshPage()
     if(menuLevel==0)
     {
         UIMenu *men = (UIMenu*)pgm_read_word(&(ui_pages[menuPos[0]]));
-        uint8_t nr = pgm_read_word_near(&(men->numEntries));
+        short nr = pgm_read_word_near(&(men->numEntries));
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
         for(r=0; r<nr && r<UI_ROWS; r++)
         {
@@ -2076,7 +2116,7 @@ void UIDisplay::refreshPage()
     else
     {
         UIMenu *men = (UIMenu*)menu[menuLevel];
-        uint8_t nr = pgm_read_word_near((void*)&(men->numEntries));
+        short nr = pgm_read_word_near((void*)&(men->numEntries));
         mtype = pgm_read_byte((void*)&(men->menuType));
         uint8_t offset = menuTop[menuLevel];
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
@@ -2091,7 +2131,7 @@ void UIDisplay::refreshPage()
             }
 
 			unsigned char entType = pgm_read_byte(&(ent->menuType));
-            unsigned int entAction = pgm_read_word(&(ent->action));
+            int entAction = (int)pgm_read_word(&(ent->action));
 
 			printCols[0] = ' ';
 			col = 1;
@@ -2294,7 +2334,7 @@ void UIDisplay::refreshPage()
 #if DISPLAY_TYPE != 5
 			HAL::delayMilliseconds(transition<3 ? 200 : 70);
 #endif // DISPLAY_TYPE != 5
-		}
+	}
 #endif // UI_ANIMATION
     }
 
@@ -2499,6 +2539,25 @@ void UIDisplay::okAction()
 
 void UIDisplay::rightAction()
 {
+#if FEATURE_SENSIBLE_PRESSURE
+	if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+		//we are in the Mod menu		
+		if(g_nSensiblePressureDigits == EMERGENCY_PAUSE_DIGITS_MAX * 0.8 || g_nSensiblePressureDigits == 32767){
+			//ist max, dann auf 0.
+			g_nSensiblePressureDigits = 0;			
+		}else if(g_nSensiblePressureDigits > EMERGENCY_PAUSE_DIGITS_MAX * 0.8 - 250 || g_nSensiblePressureDigits > 32767 - 250){	
+			//stößt oben an, hier noch check auf overflow:
+			if(EMERGENCY_PAUSE_DIGITS_MAX * 0.8 < 32767){
+				g_nSensiblePressureDigits = EMERGENCY_PAUSE_DIGITS_MAX * 0.8; //maximalstellung, das ist aber schon irre hoch. abhängig von messdose und maximaltragkraft vs. genauigkeit der zelle.
+			}else{
+				g_nSensiblePressureDigits = 32767; //die variable ist short, nie mehr rein als nötig ^^.
+			}
+		}else{
+			g_nSensiblePressureDigits += 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+		}
+		beep(1,4);
+	}else{
+#endif
 #if UI_HAS_KEYS==1
 	if( menu[menuLevel] == &ui_menu_xpos )
 	{
@@ -2542,12 +2601,16 @@ void UIDisplay::rightAction()
 		EEPROM::updateChecksum();
 #endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
 	}
-#endif // UI_HAS_KEYS==1
-
+#endif // UI_HAS_KEYS==1	
+#if FEATURE_SENSIBLE_PRESSURE	
+	}
+#endif
 } // rightAction
 
 
 #define INCREMENT_MIN_MAX(a,steps,_min,_max) if ( (increment<0) && (_min>=0) && (a<_min-increment*steps) ) {a=_min;} else { a+=increment*steps; if(a<_min) a=_min; else if(a>_max) a=_max;};
+//increment ist ne variable, global.
+#define INCREMENT_MAX(a,steps,_max) if ( (increment<0) && (a<=-1*increment*steps) ) {a=0;} else { a+=increment*steps; if(a>_max) a=_max;};
 
 void UIDisplay::adjustMenuPos()
 {
@@ -2668,12 +2731,13 @@ void UIDisplay::nextPreviousAction(int8_t next)
     }
 
     UIMenu *men = (UIMenu*)menu[menuLevel];
-    uint8_t nr = pgm_read_word_near(&(men->numEntries));
+    short nr = pgm_read_word_near(&(men->numEntries));
     uint8_t mtype = HAL::readFlashByte((const prog_char*)&(men->menuType));
     UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
     UIMenuEntry *ent =(UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
     UIMenuEntry *testEnt;
     uint8_t entType = HAL::readFlashByte((const prog_char*)&(ent->menuType));	// 0 = Info, 1 = Headline, 2 = submenu ref, 3 = direct action command
+	(void)entType; //ignore unused error Nibbels
     int action = pgm_read_word(&(ent->action));
     
 	if(mtype==2 && activeAction==0)   // browse through menu items
@@ -2768,10 +2832,14 @@ void UIDisplay::nextPreviousAction(int8_t next)
 			break;
 		}
 		case UI_ACTION_ZOFFSET:
-		{
-			INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
+		{			
+			//INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
+			INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000),(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000));		
+		#if FEATURE_SENSIBLE_PRESSURE
+			g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+		#else	
 			g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-
+		#endif
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
 			EEPROM::updateChecksum();
@@ -2922,18 +2990,15 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		}
 		case UI_ACTION_FLOWRATE_MULTIPLY:
 		{
-			INCREMENT_MIN_MAX(Printer::extrudeMultiply,1,25,500);
-
-			if( Printer::debugInfo() )
-			{
-				Com::printFLN(Com::tFlowMultiply,(int)Printer::extrudeMultiply);
-			}
+			int er = Printer::extrudeMultiply;
+			INCREMENT_MIN_MAX(er,1,25,200);
+			Commands::changeFlowateMultiply(er);
 			break;
 		}
 		case UI_ACTION_STEPPER_INACTIVE:
 		{
 			stepperInactiveTime -= stepperInactiveTime % 1000;
-			INCREMENT_MIN_MAX(stepperInactiveTime,60000UL,0,10080000UL);
+			INCREMENT_MAX(stepperInactiveTime,60000UL,10080000UL);
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32(EPR_STEPPER_INACTIVE_TIME,stepperInactiveTime);
@@ -2945,7 +3010,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		case UI_ACTION_MAX_INACTIVE:
 		{
 			maxInactiveTime -= maxInactiveTime % 1000;
-			INCREMENT_MIN_MAX(maxInactiveTime,60000UL,0,10080000UL);
+			INCREMENT_MAX(maxInactiveTime,60000UL,10080000UL);
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
 			HAL::eprSetInt32(EPR_MAX_INACTIVE_TIME,maxInactiveTime);
@@ -3150,7 +3215,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
 		case UI_ACTION_BAUDRATE:
 		{
 #if EEPROM_MODE!=0
-			char p=0;
+			unsigned char p=0;
 			int32_t rate;
 			do
 			{
@@ -3160,11 +3225,15 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
 			}while(rate!=0);
 
-			if(rate==0) p-=2;
-			p+=increment;
-			if(p<0) p = 0;
+			if(rate==0 && p>=2) p-=2;
+			else if(rate==0 && p==1) p=0;
+			
+			if(p+increment >= 0) p+=increment;
+			else if(p+increment <= 0) p=0;
+			
+			//if(p<0) p = 0;
 			rate = pgm_read_dword(&(baudrates[p]));
-			if(rate==0) p--;
+			if(rate==0 && p>=1) p--;
 			baudrate = pgm_read_dword(&(baudrates[p]));
 
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
@@ -3501,17 +3570,44 @@ void UIDisplay::executeAction(int action)
 			}
 			case UI_ACTION_BACK:
 			{
-#if FEATURE_RGB_LIGHT_EFFECTS
-				if ( menuLevel == 0 )
-				{
-					Printer::RGBButtonBackPressed = 1;
-				}
-#endif // FEATURE_RGB_LIGHT_EFFECTS
+#if FEATURE_SENSIBLE_PRESSURE
+				if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+					//we are in the Mod menu
+					//verkleinern des Digit-Limits
+					if(g_nSensiblePressureDigits == 0){
+						if(EMERGENCY_PAUSE_DIGITS_MAX * 0.8 < 32767){
+							g_nSensiblePressureDigits = EMERGENCY_PAUSE_DIGITS_MAX * 0.8; //maximalstellung, das ist aber schon irre hoch. abhängig von messdose und maximaltragkraft vs. genauigkeit der zelle.
+						}else{
+							g_nSensiblePressureDigits = 32767; //die variable ist short, nie mehr rein als nötig ^^.
+						}
+					}else if(g_nSensiblePressureDigits < 250){
+						g_nSensiblePressureDigits = 0;
+					}else{
+						g_nSensiblePressureDigits -= 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+					}
+					beep(1,4);
+					//skipBeep=true;
+				}else{
+#endif
 
-				if(menuLevel>0) menuLevel--;
-				Printer::setAutomount(false);
-				activeAction = 0;
-				g_nYesNo = 0;
+#if FEATURE_RGB_LIGHT_EFFECTS
+					if ( menuLevel == 0 )
+					{
+						Printer::RGBButtonBackPressed = 1;
+					}
+#endif // FEATURE_RGB_LIGHT_EFFECTS
+					if ( menuLevel == 1 && uid.menuPos[0] == 1 ){
+						//der würde in das modmenü zurückgehen, da sind aber die rechtst links tasten anders belegt, daher nicht da rein! sonst evtl. verstellen von DigitLimit.
+						uid.menuPos[0] = 0;
+					}
+					if(menuLevel>0) menuLevel--;
+					Printer::setAutomount(false);
+					activeAction = 0;
+					g_nYesNo = 0;
+				
+#if FEATURE_SENSIBLE_PRESSURE
+				}
+#endif
 				break;
 			}
 			case UI_ACTION_NEXT:
@@ -3736,6 +3832,34 @@ void UIDisplay::executeAction(int action)
 			}
 #endif // FEATURE_230V_OUTPUT
 
+#if FEATURE_24V_FET_OUTPUTS
+			case UI_ACTION_FET1_OUTPUT:
+			{
+				if( Printer::enableFET1 )	Printer::enableFET1 = 0;
+				else						Printer::enableFET1 = 1;
+				WRITE(FET1, Printer::enableFET1);
+
+#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+				HAL::eprSetByte( EPR_RF_FET1_MODE , Printer::enableFET1 );
+				EEPROM::updateChecksum();
+#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+				break;
+			}
+			
+			case UI_ACTION_FET2_OUTPUT:
+			{
+				if( Printer::enableFET2 )	Printer::enableFET2 = 0;
+				else						Printer::enableFET2 = 1;
+				WRITE(FET2, Printer::enableFET2);
+
+#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+				HAL::eprSetByte( EPR_RF_FET2_MODE , Printer::enableFET2 );
+				EEPROM::updateChecksum();
+#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+				break;
+			}
+#endif // FEATURE_24V_FET_OUTPUTS
+
 #if FEATURE_MILLING_MODE
 			case UI_ACTION_OPERATING_MODE:
 			{
@@ -3745,7 +3869,7 @@ void UIDisplay::executeAction(int action)
 				if( PrintLine::linesCount )		deny = 1;	// the operating mode can not be switched while the printing is in progress
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-				if( g_nHeatBedScanStatus )		deny = 1;	// the operating mode can not be switched while a heat bed scan is in progress
+				if( g_nHeatBedScanStatus || g_ZOSScanStatus )		deny = 1;	// the operating mode can not be switched while a heat bed scan / ZOS is in progress
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
@@ -4644,6 +4768,7 @@ void UIDisplay::slowAction()
     {
         UIMenu *men = (UIMenu*)menu[menuLevel];
         uint8_t mtype = pgm_read_byte((void*)&(men->menuType));
+		(void)mtype; //ignore unused error Nibbels
         refresh=1;
     }
 
