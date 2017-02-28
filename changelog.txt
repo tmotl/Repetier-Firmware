@@ -1,11 +1,11 @@
 V RF.01.37f.mod (2017-02-28)
 - Codecleanup @M3901 M3900
 - M3900 now is able to use the configuration options of M3901 directly. From now on M3901 is a preconfiguration only, the M3900 will be able to use X Y P S-Switches and scans directly.
-- The buttons function for setting the digit limit now has lower steps if you reach around {0..750} digits. This is something one might want to discuss.
+- The buttons function for setting the digit limit now has lower steps if you set values between {0..2000} digits. This is something one might want to discuss.
 Because the DMS could be under tension constantly and would therefore not have 0 @ 0 tension. But in my case (for TPE) this fine-tune-setting is better than none. Other people can still finetune their values with the correct G-Code.
-- The Z-Offset-Buttons should now reach =0, if the value is around 0 and the stepsize is != 1. This should prevent uneven numbers when tempering with the z-Offset-buttons. Example: In case you somehow had preconfigured values like zOffset=34, going under 0 (34,...14,9,4, -> 0) will round to the normal steps like "5,10,15..."
-- M3900 is now limited to zMatrix scan positions { 2 ... Max-1 } because the real scan-positions are extrapolated to row 1 and rowmax, line 1 and linemax. If you have 2 extruders or the RF2000 the scan position X=1 is still allowed.
-- fixed positioning-bug within the ZOS mhier-Scan. The Y-Position is not shifted by ~ 10mm anymore. This bug was introduced by Nibbels and formerly caused by some `nice working` missunderstanding.
+- The Z-Offset-Buttons should now reach zOffset=0um, if the value is around 0um and the stepsize is != 1um. This should prevent uneven numbers when tempering with the z-Offset-buttons. Example: In case you somehow had preconfigured values like zOffset=34um, going under 0um (34um,...14um,9um,4um, -> 0um) will round to the normal steps like "5um,10um,15um..."
+- M3900 is now limited to zMatrix scan positions { 2 ... Max-1 } because the real scan-positions are extrapolated to row(1) and row(max), line(1) and line(max). If you have 2 extruders or the RF2000 the scan position X=1 is still allowed, because then there is no extrapolated zMatrix-row(1).
+- fixed some Y positioning bug within the ZOS mhier-Scan. The Y-Position is not shifted by ~ 10mm anymore. This bug was introduced by Nibbels and formerly caused by some `nice working` missunderstanding.
 - You can now scan at random positions if you use M3900 X0 Y0. If some of those two coordinates are 0 then a random number within the scan positions limits is automatically chosen by the firmware. Wessix made this suggestion in order to prevent his special temperature sensitive heated bed to degrade at one single point.
 
 V RF.01.37e.mod (2017-02-25)
