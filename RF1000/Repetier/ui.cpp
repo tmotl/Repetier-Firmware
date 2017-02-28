@@ -1,4 +1,4 @@
-﻿/*
+/*
     This file is part of the Repetier-Firmware for RF devices from Conrad Electronic SE.
 
     Repetier-Firmware is free software: you can redistribute it and/or modify
@@ -2553,7 +2553,9 @@ void UIDisplay::rightAction()
 				g_nSensiblePressureDigits = 32767; //die variable ist short, nie mehr rein als nötig ^^.
 			}
 		}else{
-			g_nSensiblePressureDigits += 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+			//TPE braucht mini werte, wenn es sinnvoll sein soll. Darum der Ternary, sodass man per Knopf auch kleinste Zahlen justieren kann.
+			g_nSensiblePressureDigits += (g_nSensiblePressureDigits >= 2000) ? 250 : (g_nSensiblePressureDigits >= 500) ? 100 : 50 ; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+			//g_nSensiblePressureDigits += 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
 		}
 		beep(1,4);
 	}else{
@@ -3580,10 +3582,12 @@ void UIDisplay::executeAction(int action)
 						}else{
 							g_nSensiblePressureDigits = 32767; //die variable ist short, nie mehr rein als nötig ^^.
 						}
-					}else if(g_nSensiblePressureDigits < 250){
+					}else if(g_nSensiblePressureDigits < 50){ // ex 250
 						g_nSensiblePressureDigits = 0;
 					}else{
-						g_nSensiblePressureDigits -= 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+						//TPE braucht mini werte, wenn es sinnvoll sein soll. Darum der Ternary, sodass man per Knopf auch kleinste Zahlen justieren kann.
+						//g_nSensiblePressureDigits -= 250; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
+						g_nSensiblePressureDigits -= (g_nSensiblePressureDigits >= 2000) ? 250 : (g_nSensiblePressureDigits >= 500) ? 100 : 50 ; //decrement pro Knopfklick. Man kann ja auf der Taste bleiben.
 					}
 					beep(1,4);
 					//skipBeep=true;
