@@ -28,7 +28,7 @@ https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-
 ## List of Features and additional G-Codes for RF2000 and RF1000
 
 _by mhier_:  
-M3900	- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. See M3901 for Configuration of M3900  
+M3900				- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
 Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm  
 
 _by StarTony_:  
@@ -38,34 +38,42 @@ _by Wessix_:
 M355 Sx - Turn on and off, or switch Port X19 to controll lights etc. (24V-MOSFET @Connector X19)  
 M355    - Switch Port X19 to controll lights etc. (24V-MOSFET @Connector X19)  
 Idea to implement the SensiblePressure-Function, see M3909  
+Idea to send the active digits with the printTemperature-Status.
 
 _by Nibbels_:  
 Disabled Milling-Mode! If you need it, activate it within the configuration files.  
-M3901 Xn Ym Px Sy	- to configure M3900 (X-Y-Pos, Learning-Factor, linear distance weight.)  
+M3900 Xn Ym Px Sy	- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
+M3901 Xn Ym Px Sy	- to preconfigure M3900 (X-Y-Pos, Learning-Factor, linear distance weight.)  
+
 M3902 R1			- to fix a single HeatBeds Hole within the HBS Matrix.  
 M3902 Zn.n			- to add an Offset to the Matrix. n.n = {-0.2 .. 0.2} [mm]  
 M3902 Z0			- to shift your active zOffset to the zMatrix. The M3006 zOffset will be zero afterwards. The zMatrix is altered within Ram and might be saved to EEPROM[n] with M3902 S[n] afterwards.  
 M3902 Sn 			- to save the active Matrix to position n = {1..9}  
 M3902 Z0 S1			- to shift the zOffset to your zMatrix and save the Matrix at position 1. This is an example to show that the options of M3902 can be combined.  
+
 M3903 Pt Smin		- to configure a very slow and stepwise heat bed temperature decrease. One step lasts t seconds. The end temperature will be `min` °C  
+
 M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
+
 M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
 Removed all Compilerwarnings and Compilererrors within the original Firmware.  
 Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
+Activated the X35 Temperature-Sensor for RF2000. 
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm			- See "SensiblePressure"  
 
 ## Z-Offset-Scan
-* M3900				- Run a Z-Offset Scan at the specified Location.
+* M3900	Xn Ym Sy Px 			- Run a Z-Offset Scan at the specified Location.
 
-Configuration Options for M3900:  
+Preconfiguration Options for M3900:  
 * M3901 Xn Ym Sy Px 
 
 [X]/[Y] specifies the Location of the Scan within the original HBS-Locations.  
-X = {0..10}  
-Y = {0..13}  
+X = {1..9}, {0 = random}
+Y = {2..12}, {0 = random}
+With two extruders X=1 is allowed otherwise forbidden. Normally X=2 is the lowest possible scan position. This limit is caused by border values within every zMatrix. You cannot set it wrong, the upper and lower limits are limited and autoadjusted by the firmware if set wrong.  
 
 [S] specifies the learning rate of M3900  
 S= {100}  
@@ -76,9 +84,10 @@ the Matrix in RAM will be adjusted by 0% to 99% of the messured Offset. This is 
 [P] ZOS learning linear distance weight  
 P = {0..100}  
 This is a configuration option to commit a scans offset to its surrounding area only.  
-Example: Put P to a high value and messure all corners. Then the matrix is somehow "bended" and not constantly updated. (Might work very well on heat-beds which tend to lift edges within different temperature ranges).
+If you scan the middle of the heated bed and then all the corners with a high distance weight, this feature will behave like autobed leveling of your zMatrix.
+Example: Put P to a high value and messure all corners. Then the matrix is somehow "bended" and not constantly updated. (Might work very well on heat-beds which tend to lift edges within different temperature ranges or to correct tilting).
 
-You can activate the ZOS (mhiers Z-Offset-Scan) within ->Configuration->Z-Configuration->Z-Offset Scan within your printers menu structure. This will always use the preconfigured or changed (see M3901) settings within your printers RAM.
+You can activate the ZOS (mhiers Z-Offset-Scan) within ->Configuration->Z-Configuration->Z-Offset Scan within your printers menu structure. This will always use the preconfigured or changed (see M3901) settings within your printers RAM. These M3900/M3901-Settings are not stored within the printers EEPROM.  
 
 ## SensiblePressure  
 * M3909 Pn Sm  
@@ -132,9 +141,16 @@ If you make your current too low you might risk "lost steps". The Motor cannot s
 If you can lower your current, you will have a huge improvement on stepper temperature and noise production as well. The tone of your steppers might sound deeper and will not be such a pain as the original (milling like-) configuration.
 You should not include M3920 when your z-Compensation is active. This MCode will shut down z-Compensation and unhome your Printer. You would have to re-home your axes and activate z-Compensation again. I put this code to the beginning of my startcodes.
 
+## RF2000: Additional Temperature Sensor
+This optional 3rd temperature T3 is automatically sent out with the other Temperatures and Digits.  
+``` 15:16:14.637: T:204.67 /205 B:28.60 /20 B@:0 @:143 T0:28.60 /0 @0:0 T1:204.67 /205 @1:143 T3:28.23 F:322 ```
+See RESERVE_ANALOG_SENSOR_TYPE in RF2000.h for configuration options.  
+See RESERVE_ANALOG_INPUTS to find the involved code within the firmware.  
+You will need to install and additional cable and a temperature sensor at X35 on your printers Board. Then you can wire your sensor to some place needed.  
+This sensor might keep track of your boards temperature or the air-temperature within your enclosure.  
+
 ## Wessix`s help video:
 [![ScreenShot](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/d7b7fade0c7343eeb67b680339478894.png)](http://youtu.be/iu9Nft7SXD8)
 
-## !! 31.12.2016: -> Compile with Arduino.cc 1.6.5, otherwise the OutputObject-Command is not 100% stable at Commands::waitUntilEndOfAllMoves();
-see http://www.rf1000.de/viewtopic.php?f=7&t=1610&p=16082#p16082
 ## !! 03.02.2017: Project is Work in Progress and untested changes are possible.
+## !! 28.02.2017: This mod should be save to complile with Arduino 1.8.1. Former problems are gone.
