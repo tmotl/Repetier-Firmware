@@ -1,156 +1,108 @@
-# Inofficial modification of the RF firmware for RF1000 and RF2000 devices
-Based on Repetier-Firmware - the fast and user friendly firmware.
+# Inoffizielle Modifikation der RF Betriebssoftware für RF1000 und RF 2000 Geräte
 
-## Disclaimer
+Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Betriebssoftware
 
-THIS VERSION IS AN UNOFFICIAL MODIFICATION OF mhiers UNOFFICIAL MODIFICATION OF THE ORIGINAL FIRMWARE. It is neither endorsed nor
-supported by the developers of the RF1000 firmware or by the developer of the original "Z-Offset-Scan".  
-USE AT YOUR OWN RISK.
+## Warnhinweis
+Diese Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Modifikation der orginal Betriebssoftware dar. Sie wird weder vom Vertreiber der RF 1000 und RD 2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" unterstützt.
+Benutzung auf eigene Gefahr. Für etwaige Schäden die an Ihrem Gerät entstehen können kann keine Verantwortung übernommen werden.
 
-For the official version, have a look at the upstream repository: https://github.com/RF1000/Repetier-Firmware  
-For the mhier version, have a look at the upstream repository: https://github.com/mhier/Repetier-Firmware
+Für die offizielle Version der Betriebssoftware bitten wir Sie das zugrundeliegende Repository unter:
+https://github.com/RF1000/Repetier-Firmware
+aufzurufen. 
 
+Für die modifizierte Version von mhier schauen Sie bitte unter:
+https://github.com/mhier/Repetier-Firmware
 
-## Version RF.01.37mod 
+## Version RF 1.37mod
 
-See:  
-http://www.rf1000.de/viewtopic.php?f=74&t=1674 (Nibbels/Wessix SenseOffset-Thread)  
-http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882 (mhier Mod)  
-http://www.rf1000.de/viewtopic.php?f=7&t=1504&start=60#p16397 (added feature)  
-http://www.rf1000.de/viewtopic.php?f=7&t=1610 (rf1000s developement version thread to 1.35)  
-http://www.rf1000.de/viewtopic.php?f=7&t=1665 (rf1000s developement version thread to 1.37)  
+http://www.rf1000.de/viewtopic.php?f=74&t=1674 (Nibbels/Wessix SenseOffset-Thread)
+
+http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882 (mhier Mod)
+
+http://www.rf1000.de/viewtopic.php?f=7&t=1504&start=60#p16397 (added feature)
+
+http://www.rf1000.de/viewtopic.php?f=7&t=1610 (rf1000s developement version thread to 1.35)
+
+http://www.rf1000.de/viewtopic.php?f=7&t=1665 (rf1000s developement version thread to 1.37)
+
 https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-heat_bed_decrease (all the commits)
 
-## Main Features of this Mod:
-* mhier Z-Offset-Scan
-* Nibbels/Wessix SensiblePressure Adjustment
+## Haupt Funktionen dieser Modifikation:
 
-## List of Features and additional G-Codes for RF2000 and RF1000
+* mhier Z-offset Scan
+* Nibbels/Wessix SensiblePressure Anpassung
 
-_by mhier_:  
-M3900				- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
-Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm  
+Liste der Funktionen und zusätzlichen GCODEs für den RF2000 und den RF1000
 
-_by StarTony_:  
-Fan-Speed-Patch, see http://www.rf1000.de/viewtopic.php?f=7&t=1638  
+von mhier implementiert:
+M3900 - Messe den Abstand/Versatz des Heizbetts und korrigiere die aktive Z-Matrix des Heizbettes und speichere sie im RAM Speicher. (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle,  Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)
+--------- Z overrider je nach stand
 
-_by Wessix_:  
-M355 Sx - Turn on and off, or switch Port X19 to controll lights etc. (24V-MOSFET @Connector X19)  
-M355    - Switch Port X19 to controll lights etc. (24V-MOSFET @Connector X19)  
-Idea to implement the SensiblePressure-Function, see M3909  
-Idea to send the active digits with the printTemperature-Status.
+von StarTony implementiert:
+Lüfter-Geschwindigkeits-Patch, siehe unter:
+http://www.rf1000.de/viewtopic.php?f=7&t=1638
 
-_by Nibbels_:  
-Disabled Milling-Mode! If you need it, activate it within the configuration files.  
-M3900 Xn Ym Px Sy	- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
-M3901 Xn Ym Px Sy	- to preconfigure M3900 (X-Y-Pos, Learning-Factor, linear distance weight.)  
+von Wessix implementiert:
+M355 Sx - Port X19 an und abschalten / schalten um dort angeschlossene Verbraucher wie z.b. die LED Leiste zu steuern (24V MOSFET @Anschluss X19)
+grundlegende Idee eine Sensible / kontinuierliche Druckmessung zu implentieren,
+weiteres unter der Erklärung des MCODES M3909
+und Idee die Zahl der aktuellen Digits zusammen mit der Status-Temperaturabfrage abzugreifen.
 
-M3902 R1			- to fix a single HeatBeds Hole within the HBS Matrix.  
-M3902 Zn.n			- to add an Offset to the Matrix. n.n = {-0.2 .. 0.2} [mm]  
-M3902 Z0			- to shift your active zOffset to the zMatrix. The M3006 zOffset will be zero afterwards. The zMatrix is altered within Ram and might be saved to EEPROM[n] with M3902 S[n] afterwards.  
-M3902 Sn 			- to save the active Matrix to position n = {1..9}  
-M3902 Z0 S1			- to shift the zOffset to your zMatrix and save the Matrix at position 1. This is an example to show that the options of M3902 can be combined.  
+von Nibbles implementiert:
+Abschaltung des Fräs-Modus! Wenn Sie diesen benötigen kann er innerhalb der Konfigurationsdateien wieder angeschaltet werden.
+M3900 Xn Ym Px Sy - Scanne den Abstand des Heizbetts und korrigiere die aktive Z-Matrix innerhalb des RAM Speichers des Druckers.(Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle,  Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)
+M3901 Xn Ym Px Sy - um den M3900 GCODE vor zu konfigurieren.
 
-M3903 Pt Smin		- to configure a very slow and stepwise heat bed temperature decrease. One step lasts t seconds. The end temperature will be `min` °C  
+M3902 R1 - um ein einzelnes Loch im Heizbett in der Heatbed-Matrix zu korrigieren.
 
-M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
+M3902 Zn.n - Um den aktiven Z-Offset zur hinterlegten Z-Matrix zu addieren. Der M3006 Z - Offset wird danach auf 0 gesetzt. Die Matrix wird innerhalb des RAMs verändert und kann danach mit dem Befehl M3902 S [n] an der Position [n] im EEPROM abgelegt werden.
+M3902 Sn - Speichere die gerade im RAM aktivierte Matrix unter der Postion n = {1..9}
+M3902 Z0 S1 - Verschiebe des Z-Offset auf den Matrixwert und speichere die Matrix an der Position 1 im EEPROM - Dies ist ein Beispiel um zu zeigen, dass die Optionen von M3902 kombiniert werden können.
 
-M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
-Removed all Compilerwarnings and Compilererrors within the original Firmware.  
-Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
-Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
-Activated the X35 Temperature-Sensor for RF2000. 
+M3903 Pt Smin - um einen sehr langsamen und schrittweisen Abfall der Betttemperatur einzustellen. Ein Schritt dauert t Sekunden. Die Endtemperatur wird in °C angegeben.
 
-_by Nibbels/Wessix_:  
-M3909 Pn Sm			- See "SensiblePressure"  
+M3939 Fn St1 Pt2 Ex Iy Rm - um ein Diagramm über die Filamentextrusionsgeschwindigkeit und die korrelierende Digit Zahl aufzuzeichnen -> ermöglicht Rückschlüsse zur Viskosität des Filaments
 
-## Z-Offset-Scan
-* M3900	Xn Ym Sy Px 			- Run a Z-Offset Scan at the specified Location.
+M3920 Sb - Flüstermodus ein oder ausschalten(die Funktion vermindert den Strom der Steppermotoren auf ein in der Firmware definiertes anderes Profil mit niedrigeren Werten)
 
-Preconfiguration Options for M3900:  
-* M3901 Xn Ym Sy Px 
+Es wurden alle Fehler die in der Orginalbetriebssoftware zu Compilerwarnungen oder Fehlern führten eliminiert. Weiter wurden einige Verbesserungen, die für die allem zugrunde liegenden Repetier Software eingebaut wurden ebenfalls implementiert da von Conrad noch nicht umgesetzt.
 
-[X]/[Y] specifies the Location of the Scan within the original HBS-Locations.  
-X = {1..9}, {0 = random}
-Y = {2..12}, {0 = random}
-With two extruders X=1 is allowed otherwise forbidden. Normally X=2 is the lowest possible scan position. This limit is caused by border values within every zMatrix. You cannot set it wrong, the upper and lower limits are limited and autoadjusted by the firmware if set wrong.  
+Mit dem Stand vom 20.01.2017 wurde der ganze Mod auf den neuesten Firmwarstand RF.01.37 angehoben.
 
-[S] specifies the learning rate of M3900  
-S= {100}  
-the Matrix will reloaded from the EEPROM at the begin of the scan.  
-S= {0..99}  
-the Matrix in RAM will be adjusted by 0% to 99% of the messured Offset. This is a great feature for multiple little corrections, in case you would not want to start allover or you cannot trust your first values 100% (you want to sum up corrections from different scanning-locations).
 
-[P] ZOS learning linear distance weight  
-P = {0..100}  
-This is a configuration option to commit a scans offset to its surrounding area only.  
-If you scan the middle of the heated bed and then all the corners with a high distance weight, this feature will behave like autobed leveling of your zMatrix.
-Example: Put P to a high value and messure all corners. Then the matrix is somehow "bended" and not constantly updated. (Might work very well on heat-beds which tend to lift edges within different temperature ranges or to correct tilting).
+Von Nibbels und Wessix entwickelt:
+M3909 Pn Sm - siehe unter "SensibleDruckmessung / Sensible Pressure"
 
-You can activate the ZOS (mhiers Z-Offset-Scan) within ->Configuration->Z-Configuration->Z-Offset Scan within your printers menu structure. This will always use the preconfigured or changed (see M3901) settings within your printers RAM. These M3900/M3901-Settings are not stored within the printers EEPROM.  
+Z-Offset-Scan
 
-## SensiblePressure  
-* M3909 Pn Sm  
-P = max. digits = {1...14999} [digits]  
-S = max. SenseOffset = {1...300} std.: 180 [um]  
+M3900 Xn Ym Sy Px - Mache einen Z-Offset-Scan an einer bestimmten Position.
+Zuvor einstellbare Optionen für M3900:
+M3901 Xn Ym Sy Px
+[X]/[Y] legt die Position des Scans innerhalb der möglichen HBS-Matrix Positionen fest.
+X = {1..9}, {0 = zufällig} Y = {2..12}, {0 = zufällig}
+Mit zwei Extrudern ist X=1 ein erlaubter Wert, mit nur einem ein ungültiger Wert, sodass normalerweise X=2 der niedrigste Matrixwert in X Ausrichtung für eine Scanposition ist. Diese Limitierung wird von Begrenzungen/Begrenzungswerten in jeder Z-Matrix verursacht. Man kann aber nichts falsch einstellen, sollten vom Benutzer unzulässige Werte eingestellt werden, ändert die Firmware diese auf den letzten gültigen Wert.
 
-Feature called "SensiblePressure"  
- The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
- The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). The adjustment will not violate the "max. SenseOffset" restriction in order to avoid unwanted offsets (not caused by too close nozzle).  
- When choosing "max. SenseOffset" you should already know how much digits your printer normally has (Same Material, same Temperatures, same Speed, same Nozzle) and then add some plus 20% or plus 1000digits of force-tolerance.  
- When the z-Compensation gets deactivated the SensiblePressure-function is deactivated as well.  
- Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.  
- You cannot activate the Feature if zCompensation is not active already.  
+[S] legt die Lernrate von M3900 fest
+S=100: Die Matrix wird beim Beginn des Scans komplett vom EEPROM geladen. 
+
+S={0..99}: Die Matrix im RAM wird von 0 - 99% Penetranz des gemessenen Offsets angepasst. Dies ist eine tolle Möglichkeit mit mehreren kleinen Korrekturen eine insgesamt gute Korrekturquote zu erreichen im Falle dass man keinen kompletten HBS machen will oder man den ersten Messwerten nicht zu 100% trauen kann (Stichwort Popel). (Man will letztlich die Korrekturen von Verschiedenen Positionen gemeinsam nutzen)
+
+[P] mhier Z-Offset-Scan Entfernungsgewichtung
+P = {0..100}
+Dies ist eine Option mit der sich ein, an einer definierten Position gemessener Offset, nur in einem gewissen Radius um diese Messposition auswirkt. Wenn sie diese Option verwenden und die Mitte des Bettes sowie danach die vier Ecken des Druckbettes mit einer hohen Entfernungsgewichtung scanne wirkt sich dieses Feature wie ein "Auto-Bed-Levelling" auf die Z-Matrix aus. Die Matrix wird dann quasie "verbogen" und nicht mit einem konstanten Wert verändert. (Dies Option könnte für Heizbetten bei denen sich die Ecken bei unterschiedlichen Temperaturen anheben/senken gut funktionieren um etwaige Verdrehungen herauszukorrigieren)  
+
+
+
+
+
+  
+
  
- While Printing you can adjust or activate this feature with the "Left"- and "Right"-Button, while being in the "Mod-Menu" which is page 2 on the printers display.  
 
-## SensibleViscosity  
-* M3939 Fn St1 Pt2   Ex Iy Rm  
-S = Starting Temperature for the Test in [°C]  
-P = Final Temperature for the Test in [°C]  
-F = max. test digits = 10000 or {1...12000} [digits]  
-E = max. test extrusion velocity = 5 or {0.05...maxStartFeedrate} [mm/s]  
-optional:  
-I = test velocity increment = 0.1 or {0.02...0.4} [mm/s]  
-R = max. digit change needed to consider having a filled nozzle. = 800 [digits] 
-
-Feature called "SensibleViscosity"  
- The printer will automaticly extrude into the thin air and messure the resulting force. 
- After every messurement the velocity of extrusion is increased.  
- You will get a CSV-Output within your Console-Window (Repetierserver/Repetierhost/Octoprint/...) which you can easily copy and paste to some text file. Excel can then read the Data and you can put it into some Chart with 2 Clicks.
- You might ask why you need this feature, but in case you know your Filament quite well you can compare these resulting chars to really see how your filament extrusion behaves under different circumstances or when your nozzle is or gets clogged.
- For longer heated/boiled (my) ABS: http://www.rf1000.de/viewtopic.php?f=62&t=1549&p=16617#p16617  
- ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/3508699873f7431489d1df9344110e7f.png "Boiled ABS")  
- For the general viscosity of (my) ABS: http://www.rf1000.de/viewtopic.php?f=23&t=1620&p=16613#p16605  
- ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/610de7720945474590668b20c05d7652.png "Temperature ABS")  
- That is a clogged nozzle with the same ABS:
- ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/c00ac11b3a384994b37ce8bc3cf03bd9.png "Clogged Nozzle ABS")  
- That is red PLA:
- ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/2a3253c930794afc81e4fa4d4b2a4261.png "Clogged Nozzle ABS")  
-
- Have fun finally seeing your Filaments behaviour over time, temp, nozzles ;)  
+  
  
-## SilentMode   
-* M3920 Sb  
-S = {0,1} Switch to SilentMode or back to normal stepper current and unhome your printer.  
 
-This Feature might be handy if you want to predefine another set of stepper current, but you dont want to have this lower values all the time. 
+ 
+ 
 
-If you make your current too low you might risk "lost steps". The Motor cannot stand the applied force and you might get shifted Layers (X,Y). If that is the case you should lower your acceleration or rise up the current again.
 
-If you can lower your current, you will have a huge improvement on stepper temperature and noise production as well. The tone of your steppers might sound deeper and will not be such a pain as the original (milling like-) configuration.
-You should not include M3920 when your z-Compensation is active. This MCode will shut down z-Compensation and unhome your Printer. You would have to re-home your axes and activate z-Compensation again. I put this code to the beginning of my startcodes.
-
-## RF2000: Additional Temperature Sensor
-This optional 3rd temperature T3 is automatically sent out with the other Temperatures and Digits.  
-``` 15:16:14.637: T:204.67 /205 B:28.60 /20 B@:0 @:143 T0:28.60 /0 @0:0 T1:204.67 /205 @1:143 T3:28.23 F:322 ```
-See RESERVE_ANALOG_SENSOR_TYPE in RF2000.h for configuration options.  
-See RESERVE_ANALOG_INPUTS to find the involved code within the firmware.  
-You will need to install and additional cable and a temperature sensor at X35 on your printers Board. Then you can wire your sensor to some place needed.  
-This sensor might keep track of your boards temperature or the air-temperature within your enclosure.  
-
-## Wessix`s help video:
-[![ScreenShot](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/d7b7fade0c7343eeb67b680339478894.png)](http://youtu.be/iu9Nft7SXD8)
-
-## !! 03.02.2017: Project is Work in Progress and untested changes are possible.
-## !! 28.02.2017: This mod should be save to complile with Arduino 1.8.1. Former problems are gone.
