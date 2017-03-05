@@ -11,7 +11,7 @@ Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's
 Für etwaige Schäden, die an Ihrem Gerät entstehen könnten, kann keine Verantwortung übernommen werden.  
 BENUTZUNG AUF EIGENE GEFAHR. 
 
-Für die offizielle Version der Firmware: https://github.com/RF1000/Repetier-Firmware (developement)
+Für die offizielle Version der Firmware: https://github.com/RF1000/Repetier-Firmware (developement)  
 Für die modifizierte Version von mhier: https://github.com/mhier/Repetier-Firmware
 
 ## Version RF 1.37mod
