@@ -1,4 +1,8 @@
-# Inoffizielle Modifikation der RF Betriebssoftware für RF1000 und RF 2000 Geräte
+[<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Flag_of_the_United_Kingdom.svg/100px-Flag_of_the_United_Kingdom.svg.png" height="30">](README.md)
+[<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/100px-Flag_of_the_United_States.svg.png" height="30">](README.md)
+[<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Flag_of_Germany.svg/100px-Flag_of_Germany.svg.png" height="30">](README.de_DE.md)
+
+# Inoffizielle Modifikation der RF Firmware für RF1000 und RF2000 Geräte
 
 Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Betriebssoftware
 
@@ -32,7 +36,7 @@ https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-
 * mhier Z-offset Scan
 * Nibbels/Wessix SensiblePressure Anpassung
 
-Liste der Funktionen und zusätzlichen GCODEs für den RF2000 und den RF1000
+## Liste der Funktionen und zusätzlichen GCODEs für den RF2000 und den RF1000
 
 von mhier implementiert:
 M3900 - Messe den Abstand/Versatz des Heizbetts und korrigiere die aktive Z-Matrix des Heizbettes und speichere sie im RAM Speicher. (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle,  Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)
@@ -73,7 +77,7 @@ Mit dem Stand vom 20.01.2017 wurde der ganze Mod auf den neuesten Firmwarstand R
 Von Nibbels und Wessix entwickelt:
 M3909 Pn Sm - siehe unter "SensibleDruckmessung / Sensible Pressure"
 
-Z-Offset-Scan
+## mhier Z-Offset-Scan
 
 M3900 Xn Ym Sy Px - Mache einen Z-Offset-Scan an einer bestimmten Position.
 Zuvor einstellbare Optionen für M3900:
