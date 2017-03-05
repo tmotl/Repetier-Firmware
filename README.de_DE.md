@@ -48,7 +48,7 @@ _von Nibbels_:
  **M3900 Xn Ym Px Sy** - Scanne den Abstand des Heizbetts und korrigiere die aktive Z-Matrix innerhalb des RAM im Drucker. (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle, Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
  **M3901 Xn Ym Px Sy** - Vorkonfigurationsbefehl für M3900, ohne den Scan zu starten.  
  **M3902 R1** - um ein einzelnes Loch im Heizbett in der Heatbed-Matrix zu korrigieren.  
-** M3902 Zn.n** - Um den aktiven Z-Offset zur hinterlegten Z-Matrix zu addieren. Der M3006 Z - Offset wird danach auf 0 gesetzt. Die Matrix wird innerhalb des RAMs verändert und kann danach mit dem Befehl M3902 S [n] an der Position [n] im EEPROM abgelegt werden.  
+**M3902 Zn.n** - Um den aktiven Z-Offset zur hinterlegten Z-Matrix zu addieren. Der M3006 Z - Offset wird danach auf 0 gesetzt. Die Matrix wird innerhalb des RAMs verändert und kann danach mit dem Befehl M3902 S [n] an der Position [n] im EEPROM abgelegt werden.  
  **M3902 Sn** - Speichere die gerade im RAM aktivierte Matrix unter der Postion n = {1..9}  
  **M3902 Z0 S1** - Verschiebe des Z-Offset auf den Matrixwert und speichere die Matrix an der Position 1 im EEPROM - Dies ist ein Beispiel um zu zeigen, dass die Optionen von M3902 kombiniert werden können.  
 **M3903 Pt Smin** - um einen sehr langsamen und schrittweisen Abfall der Betttemperatur einzustellen. Ein Schritt dauert t Sekunden. Die Endtemperatur wird in °C angegeben.  
