@@ -151,12 +151,12 @@ Man sollte diesen MCODE nicht absetzen solange die Z-Kompensation aktiv ist und 
 
 ## RF2000: Zusätzlicher Temperatursensor
 
-Diese Option aktivieret einen weiteren Temperatursensor T3 dessen Messwerte automatisch mit der Statusabfrage ausgegeben werden.
-Beispiel: 
-``` 15:16:14.637: T:204.67 /205 B:28.60 /20 B@:0 @:143 T0:28.60 /0 @0:0 T1:204.67 /205 @1:143 T3:28.23 F:322 ```
-Genaueres unter RESERVE_ANALOG_SENSOR_TYPE in der RF2000.h für weitere Konfiguartionsoptionen.
-Schauen sie unter RESERVE_ANALOG_INPUTS um den involvierten Code zu betrachten.
-Sie werden ein zusätzliche Kabel und einen Temperatursensor auf X35 an iherem Druckerboard anschliessen müssen. Dann können Sie den Temperatursensor an einem gewünschten Ort positionieren. Mit einem solchen Sensor könnte z.B. die Temperatur in der Nähe der Hauptplatine oder im Druckraum gemessen werden.
+Diese Option aktiviert einen weiteren Temperatursensor T3, dessen Messwerte automatisch mit der Statusabfrage ausgegeben werden.
+Beispiel: ``` 15:16:14.637: T:204.67 /205 B:28.60 /20 B@:0 @:143 T0:28.60 /0 @0:0 T1:204.67 /205 @1:143 T3:28.23 F:322 ```  
+Weitere Konfiguartionsoptionen findet man RESERVE_ANALOG_SENSOR_TYPE in der RF2000.h.
+Sucht man in der Firmware nach RESERVE_ANALOG_INPUTS sieht man den Code.
+Man muss, um den Temperatursensor zu nutzen, ein zusätzliches Kabel mit einem Temperatursensor am Port X35 an der Druckerplatine des RF2000-Druckers anschliessen. Anschließend kann der optionale Sensor an einem beliebigen Punkt im Drucker positioniert werden.
+Es könnte z.B. die Temperatur in der Nähe der Hauptplatine oder im Druckraum gemessen werden.
 
 ## Wessix's Hilfe-Video:
 [![ScreenShot](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/d7b7fade0c7343eeb67b680339478894.png)](http://youtu.be/iu9Nft7SXD8)
