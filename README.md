@@ -4,7 +4,7 @@ Based on Repetier-Firmware - the fast and user friendly firmware.
 ## Disclaimer
 
 THIS VERSION IS AN UNOFFICIAL MODIFICATION OF mhiers UNOFFICIAL MODIFICATION OF THE ORIGINAL FIRMWARE. It is neither endorsed nor
-supported by the developers of the RF1000 firmware or by the developer of the original "Z-Offset-Scan".  
+supported by the developers of the RF1000 firmware or by the developer of the original "mhier Z-Offset-Scan".  
 USE AT YOUR OWN RISK.
 
 For the official version, have a look at the upstream repository: https://github.com/RF1000/Repetier-Firmware  
@@ -29,7 +29,8 @@ https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-
 
 _by mhier_:  
 M3900				- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
-Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm  
+RF2000: Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm  
+RF1000: Z_OVERRIDE_MAX = 0.5mm, because of the original z-min-endstop
 
 _by StarTony_:  
 Fan-Speed-Patch, see http://www.rf1000.de/viewtopic.php?f=7&t=1638  
@@ -64,7 +65,7 @@ Activated the X35 Temperature-Sensor for RF2000.
 _by Nibbels/Wessix_:  
 M3909 Pn Sm			- See "SensiblePressure"  
 
-## Z-Offset-Scan
+## mhier Z-Offset-Scan
 * M3900	Xn Ym Sy Px 			- Run a Z-Offset Scan at the specified Location.
 
 Preconfiguration Options for M3900:  
@@ -87,7 +88,7 @@ This is a configuration option to commit a scans offset to its surrounding area 
 If you scan the middle of the heated bed and then all the corners with a high distance weight, this feature will behave like autobed leveling of your zMatrix.
 Example: Put P to a high value and messure all corners. Then the matrix is somehow "bended" and not constantly updated. (Might work very well on heat-beds which tend to lift edges within different temperature ranges or to correct tilting).
 
-You can activate the ZOS (mhiers Z-Offset-Scan) within ->Configuration->Z-Configuration->Z-Offset Scan within your printers menu structure. This will always use the preconfigured or changed (see M3901) settings within your printers RAM. These M3900/M3901-Settings are not stored within the printers EEPROM.  
+You can activate the mhier Z-Offset-Scan within ->Configuration->Z-Configuration->Z-Offset Scan within your printers menu structure. This will always use the preconfigured or changed (see M3901) settings within your printers RAM. These M3900/M3901-Settings are not stored within the printers EEPROM.  
 
 ## SensiblePressure  
 * M3909 Pn Sm  
