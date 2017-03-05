@@ -56,14 +56,14 @@ M3903 Pt Smin		- to configure a very slow and stepwise heat bed temperature decr
 
 M3939 Fn St1 Pt2 Ex Iy Rm	- to messure a curve of your Filaments velocity over digits -> viscosity.  
 
-M3920 Sb - to go into or switch back from SilentMode (This will lower your Stepper-Current to another profile)  
-Removed all Compilerwarnings and Compilererrors within the original Firmware.  
+M3920 Sb - to go into or switch back from SilentMode (This will lower your steppers current to an alternative profile)  
+Removed all compiler warnings and errors within the original Firmware.  
 Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
 Activated the X35 Temperature-Sensor for RF2000. 
 
 _by Nibbels/Wessix_:  
-M3909 Pn Sm			- See "SensiblePressure"  
+M3909 Pn Sm			- See "Nibbels/Wessix SenseOffset"  
 
 ## mhier Z-Offset-Scan
 * M3900	Xn Ym Sy Px 			- Run a Z-Offset Scan at the specified Location.
@@ -90,16 +90,16 @@ Example: Put P to a high value and messure all corners. Then the matrix is someh
 
 You can activate the mhier Z-Offset-Scan within ->Configuration->Z-Configuration->Z-Offset Scan within your printers menu structure. This will always use the preconfigured or changed (see M3901) settings within your printers RAM. These M3900/M3901-Settings are not stored within the printers EEPROM.  
 
-## SensiblePressure  
+## Nibbels/Wessix SenseOffset  
 * M3909 Pn Sm  
 P = max. digits = {1...14999} [digits]  
 S = max. SenseOffset = {1...300} std.: 180 [um]  
 
-Feature called "SensiblePressure"  
+Feature called "Nibbels/Wessix SenseOffset"  
  The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
  The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). The adjustment will not violate the "max. SenseOffset" restriction in order to avoid unwanted offsets (not caused by too close nozzle).  
  When choosing "max. SenseOffset" you should already know how much digits your printer normally has (Same Material, same Temperatures, same Speed, same Nozzle) and then add some plus 20% or plus 1000digits of force-tolerance.  
- When the z-Compensation gets deactivated the SensiblePressure-function is deactivated as well.  
+ When the z-compensation gets deactivated the senseoffset-function is deactivated as well.  
  Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.  
  You cannot activate the Feature if zCompensation is not active already.  
  
