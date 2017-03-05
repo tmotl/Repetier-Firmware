@@ -59,7 +59,7 @@ Weitere (passende) **Verbesserungen/Bugfixes der Entwickler der originalen Repet
 Mit dem Stand vom 20.01.2017 wurde die Firmware auf den neuesten Firmwarestand der Original **RF.01.37** angehoben.  
 
 _von Nibbels und Wessix entwickelt_:  
-**M3909 Pn Sm** - siehe unter "SensibleDruckmessung / Sensible Pressure"  
+**M3909 Pn Sm** - siehe "SenseOffset" (Kompensation der thermischen Nachdehnung)  
 
 ## mhier Z-Offset-Scan
 
@@ -81,7 +81,7 @@ gestartet werden. In diesem Fall werden immer die vorkonfigurierten oder bereits
 * M3901 **Xn Ym Sy Px**  
 Konfiguriert den mhier Z-Offset-Scan, ohne diesen sofort auszuführen.
 
-## kontinuierliche sensible Druckmessung
+## "SenseOffset" (Kompensation der thermischen Nachdehnung)  
 
 * M3909 Pn Sm  
 **P** = maximale Digitgrenze = {1....14999} [digits]  
@@ -96,7 +96,7 @@ Sie können die Funktion nicht aktivieren wenn die Z-Kompensation der Grund Firm
 
 Während des Drucks können sie die Funktion aktivieren oder einstellen indem sie die "links" und "rechts" Taste an Bedienfeld drücken, solange sie im "Mod-Menü" des Druckers (Seite 2 auf dem Display des Druckers) sind (Seite 2 kann über die Pfeil nach unten Taste vom Hauptbildschirm aus aufgerufen werden).  
 
-## SensibleViskositätsmessung = SensibleViscosity  
+## Filament Viskositätsmessung = SensibleViscosity  
 * M3939 Fn St1 Pt2 Ex Iy Rm  
 **S** = Starttemperatur für den Test in °C  
 **P** = Enddemperatur für den Test in °C  
@@ -117,8 +117,6 @@ Sie werden eine CSV-formatierte Ausgabe im Konsolenfenster ihres Slicers oder Pr
  ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/c00ac11b3a384994b37ce8bc3cf03bd9.png "Clogged Nozzle ABS")  
  Das ist rotes PLA:
  ![ ](https://downfight.de/picproxy.php?url=http://image.prntscr.com/image/2a3253c930794afc81e4fa4d4b2a4261.png "Clogged Nozzle ABS")  
-
-
 
 ## FlüsterModus = SilentMode
 * M3920 Sb
