@@ -2,20 +2,16 @@
 [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/100px-Flag_of_the_United_States.svg.png" height="30">](README.md)
 [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Flag_of_Germany.svg/100px-Flag_of_Germany.svg.png" height="30">](README.de_DE.md)
 
-# Inoffizielle Modifikation der RF Betriebssoftware für RF1000 und RF2000 Geräte
+# Inoffizielle Modifikation der RF Firmware für RF1000 und RF2000 Geräte
 
-Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Betriebssoftware  
+Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Firmware  
 
 ## Warnhinweis
-Diese Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Modifikation der orginal Betriebssoftware dar. Sie wird weder vom Vertreiber der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" unterstützt.  
-Benutzung auf eigene Gefahr. Für etwaige Schäden die an Ihrem Gerät entstehen können kann keine Verantwortung übernommen werden.  
+Diese Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Modifikation der orginal Firmware dar. Sie wird weder vom Vertreiber der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" unterstützt.  
+BENUTZUNG AUF EIGENE GEFAHR. Für etwaige Schäden, die an Ihrem Gerät entstehen könnten, kann keine Verantwortung übernommen werden.  
 
-Für die offizielle Version der Betriebssoftware bitten wir Sie das zugrundeliegende Repository unter:  
-https://github.com/RF1000/Repetier-Firmware
-aufzurufen. 
-
-Für die modifizierte Version von mhier schauen Sie bitte unter:  
-https://github.com/mhier/Repetier-Firmware
+Für die offizielle Version der Firmware: https://github.com/RF1000/Repetier-Firmware (developement)
+Für die modifizierte Version von mhier: https://github.com/mhier/Repetier-Firmware
 
 ## Version RF 1.37mod
 
