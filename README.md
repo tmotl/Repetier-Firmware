@@ -77,7 +77,7 @@ With two extruders X=1 is allowed otherwise forbidden. Normally X=2 is the lowes
 
 [S] specifies the learning rate of M3900  
 S= {100}  
-the Matrix will reloaded from the EEPROM at the begin of the scan.  
+the Matrix will be reloaded from the EEPROM at the begin of the scan.  
 S= {0..99}  
 the Matrix in RAM will be adjusted by 0% to 99% of the messured Offset. This is a great feature for multiple little corrections, in case you would not want to start allover or you cannot trust your first values 100% (you want to sum up corrections from different scanning-locations).
 
