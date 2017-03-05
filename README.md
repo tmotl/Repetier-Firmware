@@ -95,7 +95,7 @@ You can activate the mhier Z-Offset-Scan within ->Configuration->Z-Configuration
 P = max. digits = {1...14999} [digits]  
 S = max. SenseOffset = {1...300} std.: 180 [um]  
 
-Feature called "Nibbels/Wessix SenseOffset"  
+Feature called "Nibbels/Wessix SenseOffset". This is a digit limiter which decreases the printers digits by lowering the heatbed. It compensates the thermal expansion of some second order printer parts.  
  The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
  The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). The adjustment will not violate the "max. SenseOffset" restriction in order to avoid unwanted offsets (not caused by too close nozzle).  
  When choosing "max. SenseOffset" you should already know how much digits your printer normally has (Same Material, same Temperatures, same Speed, same Nozzle) and then add some plus 20% or plus 1000digits of force-tolerance.  
