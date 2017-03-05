@@ -31,7 +31,7 @@ Nibbels/Wessix SenseOffset (Kompensation der thermischen Nachdehnung)
 ## Liste der Funktionen und zusätzlichen GCODEs für den RF2000 und den RF1000
 
 _von mhier entwickelt_:  
-- M3900 - Messe den Abstand/Versatz des Heizbetts und korrigiere die aktive Z-Matrix des Heizbettes und speichere sie im RAM Speicher.   (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle,  Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
+M3900 - Messe den Abstand/Versatz des Heizbetts und korrigiere die aktive Z-Matrix des Heizbettes und speichere sie im RAM Speicher.   (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle,  Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
 Modell RF2000: Z_OVERRIDE_MAX = 1.0mm, anstelle von 0.5mm.  
 Modell RF1000: Z_OVERRIDE_MAX = 0.5mm, weil mehr mit dem Originalschalter nicht zwingend gut ist.  
 
@@ -55,7 +55,7 @@ _von Nibbels_:
 **M3939 Fn St1 Pt2 Ex Iy Rm** - um ein Diagramm über die Filamentextrusionsgeschwindigkeit und die korrelierende Digit Zahl aufzuzeichnen -> ermöglicht Rückschlüsse zur Viskosität des Filaments.  
 **M3920 Sb** - Flüstermodus ein oder ausschalten(die Funktion vermindert den Strom der Steppermotoren auf ein in der Firmware definiertes anderes Profil mit niedrigeren Werten).  
 Es wurden **alle Compilerwarnungen und Compilerfehler eliminiert**. 
-Weitere (passende) **Verbesserungen/Bugfixes der Entwickler der originalen RepetierFirmware** wurden auch in diesen Mod übernommen, obwohl die original RF2000/RF1000 Firmware diese nicht übernommen hatte.
+Weitere (passende) **Verbesserungen/Bugfixes/Commits der Entwickler der originalen RepetierFirmware** wurden auch in diesen Mod übernommen, obwohl die original RF2000/RF1000 Firmware diese nicht übernommen hatte.
 Mit dem Stand vom 20.01.2017 wurde die Firmware auf den neuesten Firmwarestand der Original **RF.01.37** angehoben.  
 
 _von Nibbels und Wessix entwickelt_:  
@@ -81,16 +81,16 @@ gestartet werden. In diesem Fall werden immer die vorkonfigurierten oder bereits
 * M3901 **Xn Ym Sy Px**  
 Konfiguriert den mhier Z-Offset-Scan, ohne diesen sofort auszuführen.
 
-## "SenseOffset" (Kompensation der thermischen Nachdehnung)  
+## SenseOffset (Kompensation der thermischen Nachdehnung)  
 
 * M3909 Pn Sm  
 **P** = maximale Digitgrenze = {1....14999} [digits]  
 **S** = maximaler Mess/Korrektur-Abstand = {1...300} Standardeinstellung wenn nicht expliziet definiert.: 180 [um]  
 
-Der Drucker wird wenn das Feature aktiviert ist automatisch den in Digits gemessenen Druck unter der vorgegebenen Grenze halten indem er den Abstand zwischen Düse und Bett vergrößert und dadurch den entstehenden Druck verringert. Die Anpassung die vom Drucker vorgenommen wird ist auf positive Werte beschränkt (das bedeutet dass das Bett wird niemals näher an die Düse fahren wie ohne Aktivierung des Mods durch M3909). Die vorgenommenen Änderungen werden den Wert "max. SenseOffset = maximaler Mess/Korrektur-Abstand" nicht überschreiten um ungewollt hohe Offsets/Abstände (falls nicht durch eine zu nah am Bett befindliche Düse bedingt) zu vermeiden.  
+Der Drucker wird, wenn das Feature aktiviert ist, automatisch den gemessenen Filament-Einpress-Druck (positive Digits) unter der vorgegebenen Grenze halten indem er den Abstand zwischen Düse und Bett vergrößert und dadurch den entstehenden Innendruck im Hotend verringert wird. Das Heizbett wird ausschließlich von der Düse weggeregelt, das bedeutet, dass das Bett niemals näher an die Düse fahren wird. Die vorgenommenen Änderungen werden den Wert "max. SenseOffset = maximaler Mess/Korrektur-Abstand" nicht überschreiten, um ungewollt hohe Offsets/Abstände (falls nicht durch eine zu nah am Bett befindliche Düse bedingt) zu vermeiden.  
 
 Bei der Wahl des Wertes für "max. SenseOffset = maximaler Mess/Korrektur-Abstand" sollten Sie bereits anhand vorangegangener "guter" Drucke wissen welchen Digitwert der Drucker normalerweise bei zufriedenstellendem Druckergebnis einnimmt (Basierend auf gleichem Material, gleichen Drucktemperaturen, gleiche Druckgeschwindigkeit, gleiche Düse) und dann ca 20% oder 1000 Digits an Krafttoleranz dazu addieren.  
-Wird die Z-Kompensation ausgeschalten wird die "SensiblePressure = kontinuierliche sensible Druckmessung" ebenfalls ausgeschaltet
+Wird die Z-Kompensation ausgeschalten wird SenseOffset ebenfalls ausgeschaltet.
 Benutzen Sie "M3909 P0" für die manuelle Abschaltung der Funktion, dies sollte aber normalerweise nicht nötig werden. (Die Funktion schaltet sich nach vollenden des kritischen Ersten Layers von selbst ab)  
 Sie können die Funktion nicht aktivieren wenn die Z-Kompensation der Grund Firmware zuvor nicht aktiviert wurde.  
 
