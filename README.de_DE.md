@@ -7,8 +7,7 @@
 Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Firmware  
 
 ## Warnhinweis
-Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Firmware-Modifikation der orginal Conrad-Firmware dar. 
-Sie wird weder vom Hersteller der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" supported.  
+Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Firmware-Modifikation der orginal Conrad-Firmware dar. Sie wird weder vom Hersteller der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" supported.  
 Für etwaige Schäden, die an Ihrem Gerät entstehen könnten, kann keine Verantwortung übernommen werden.  
 BENUTZUNG AUF EIGENE GEFAHR. 
 
@@ -40,52 +39,53 @@ _von StarTony_:
 Lüfter-Geschwindigkeits-Patch, siehe: http://www.rf1000.de/viewtopic.php?f=7&t=1638  
 
 _von Wessix_:  
- M355 Sx - Port X19 an und abschalten, um dort angeschlossene Verbraucher wie z.b. die LED Leiste zu steuern (24V MOSFET @Anschluss X19) 
+ **M355 Sx** - Port X19 an und abschalten, um dort angeschlossene Verbraucher wie z.b. die LED Leiste zu steuern (24V MOSFET @Anschluss X19)  
  Die grundlegende Idee eine Drucksensible Offsetregelung zu implentieren (Siehe Erklärung des MCODES M3909)  
  Idee die Zahl der aktuellen Digits zusammen mit der Status-Temperaturabfrage abzugreifen.  
 
 _von Nibbels_:  
- Abschaltung des Fräs-Modus! Wenn Sie diesen benötigen kann er innerhalb der Konfigurationsdateien erneut angeschaltet werden.  
- M3900 Xn Ym Px Sy - Scanne den Abstand des Heizbetts und korrigiere die aktive Z-Matrix innerhalb des RAM im Drucker. (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle, Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
- M3901 Xn Ym Px Sy - Vorkonfigurationsbefehl für M3900, ohne den Scan zu starten. 
- M3902 R1 - um ein einzelnes Loch im Heizbett in der Heatbed-Matrix zu korrigieren.  
- M3902 Zn.n - Um den aktiven Z-Offset zur hinterlegten Z-Matrix zu addieren. Der M3006 Z - Offset wird danach auf 0 gesetzt. Die Matrix wird innerhalb des RAMs verändert und kann danach mit dem Befehl M3902 S [n] an der Position [n] im EEPROM abgelegt werden.  
- M3902 Sn - Speichere die gerade im RAM aktivierte Matrix unter der Postion n = {1..9}  
- M3902 Z0 S1 - Verschiebe des Z-Offset auf den Matrixwert und speichere die Matrix an der Position 1 im EEPROM - Dies ist ein Beispiel um zu zeigen, dass die Optionen von M3902 kombiniert werden können.  
- M3903 Pt Smin - um einen sehr langsamen und schrittweisen Abfall der Betttemperatur einzustellen. Ein Schritt dauert t Sekunden. Die Endtemperatur wird in °C angegeben.  
- M3939 Fn St1 Pt2 Ex Iy Rm - um ein Diagramm über die Filamentextrusionsgeschwindigkeit und die korrelierende Digit Zahl aufzuzeichnen -> ermöglicht Rückschlüsse zur Viskosität des Filaments.  
- M3920 Sb - Flüstermodus ein oder ausschalten(die Funktion vermindert den Strom der Steppermotoren auf ein in der Firmware definiertes anderes Profil mit niedrigeren Werten).  
- Es wurden alle Fehler die in der Orginalbetriebssoftware zu Compilerwarnungen oder Fehlern führten eliminiert. Weiter wurden einige Verbesserungen, die für die allem zugrunde liegenden Repetier Software eingebaut wurden ebenfalls implementiert da von Conrad noch nicht umgesetzt.  
- Mit dem Stand vom 20.01.2017 wurde der ganze Mod auf den neuesten Firmwarstand RF.01.37 angehoben.  
+ **Abschaltung des Fräs-Modus!** Wenn Sie diesen benötigen kann er innerhalb der Konfigurationsdateien erneut angeschaltet werden.  
+ **M3900 Xn Ym Px Sy** - Scanne den Abstand des Heizbetts und korrigiere die aktive Z-Matrix innerhalb des RAM im Drucker. (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle, Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
+ **M3901 Xn Ym Px Sy** - Vorkonfigurationsbefehl für M3900, ohne den Scan zu starten.  
+ **M3902 R1** - um ein einzelnes Loch im Heizbett in der Heatbed-Matrix zu korrigieren.  
+** M3902 Zn.n** - Um den aktiven Z-Offset zur hinterlegten Z-Matrix zu addieren. Der M3006 Z - Offset wird danach auf 0 gesetzt. Die Matrix wird innerhalb des RAMs verändert und kann danach mit dem Befehl M3902 S [n] an der Position [n] im EEPROM abgelegt werden.  
+ **M3902 Sn** - Speichere die gerade im RAM aktivierte Matrix unter der Postion n = {1..9}  
+ **M3902 Z0 S1** - Verschiebe des Z-Offset auf den Matrixwert und speichere die Matrix an der Position 1 im EEPROM - Dies ist ein Beispiel um zu zeigen, dass die Optionen von M3902 kombiniert werden können.  
+**M3903 Pt Smin** - um einen sehr langsamen und schrittweisen Abfall der Betttemperatur einzustellen. Ein Schritt dauert t Sekunden. Die Endtemperatur wird in °C angegeben.  
+ **M3939 Fn St1 Pt2 Ex Iy Rm** - um ein Diagramm über die Filamentextrusionsgeschwindigkeit und die korrelierende Digit Zahl aufzuzeichnen -> ermöglicht Rückschlüsse zur Viskosität des Filaments.  
+ **M3920 Sb** - Flüstermodus ein oder ausschalten(die Funktion vermindert den Strom der Steppermotoren auf ein in der Firmware definiertes anderes Profil mit niedrigeren Werten).  
+ Es wurden **alle Compilerwarnungen und Compilerfehler eliminiert**. 
+ Weitere Verbesserungen, welche von der originalen RepetierFirmware umgesetzt wurden und sinnvoll sein könnten, wurden auch in diesen Mod übernommen, obwohl die original RF2000/RF1000 Firmware diese nicht übernommen hatte.
+ Mit dem Stand vom 20.01.2017 wurde die Firmware auf den neuesten Firmwarestand der Original **RF.01.37** angehoben.  
 
 _von Nibbels und Wessix entwickelt_:  
- M3909 Pn Sm - siehe unter "SensibleDruckmessung / Sensible Pressure"  
+ **M3909 Pn Sm** - siehe unter "SensibleDruckmessung / Sensible Pressure"  
 
 ## mhier Z-Offset-Scan
 
-* M3900 Xn Ym Sy Px - Mache einen Z-Offset-Scan an einer bestimmten Position.  
-[X]/[Y] legt die Position des Scans innerhalb der möglichen HBS-Matrix Positionen fest.  
-X = {1..9}, {0 = Zufallsposition X}  
-Y = {2..12}, {0 = Zufallsposition Y}  
+* M3900 **Xn Ym Sy Px** - Mache einen Z-Offset-Scan an einer bestimmten Position.  
+ **[X]/[Y]** legt die Position des Scans innerhalb der möglichen HBS-Matrix Positionen fest.  
+**X** = {1..9}, {0 = Zufallsposition X}  
+**Y** = {2..12}, {0 = Zufallsposition Y}  
 Mit zwei Extrudern ist X=1 ein erlaubter Wert, mit nur einem ist normalerweise X=2 die niedrigste Matrix-Scanposition in X Ausrichtung. Diese Limitierung wird von Begrenzungen/Begrenzungswerten in jeder Z-Matrix verursacht. Man kann aber nichts falsch einstellen, sollten für X und Y vom Benutzer unzulässige Werte eingestellt werden, ändert die Firmware diese auf den nächstliegenden gültigen Wert.  
-[S] legt die Lernrate fest  
-S = {100}: Die Matrix wird beim Beginn des Scans komplett aus dem EEPROM in den RAM des Druckers geladen. Bisherige nicht gespeicherte Änderungen werden verworfen.  
-S = {0..99}: Die Matrix im RAM wird von 0 - 99% Penetranz des gemessenen Offsets angepasst. Dies ist eine tolle Möglichkeit mit mehreren kleinen Korrekturen eine insgesamt gute Korrekturquote zu erreichen im Falle dass man keinen kompletten HBS machen will oder man den ersten Messwerten nicht zu 100% trauen kann (Stichwort Popel). (Man will letztlich die Korrekturen von Verschiedenen Positionen gemeinsam nutzen)  
-[P] mhier Z-Offset-Scan Entfernungsgewichtung  
-P = {0..100}  
+ **[S]** legt die Lernrate fest  
+**S** = {100}: Die Matrix wird beim Beginn des Scans komplett aus dem EEPROM in den RAM des Druckers geladen. Bisherige nicht gespeicherte Änderungen werden verworfen.  
+**S** = {0..99}: Die Matrix im RAM wird von 0 - 99% Penetranz des gemessenen Offsets angepasst. Dies ist eine tolle Möglichkeit mit mehreren kleinen Korrekturen eine insgesamt gute Korrekturquote zu erreichen im Falle dass man keinen kompletten HBS machen will oder man den ersten Messwerten nicht zu 100% trauen kann (Stichwort Popel). (Man will letztlich die Korrekturen von Verschiedenen Positionen gemeinsam nutzen)  
+ **[P]** mhier Z-Offset-Scan Entfernungsgewichtung  
+**P** = {0..100}  
 Dies ist eine Option mit der sich ein, an einer definierten Position gemessener Offset, nur in einem gewissen Radius um diese Messposition auswirkt. Wenn sie diese Option verwenden und die Mitte des Bettes sowie danach die vier Ecken des Druckbettes mit einer hohen Entfernungsgewichtung scanne wirkt sich dieses Feature wie ein "Auto-Bed-Levelling" auf die Z-Matrix aus. Die Matrix wird dann quasie "verbogen" und nicht mit einem konstanten Wert verändert. (Dies Option könnte für Heizbetten bei denen sich die Ecken bei unterschiedlichen Temperaturen anheben/senken gut funktionieren um etwaige Verdrehungen herauszukorrigieren)  
 
-Sie können den mhier Z-Offset-Scan im Druckermenü unter: ```-> Konfiguration ->  Z-Konfiguration -> Z-Offset Scan```  
-starten. Dann werden immer die vorkonfigurierten oder bereits geänderten (siehe unter M3901) Einstellungen vom RAM des Druckers verwendet. Diese M3900/M3901 Einstellungen werden nicht im EEPROM des Druckers gespeichert.  
+Der mhier Z-Offset-Scan kann im Druckermenü unter ```-> Konfiguration ->  Z-Konfiguration -> Z-Offset Scan```  
+gestartet werden. In diesem Fall werden immer die vorkonfigurierten oder bereits geänderten (siehe unter M3901) Einstellungen im RAM des Druckers verwendet. Diese M3900/M3901 Einstellungen werden nicht im EEPROM des Druckers gespeichert, sind also nach einem Neustart des Druckers wieder auf Standard eingestellt.  
 
-* M3901 Xn Ym Sy Px  
+* M3901 **Xn Ym Sy Px**  
 Konfiguriert den mhier Z-Offset-Scan, ohne diesen sofort auszuführen.
 
 ## kontinuierliche sensible Druckmessung
 
 * M3909 Pn Sm  
-P = maximale Digitgrenze = {1....14999} [digits]  
-S = maximaler Mess/Korrektur-Abstand = {1...300} Standardeinstellung wenn nicht expliziet definiert.: 180 [um]  
+**P** = maximale Digitgrenze = {1....14999} [digits]  
+**S** = maximaler Mess/Korrektur-Abstand = {1...300} Standardeinstellung wenn nicht expliziet definiert.: 180 [um]  
 
 Der Drucker wird wenn das Feature aktiviert ist automatisch den in Digits gemessenen Druck unter der vorgegebenen Grenze halten indem er den Abstand zwischen Düse und Bett vergrößert und dadurch den entstehenden Druck verringert. Die Anpassung die vom Drucker vorgenommen wird ist auf positive Werte beschränkt (das bedeutet dass das Bett wird niemals näher an die Düse fahren wie ohne Aktivierung des Mods durch M3909). Die vorgenommenen Änderungen werden den Wert "max. SenseOffset = maximaler Mess/Korrektur-Abstand" nicht überschreiten um ungewollt hohe Offsets/Abstände (falls nicht durch eine zu nah am Bett befindliche Düse bedingt) zu vermeiden.  
 
@@ -98,14 +98,13 @@ Während des Drucks können sie die Funktion aktivieren oder einstellen indem si
 
 ## SensibleViskositätsmessung = SensibleViscosity  
 * M3939 Fn St1 Pt2 Ex Iy Rm  
-S = Starttemperatur für den Test in °C  
-P = Enddemperatur für den Test in °C  
-F = maximaler Wert für die Digits = 10000 oder {1...12000} [digits]  
-E = maximale Extrusionsgeschwindigkeit = 5 oder {0,05 .... max.StartFeedrate} [mm/s]  
-
+**S** = Starttemperatur für den Test in °C  
+**P** = Enddemperatur für den Test in °C  
+**F** = maximaler Wert für die Digits = 10000 oder {1...12000} [digits]  
+**E** = maximale Extrusionsgeschwindigkeit = 5 oder {0,05 .... max.StartFeedrate} [mm/s]  
 optional:  
-I = Extrusionsgeschwindigkeitssteigerungsrate = 0.1 oder {0.02.....0.4} [mm/s]  
-R= maximaler Digitunterschied welche angenommen wird um eine "gefüllte" Düse anzunehmen = 800 [digits]  
+**I** = Extrusionsgeschwindigkeitssteigerungsrate = 0.1 oder {0.02.....0.4} [mm/s]  
+**R** = maximaler Digitunterschied welche angenommen wird um eine "gefüllte" Düse anzunehmen = 800 [digits]  
 
 Der Drucker wird automatisch in die Luft extrudieren und  die dabei entsehende Kraft messen. Nach jeder Messung wirde die Geschwindigkeit der Extrusion erhöht.  
 Sie werden eine CSV-formatierte Ausgabe im Konsolenfenster ihres Slicers oder Printservers angezeigt bekommen, die sin dann einfach per kopieren und einfügen in eine Textdatei kopieren können. Diese kann dann z.B. in MS Exel importiert und in einen Graphen umgewandelt werden. Sie werden sich nach dem Sinn dieses Features fragen, aber wenn sie ihr Filament gut kennen können sie die resultierenden Werte vergleichen insbesondere unter sich verändernden Bedingungen und was z.B. passiert wenn die Düse verstopft oder kurz davor ist.  
@@ -123,7 +122,7 @@ Sie werden eine CSV-formatierte Ausgabe im Konsolenfenster ihres Slicers oder Pr
 
 ## FlüsterModus = SilentMode
 * M3920 Sb
-S = {0,1} = Flüstermodus an und abschalten und Verlust der Nullpunktjustierung 
+**S** = {0,1} = Flüstermodus an und abschalten und Verlust der Nullpunktjustierung 
 
 Diese Funktion kann nützlich sein wenn sie eine zu den von Conrad vorgegebenen Motorströmen abweichende Einstellung dieser definieren wollen, diese Funktion aber an und abschaltbar machen wollen.
 
