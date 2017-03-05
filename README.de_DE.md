@@ -25,8 +25,8 @@ https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-
 
 ## Haupt-Funktionen dieser Modifikation:
 
-mhier Z-Offset Scan (zMatrix Höhenkorrektur)
-Nibbels/Wessix SenseOffset (Kompensation der thermischen Nachdehnung)
+mhier Z-Offset Scan (zMatrix Höhenkorrektur)  
+Nibbels/Wessix SenseOffset (Kompensation der thermischen Nachdehnung)  
 
 ## Liste der Funktionen und zusätzlichen GCODEs für den RF2000 und den RF1000
 
