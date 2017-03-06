@@ -1,3 +1,7 @@
+V RF.01.37f.mod (2017-03-06)
+- we added a german description/readme.md
+- the Z-Endstop default switch is now "SINGLE" not "CIRCUIT" anymore. This was the cause of some problems on two printers with only one endstop installed. Now this default setting again sticks to the developement/master of the original RF1000 Firmware.
+
 V RF.01.37f.mod (2017-02-28)
 - Codecleanup @M3901 M3900
 - M3900 now is able to use the configuration options of M3901 directly. From now on M3901 is a preconfiguration only, the M3900 will be able to use X Y P S-Switches and scans directly.
