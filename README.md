@@ -34,7 +34,7 @@ https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-
 _by mhier_:  
 M3900				- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
 RF2000: Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm  
-RF1000: Z_OVERRIDE_MAX = 0.5mm, because of the original z-min-endstop
+RF1000: Z_OVERRIDE_MAX = 1.0mm, instead of 0.5mm  
 
 _by StarTony_:  
 Fan-Speed-Patch, see http://www.rf1000.de/viewtopic.php?f=7&t=1638  
