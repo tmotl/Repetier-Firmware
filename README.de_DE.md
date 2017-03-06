@@ -7,14 +7,14 @@
 Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Firmware  
 
 ## Warnhinweis
-Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Firmware-Modifikation der orginal Conrad-Firmware dar. Sie wird weder vom Hersteller der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" supported.  
+Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Firmware-Modifikation der original Conrad-Firmware dar. Sie wird weder vom Hersteller der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" supported.  
 Für etwaige Schäden, die an Ihrem Gerät entstehen könnten, kann keine Verantwortung übernommen werden.  
 BENUTZUNG AUF EIGENE GEFAHR. 
 
-Für die offizielle Version der Firmware: https://github.com/RF1000/Repetier-Firmware (developement)  
-Für die modifizierte Version von mhier: https://github.com/mhier/Repetier-Firmware
+Link zur offiziellen Version der Firmware: https://github.com/RF1000/Repetier-Firmware (siehe Branch developement)  
+Link zur modifizierten Version von mhier: https://github.com/mhier/Repetier-Firmware/tree/heat_bed_z_offset_scan
 
-## Version RF 1.37mod
+## Version RF 1.37mod - wichtige Threads im Forum
 
 http://www.rf1000.de/viewtopic.php?f=74&t=1674 (Nibbels/Wessix SenseOffset-Thread)  
 http://www.rf1000.de/viewtopic.php?f=7&t=1504#p14882 (mhier Mod)  
@@ -25,8 +25,8 @@ https://github.com/Nibbels/Repetier-Firmware/commits/heat_bed_z_offset_scan-%26-
 
 ## Haupt-Funktionen dieser Modifikation:
 
-mhier Z-Offset Scan (zMatrix Höhenkorrektur)  
-Nibbels/Wessix SenseOffset (Kompensation der thermischen Nachdehnung)  
+mhier Z-Offset Scan (zMatrix Höhenkorrekturscan durch Abtasten eines Punktes auf dem Heizbetts bei Betriebstemperatur)  
+Nibbels/Wessix SenseOffset (Kompensation der thermischen Nachdehnung im ersten Layer)  
 
 ## Liste der Funktionen und zusätzlichen GCODEs für den RF2000 und den RF1000
 
@@ -107,7 +107,8 @@ _Beispiel 3:_
 Der Drucker druckt PLA sehr heiß und sehr langsam. Die Digits schwanken sehr stark zwischen 1000 und 2500. Vermutlich hilft es, das PLA schneller zu drucken, dann stabilisieren sich die Digits, ein gutes Limit in der ersten Lage könnte z.B. 3000 digits sein. Anschließend kann man sein Gefühl für das Material verfeinern.
 
 Wird aus irgendeinem Grund die Z-Kompensation ausgeschaltet wird SenseOffset ebenfalls deaktiviert.
-"M3909 P0" sorgt für die manuelle Abschaltung der Funktion, dies sollte aber normalerweise nicht nötig sein. Die Funktion ist nur aktiv, wenn sich die Z-Höhe unter ~0.2mm befindet. Anschließend wird sie inaktiv und vollständig deaktiviert, sobald das Druckobjekt ausgegeben wird.
+"M3909 P0" sorgt für die manuelle Abschaltung der Funktion, dies sollte aber normalerweise nicht nötig sein. Die Funktion ist nur aktiv, wenn sich die Z-Höhe unter ~0.2mm befindet. Dieses Arbeitshöhenlimit, ab dem die Funktion inaktiv wird, entspricht dem unteren Grenzwert der Z-Kompensation. Siehe auch M3007 (http://www.rf1000.de/wiki/index.php/GCodes#M3007_-_Minimale_H.C3.B6he_f.C3.BCr_Z-Kompensation_festlegen)
+Abschließend, sobald das Druckobjekt ausgegeben wird, wird M3909 inaktiv und vollständig deaktiviert.
 Ohne Z-Kompensation kann SenseOffset nicht aktiviert werden, es wird sofort deaktiviert.
 
 Während des Drucks kann man während des ersten Layers diese Funktion aktivieren oder das Limit ändern, indem man die "links"- und "rechts"-Navigationstasten an Bedienfeld des Druckers nutzt, solange man sich im "Mod-Menü" des Druckers befindet. (Seite 2 auf dem Display des Druckers. Seite 2 kann über die Pfeil nach unten Taste vom Hauptbildschirm aus aufgerufen werden).  
