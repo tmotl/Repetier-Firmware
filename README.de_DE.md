@@ -33,7 +33,7 @@ Nibbels/Wessix SenseOffset (Kompensation der thermischen Nachdehnung)
 _von mhier entwickelt_:  
 M3900 - Messe den Abstand/Versatz des Heizbetts und korrigiere die aktive Z-Matrix des Heizbettes und speichere sie im RAM Speicher.   (Angabe von X, Y Wert der Matrix möglich, Zufallsbestimmung der Messtelle,  Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
 Modell RF2000: Z_OVERRIDE_MAX = 1.0mm, anstelle von 0.5mm.  
-Modell RF1000: Z_OVERRIDE_MAX = 0.5mm, weil mehr mit dem Originalschalter nicht zwingend gut ist.  
+Modell RF1000: Z_OVERRIDE_MAX = 1.0mm, anstelle von 0.5mm.   
 
 _von StarTony_:  
 Lüfter-Geschwindigkeits-Patch, siehe: http://www.rf1000.de/viewtopic.php?f=7&t=1638  
