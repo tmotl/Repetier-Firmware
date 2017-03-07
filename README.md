@@ -46,7 +46,6 @@ Idea to implement the SensiblePressure-Function, see M3909
 Idea to send the active digits with the printTemperature-Status.
 
 _by Nibbels_:  
-Disabled Milling-Mode! If you need it, activate it within the configuration files.  
 M3900 Xn Ym Px Sy	- Scan the heatbeds offset and correct the active zMatrix within the RAM of the Printer. (X-Y-Pos, Learning-Factor, linear distance weight.)  
 M3901 Xn Ym Px Sy	- to preconfigure M3900 (X-Y-Pos, Learning-Factor, linear distance weight.)  
 
