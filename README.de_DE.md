@@ -44,7 +44,6 @@ Die grundlegende Idee zum SenseOffset (Kompensation der thermischen Nachdehnung)
 Idee den aktuellen Digit-Kraftwert zusammen mit der Status-Temperaturabfrage zum RepetierServer/Octoprint zu senden.  
 
 _von Nibbels_:  
-**Abschaltung des Fräs-Modus!** Wenn benötigt kann er innerhalb der Konfigurationsdateien erneut angeschaltet werden.  
 **M3900 Xn Ym Px Sy** - Scanne den Abstand des Heizbetts und korrigiere die aktive zMatrix innerhalb des RAM im Drucker. (Angabe von X, Y Wert der zMatrix möglich, Zufallsbestimmung der Messtelle, Lernfaktor, Lineare Gewichtung in Abhängigkeit von der Entfernung)  
 **M3901 Xn Ym Px Sy** - Vorkonfigurationsbefehl für M3900, ohne den Scan zu starten.  
 **M3902 R1** - um ein einzelnes Loch im Heizbett in der Heatbed-Matrix korrigieren. Der tiefste Matrixpunkt wird durch interpolation der umliegenden Punkte angehoben.  
