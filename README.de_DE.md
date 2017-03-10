@@ -11,8 +11,9 @@ Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's
 Für etwaige Schäden, die an Ihrem Gerät entstehen könnten, kann keine Verantwortung übernommen werden.  
 BENUTZUNG AUF EIGENE GEFAHR. 
 
-Link zur offiziellen Version der Firmware: https://github.com/RF1000/Repetier-Firmware (siehe Branch developement)  
-Link zur modifizierten Version von mhier: https://github.com/mhier/Repetier-Firmware/tree/heat_bed_z_offset_scan
+Link zur offiziellen Version der Firmware:
+https://github.com/RF1000/Repetier-Firmware (siehe Branch developement)  
+
 
 ## Version RF 1.37mod - wichtige Threads im Forum
 

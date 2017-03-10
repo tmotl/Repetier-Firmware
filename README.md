@@ -12,7 +12,7 @@ supported by the developers of the RF1000 firmware or by the developer of the or
 USE AT YOUR OWN RISK.
 
 For the official version, have a look at the upstream repository:
-https://github.com/RF1000/Repetier-Firmware
+https://github.com/RF1000/Repetier-Firmware (see branch development)
 
 
 ## Version RF.01.37mod 
