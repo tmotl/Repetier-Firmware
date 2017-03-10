@@ -167,110 +167,110 @@ for 2 row displays. You can add additional pages or change the default pages lik
 
 #if UI_ROWS>=6 && UI_DISPLAY_TYPE==5
 
-	// graphic main status
-	UI_PAGE6(ui_page1,"\xa %e0/%E0\xb0 X:%x0",
+    // graphic main status
+    UI_PAGE6(ui_page1,"\xa %e0/%E0\xb0 X:%x0",
 
-	#if NUM_EXTRUDER>1
-		 "\xa %e1/%E1\xb0 Y:%x1",
-	#else
-		 "\xa -----/---\xb0 Y:%x1",
-	#endif // NUM_EXTRUDER>1
+    #if NUM_EXTRUDER>1
+         "\xa %e1/%E1\xb0 Y:%x1",
+    #else
+         "\xa -----/---\xb0 Y:%x1",
+    #endif // NUM_EXTRUDER>1
 
-	#if HAVE_HEATED_BED==true
-		 "\xe %eb/%Eb\xb0 Z:%x2",
-	#else
-		 "\xb -----/---\xb0 Z:%x2",
-	#endif // HAVE_HEATED_BED==true
+    #if HAVE_HEATED_BED==true
+         "\xe %eb/%Eb\xb0 Z:%x2",
+    #else
+         "\xb -----/---\xb0 Z:%x2",
+    #endif // HAVE_HEATED_BED==true
 
-	"Mul:%om", "Buf:%oB", "%os");
+    "Mul:%om", "Buf:%oB", "%os");
 
-	#if EEPROM_MODE!=0
-		UI_PAGE4(ui_page2,"%Z5","%Z6","%Z7","%Z8");
-		#define UI_PRINTTIME_PAGES ,&ui_page2
-		#define UI_PRINTTIME_COUNT 1
-	#else
-		#define UI_PRINTTIME_PAGES
-		#define UI_PRINTTIME_COUNT 0
-	#endif // EEPROM_MODE!=0
+    #if EEPROM_MODE!=0
+        UI_PAGE4(ui_page2,"%Z5","%Z6","%Z7","%Z8");
+        #define UI_PRINTTIME_PAGES ,&ui_page2
+        #define UI_PRINTTIME_COUNT 1
+    #else
+        #define UI_PRINTTIME_PAGES
+        #define UI_PRINTTIME_COUNT 0
+    #endif // EEPROM_MODE!=0
 
-	/* Merge pages together. Use the following pattern:
-	#define UI_PAGES {&name1,&name2,&name3} */
-	#define UI_PAGES {&ui_page1 UI_PRINTTIME_PAGES}
+    /* Merge pages together. Use the following pattern:
+    #define UI_PAGES {&name1,&name2,&name3} */
+    #define UI_PAGES {&ui_page1 UI_PRINTTIME_PAGES}
 
-	// How many pages do you want to have. Minimum is 1.
-	#define UI_NUM_PAGES 1+UI_PRINTTIME_COUNT
+    // How many pages do you want to have. Minimum is 1.
+    #define UI_NUM_PAGES 1+UI_PRINTTIME_COUNT
 
 #elif UI_ROWS>=4
-	#if HAVE_HEATED_BED==true
-		#if UI_COLS<=16
-			UI_PAGE4(ui_page1,"%U1%ec/%EcB%eB/%Eb","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
-		#else
-			UI_PAGE4(ui_page1,"%U1%ec/%Ec\002 B%eB/%Eb\002","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
-		#endif // UI_COLS<=16
-	#else
-		UI_PAGE4(ui_page1,UI_TEXT_PAGE_EXTRUDER,"Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
-	#endif // HAVE_HEATED_BED==true
+    #if HAVE_HEATED_BED==true
+        #if UI_COLS<=16
+            UI_PAGE4(ui_page1,"%U1%ec/%EcB%eB/%Eb","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
+        #else
+            UI_PAGE4(ui_page1,"%U1%ec/%Ec\002 B%eB/%Eb\002","Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
+        #endif // UI_COLS<=16
+    #else
+        UI_PAGE4(ui_page1,UI_TEXT_PAGE_EXTRUDER,"Z:%x2 mm %sC",UI_TEXT_STRAIN_GAUGE,"%os");
+    #endif // HAVE_HEATED_BED==true
 
-	UI_PAGE4(ui_page2,"X:%x0 mm","Y:%x1 mm","Z:%x2 mm %sC","%os");
-	UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1, 
+    UI_PAGE4(ui_page2,"X:%x0 mm","Y:%x1 mm","Z:%x2 mm %sC","%os");
+    UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1, 
 
-			 #if NUM_EXTRUDER>1
-				UI_TEXT_PAGE_EXTRUDER2
-			 #else
-				""
-			 #endif // NUM_EXTRUDER>1
-			  
-				,UI_TEXT_PAGE_BED,"%os");
+             #if NUM_EXTRUDER>1
+                UI_TEXT_PAGE_EXTRUDER2
+             #else
+                ""
+             #endif // NUM_EXTRUDER>1
+              
+                ,UI_TEXT_PAGE_BED,"%os");
 
-	#if EEPROM_MODE!=0
-		UI_PAGE4(ui_page4,"%Z5","%Z6","%Z7","%Z8");
-	  
-		#define UI_PRINTTIME_PAGES ,&ui_page4
-		#define UI_PRINTTIME_COUNT 1
-	#else
-		#define UI_PRINTTIME_PAGES
-		#define UI_PRINTTIME_COUNT 0
-	#endif // EEPROM_MODE!=0
+    #if EEPROM_MODE!=0
+        UI_PAGE4(ui_page4,"%Z5","%Z6","%Z7","%Z8");
+      
+        #define UI_PRINTTIME_PAGES ,&ui_page4
+        #define UI_PRINTTIME_COUNT 1
+    #else
+        #define UI_PRINTTIME_PAGES
+        #define UI_PRINTTIME_COUNT 0
+    #endif // EEPROM_MODE!=0
 
-	#if EEPROM_MODE!=0 && FEATURE_SERVICE_INTERVAL
-		UI_PAGE4(ui_page5,"%Z1","%Z2","%Z3","%Z4");
-		#define UI_SERVICE_PAGES ,&ui_page5
-		#define UI_SERVICE_COUNT 1
-	#else
-		#define UI_SERVICE_PAGES
-		#define UI_SERVICE_COUNT 0
-	#endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
-	#if UI_COLS<=16
-	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
-						"zO: %z0um zM: %HB",
-						"sO: %sSum@%sM",
-						"Z: %x2mm %sC");
-	#else	
-	UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
-						"zO: %z0 um zMat: %HB",
-						"sO: %sS um @%sM",
-						"Z: %x2 mm %sC");
-	#endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
-	#define UI_MOD_PAGES &ui_page_mod
-	#define UI_MOD_COUNT 1
-	
-	/* Merge pages together. Use the following pattern:
-	#define UI_PAGES {&name1,&name2,&name3} */
-	#define UI_PAGES {&ui_page1,UI_MOD_PAGES,&ui_page2,&ui_page3 UI_PRINTTIME_PAGES UI_SERVICE_PAGES}
+    #if EEPROM_MODE!=0 && FEATURE_SERVICE_INTERVAL
+        UI_PAGE4(ui_page5,"%Z1","%Z2","%Z3","%Z4");
+        #define UI_SERVICE_PAGES ,&ui_page5
+        #define UI_SERVICE_COUNT 1
+    #else
+        #define UI_SERVICE_PAGES
+        #define UI_SERVICE_COUNT 0
+    #endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
+    #if UI_COLS<=16
+    UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
+                        "zO: %z0um zM: %HB",
+                        "sO: %sSum@%sM",
+                        "Z: %x2mm %sC");
+    #else   
+    UI_PAGE4(ui_page_mod,UI_TEXT_STRAIN_GAUGE_SPEED,
+                        "zO: %z0 um zMat: %HB",
+                        "sO: %sS um @%sM",
+                        "Z: %x2 mm %sC");
+    #endif // EEPROM_MODE && FEATURE_SERVICE_INTERVAL
+    #define UI_MOD_PAGES &ui_page_mod
+    #define UI_MOD_COUNT 1
+    
+    /* Merge pages together. Use the following pattern:
+    #define UI_PAGES {&name1,&name2,&name3} */
+    #define UI_PAGES {&ui_page1,UI_MOD_PAGES,&ui_page2,&ui_page3 UI_PRINTTIME_PAGES UI_SERVICE_PAGES}
 
-	// How many pages do you want to have. Minimum is 1.
-	#define UI_NUM_PAGES 3+UI_PRINTTIME_COUNT+UI_SERVICE_COUNT+UI_MOD_COUNT
+    // How many pages do you want to have. Minimum is 1.
+    #define UI_NUM_PAGES 3+UI_PRINTTIME_COUNT+UI_SERVICE_COUNT+UI_MOD_COUNT
 #else
-	UI_PAGE2(ui_page1,UI_TEXT_PAGE_EXTRUDER,UI_TEXT_PAGE_BED);
-	UI_PAGE2(ui_page2,"X:%x0 Y:%x1","%os");
-	UI_PAGE2(ui_page3,"Z:%x2 mm %sC","%os");
+    UI_PAGE2(ui_page1,UI_TEXT_PAGE_EXTRUDER,UI_TEXT_PAGE_BED);
+    UI_PAGE2(ui_page2,"X:%x0 Y:%x1","%os");
+    UI_PAGE2(ui_page3,"Z:%x2 mm %sC","%os");
 
-	/* Merge pages together. Use the following pattern:
-	#define UI_PAGES {&name1,&name2,&name3} */
-	#define UI_PAGES {&ui_page1,&ui_page2,&ui_page3}
+    /* Merge pages together. Use the following pattern:
+    #define UI_PAGES {&name1,&name2,&name3} */
+    #define UI_PAGES {&ui_page1,&ui_page2,&ui_page3}
 
-	// How many pages do you want to have. Minimum is 1.
-	#define UI_NUM_PAGES 3
+    // How many pages do you want to have. Minimum is 1.
+    #define UI_NUM_PAGES 3
 #endif // UI_ROWS>=4
 
 /* ============ MENU definition ================
@@ -356,21 +356,21 @@ UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_heat_bed_scan,UI_TEXT_DO_HEAT_BED_SCAN,UI_A
 
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_heat_bed_scan_pla,UI_TEXT_HEAT_BED_SCAN_PLA,UI_ACTION_RF_SCAN_HEAT_BED_PLA,MENU_MODE_PRINTER,0);
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_heat_bed_scan_abs,UI_TEXT_HEAT_BED_SCAN_ABS,UI_ACTION_RF_SCAN_HEAT_BED_ABS,MENU_MODE_PRINTER,0);
-#define UI_MENU_HEAT_BED_MODE_COND	 , &ui_menu_heat_bed_scan_pla, &ui_menu_heat_bed_scan_abs
-#define	UI_MENU_HEAT_BED_MODE_COUNT 2
+#define UI_MENU_HEAT_BED_MODE_COND   , &ui_menu_heat_bed_scan_pla, &ui_menu_heat_bed_scan_abs
+#define UI_MENU_HEAT_BED_MODE_COUNT 2
 #else
-#define UI_MENU_HEAT_BED_MODE_COND	 
-#define	UI_MENU_HEAT_BED_MODE_COUNT 0
+#define UI_MENU_HEAT_BED_MODE_COND   
+#define UI_MENU_HEAT_BED_MODE_COUNT 0
 
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_mhier_z_scan,UI_TEXT_DO_MHIER_BED_SCAN,UI_ACTION_RF_DO_MHIER_BED_SCAN,MENU_MODE_PRINTER,0);
-#define UI_MENU_HEAT_MHIER_COND	 , &ui_menu_mhier_z_scan 
-#define	UI_MENU_HEAT_MHIER_COUNT 1
+#define UI_MENU_HEAT_MHIER_COND  , &ui_menu_mhier_z_scan 
+#define UI_MENU_HEAT_MHIER_COUNT 1
 #else
-#define UI_MENU_HEAT_MHIER_COND	 
-#define	UI_MENU_HEAT_MHIER_COUNT 0
+#define UI_MENU_HEAT_MHIER_COND  
+#define UI_MENU_HEAT_MHIER_COUNT 0
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_work_part_scan,UI_TEXT_DO_WORK_PART_SCAN,UI_ACTION_RF_SCAN_WORK_PART,0,MENU_MODE_PRINTER);
@@ -388,11 +388,11 @@ UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_set_z_origin,UI_TEXT_SET_Z_ORIGIN,UI_ACTION
 
 #if FEATURE_FIND_Z_ORIGIN
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_find_z_origin,UI_TEXT_FIND_Z_ORIGIN,UI_ACTION_RF_FIND_Z_ORIGIN,0,MENU_MODE_PRINTER);
-#define UI_MENU_FIND_Z_COND	 ,&ui_menu_find_z_origin
-#define	UI_MENU_FIND_Z_COUNT 1
+#define UI_MENU_FIND_Z_COND  ,&ui_menu_find_z_origin
+#define UI_MENU_FIND_Z_COUNT 1
 #else
-#define UI_MENU_FIND_Z_COND	 
-#define	UI_MENU_FIND_Z_COUNT 0
+#define UI_MENU_FIND_Z_COND  
+#define UI_MENU_FIND_Z_COUNT 0
 #endif // FEATURE_FIND_Z_ORIGIN
 
 UI_MENU_CHANGEACTION_FILTER(ui_menu_set_z_matrix_work_part,UI_TEXT_SET_Z_MATRIX_WORK_PART,UI_ACTION_RF_SET_Z_MATRIX_WORK_PART,0,MENU_MODE_PRINTER);
@@ -595,13 +595,13 @@ UI_MENU_SUBMENU_FILTER(ui_menu_fan_sub,UI_TEXT_FANSPEED,ui_menu_fan,MENU_MODE_PR
 #ifdef SDSUPPORT
 #define UI_MENU_SD_FILESELECTOR {&ui_menu_back}
 UI_MENU_FILESELECT(ui_menu_sd_fileselector,UI_MENU_SD_FILESELECTOR,1);
-UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_print_file,		UI_TEXT_PRINT_FILE,     UI_ACTION_SD_PRINT,    MENU_MODE_SD_MOUNTED,  MENU_MODE_SD_PRINTING | MENU_MODE_MILLER);
+UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_print_file,     UI_TEXT_PRINT_FILE,     UI_ACTION_SD_PRINT,    MENU_MODE_SD_MOUNTED,  MENU_MODE_SD_PRINTING | MENU_MODE_MILLER);
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_pause_print,    UI_TEXT_PAUSE_PRINT,    UI_ACTION_SD_PAUSE,    MENU_MODE_SD_PRINTING, MENU_MODE_SD_PAUSED   | MENU_MODE_MILLER);
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_continue_print, UI_TEXT_CONTINUE_PRINT, UI_ACTION_SD_CONTINUE, MENU_MODE_SD_PAUSED,   MENU_MODE_MILLER);
 UI_MENU_ACTION4C(ui_menu_sd_stop_print_ack, UI_ACTION_SD_STOP_ACK, UI_TEXT_STOP_PRINT_ACK);
 UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_sd_stop_print, UI_TEXT_STOP_PRINT, ui_menu_sd_stop_print_ack, MENU_MODE_SD_PRINTING, MENU_MODE_MILLER);
 
-UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_mill_file,	   UI_TEXT_MILL_FILE,     UI_ACTION_SD_PRINT,    MENU_MODE_SD_MOUNTED,  MENU_MODE_SD_PRINTING | MENU_MODE_PRINTER);
+UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_mill_file,     UI_TEXT_MILL_FILE,     UI_ACTION_SD_PRINT,    MENU_MODE_SD_MOUNTED,  MENU_MODE_SD_PRINTING | MENU_MODE_PRINTER);
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_pause_mill,    UI_TEXT_PAUSE_MILL,    UI_ACTION_SD_PAUSE,    MENU_MODE_SD_PRINTING, MENU_MODE_SD_PAUSED   | MENU_MODE_PRINTER);
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_sd_continue_mill, UI_TEXT_CONTINUE_MILL, UI_ACTION_SD_CONTINUE, MENU_MODE_SD_PAUSED,   MENU_MODE_PRINTER);
 UI_MENU_ACTION4C(ui_menu_sd_stop_mill_ack, UI_ACTION_SD_STOP_ACK, UI_TEXT_STOP_MILL_ACK);
@@ -675,11 +675,11 @@ UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_general_max_inactive,UI_TEXT_ALL_OFF,ui_me
 
 #if FEATURE_BEEPER
 UI_MENU_ACTIONCOMMAND(ui_menu_general_beeper,UI_TEXT_BEEPER,UI_ACTION_BEEPER);
-#define BEEPER_MODE_COUNT	1
-#define BEEPER_MODE_ENTRY	,&ui_menu_general_beeper
+#define BEEPER_MODE_COUNT   1
+#define BEEPER_MODE_ENTRY   ,&ui_menu_general_beeper
 #else
-#define BEEPER_MODE_COUNT	0
-#define BEEPER_MODE_ENTRY	
+#define BEEPER_MODE_COUNT   0
+#define BEEPER_MODE_ENTRY   
 #endif // FEATURE_BEEPER
 
 #if FEATURE_RGB_LIGHT_EFFECTS
@@ -694,45 +694,45 @@ UI_MENU_CHANGEACTION(ui_menu_toggle_rgb_light,UI_TEXT_RGB_LIGHT_MODE,UI_ACTION_R
 #if FEATURE_MILLING_MODE
 UI_MENU_ACTIONCOMMAND(ui_menu_operating_mode,UI_TEXT_OPERATING_MODE,UI_ACTION_OPERATING_MODE);
 #define OPERATING_MODE_ENTRY ,&ui_menu_operating_mode
-#define	OPERATING_MODE_COUNT 1
+#define OPERATING_MODE_COUNT 1
 
 #if MOTHERBOARD == DEVICE_TYPE_RF1000
 UI_MENU_ACTIONCOMMAND(ui_menu_z_endstop_type,UI_TEXT_Z_ENDSTOP_TYPE,UI_ACTION_Z_ENDSTOP_TYPE);
 #define Z_ENDSTOP_TYPE_ENTRY ,&ui_menu_z_endstop_type
-#define	Z_ENDSTOP_TYPE_COUNT 1
+#define Z_ENDSTOP_TYPE_COUNT 1
 #else
 #define Z_ENDSTOP_TYPE_ENTRY 
-#define	Z_ENDSTOP_TYPE_COUNT 0
+#define Z_ENDSTOP_TYPE_COUNT 0
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 
 #if FEATURE_CONFIGURABLE_MILLER_TYPE
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_miller_type,UI_TEXT_MILLER_TYPE,UI_ACTION_MILLER_TYPE,MENU_MODE_MILLER,0);
 #define MILLER_TYPE_ENTRY ,&ui_menu_miller_type
-#define	MILLER_TYPE_COUNT 1
+#define MILLER_TYPE_COUNT 1
 #else
 #define MILLER_TYPE_ENTRY 
-#define	MILLER_TYPE_COUNT 0
+#define MILLER_TYPE_COUNT 0
 #endif // FEATURE_CONFIGURABLE_MILLER_TYPE
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE && MOTHERBOARD == DEVICE_TYPE_RF1000
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_hotend_type,UI_TEXT_HOTEND_TYPE,UI_ACTION_HOTEND_TYPE,MENU_MODE_PRINTER,0);
 #define HOTEND_TYPE_ENTRY ,&ui_menu_hotend_type
-#define	HOTEND_TYPE_COUNT 1
+#define HOTEND_TYPE_COUNT 1
 #else
 #define HOTEND_TYPE_ENTRY 
-#define	HOTEND_TYPE_COUNT 0
+#define HOTEND_TYPE_COUNT 0
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE && MOTHERBOARD == DEVICE_TYPE_RF1000
 
 #else
 
 #define OPERATING_MODE_ENTRY 
-#define	OPERATING_MODE_COUNT 0
+#define OPERATING_MODE_COUNT 0
 #define Z_ENDSTOP_TYPE_ENTRY 
-#define	Z_ENDSTOP_TYPE_COUNT 0
+#define Z_ENDSTOP_TYPE_COUNT 0
 #define MILLER_TYPE_ENTRY 
-#define	MILLER_TYPE_COUNT 0
+#define MILLER_TYPE_COUNT 0
 #define HOTEND_TYPE_ENTRY 
-#define	HOTEND_TYPE_COUNT 0
+#define HOTEND_TYPE_COUNT 0
 
 #endif // FEATURE_MILLING_MODE
 
@@ -743,11 +743,11 @@ UI_MENU_ACTION2C(ui_menu_extruder_offsety2,UI_ACTION_EXTRUDER_OFFSET_Y,UI_TEXT_E
 UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_extruder_offset_y,UI_TEXT_EXTRUDER_OFFSET_Y,ui_menu_extruder_offsety2, MENU_MODE_PRINTER, MENU_MODE_MILLER);
 #define EXTRUDER_OFFSET_TYPE_ENTRY_X ,&ui_menu_extruder_offset_x
 #define EXTRUDER_OFFSET_TYPE_ENTRY_Y ,&ui_menu_extruder_offset_y
-#define	EXTRUDER_OFFSET_TYPE_COUNT_XY 2
+#define EXTRUDER_OFFSET_TYPE_COUNT_XY 2
 #else
 #define EXTRUDER_OFFSET_TYPE_ENTRY_X
 #define EXTRUDER_OFFSET_TYPE_ENTRY_Y
-#define	EXTRUDER_OFFSET_TYPE_COUNT_XY 0
+#define EXTRUDER_OFFSET_TYPE_COUNT_XY 0
 #endif // NUM_EXTRUDER>1
 
 #define UI_MENU_GENERAL {UI_MENU_ADDCONDBACK &ui_menu_general_baud,&ui_menu_general_stepper_inactive,&ui_menu_general_max_inactive BEEPER_MODE_ENTRY RGB_LIGHT_ENTRY OPERATING_MODE_ENTRY Z_ENDSTOP_TYPE_ENTRY HOTEND_TYPE_ENTRY MILLER_TYPE_ENTRY EXTRUDER_OFFSET_TYPE_ENTRY_X EXTRUDER_OFFSET_TYPE_ENTRY_Y}
@@ -775,16 +775,16 @@ UI_MENU(ui_menu_configuration,UI_MENU_CONFIGURATION,UI_MENU_BACKCNT+UI_MENU_SL_C
 
 /** \brief Main menu */
 UI_MENU_SUBMENU(ui_menu_main1, UI_TEXT_QUICK_SETTINGS, ui_menu_quick);
-UI_MENU_SUBMENU(ui_menu_main2, UI_TEXT_POSITION,	   ui_menu_positions);
-UI_MENU_SUBMENU_FILTER(ui_menu_main3, UI_TEXT_EXTRUDER,	ui_menu_extruder, MENU_MODE_PRINTER, 0);
+UI_MENU_SUBMENU(ui_menu_main2, UI_TEXT_POSITION,       ui_menu_positions);
+UI_MENU_SUBMENU_FILTER(ui_menu_main3, UI_TEXT_EXTRUDER, ui_menu_extruder, MENU_MODE_PRINTER, 0);
 
 #if SHOW_DEBUGGING_MENU
-UI_MENU_SUBMENU(ui_menu_main4, UI_TEXT_DEBUGGING,	   ui_menu_debugging);
-#define DEBUGGING_MENU_ENTRY	&ui_menu_main4,
-#define DEBUGGING_MENU_COUNT	1
+UI_MENU_SUBMENU(ui_menu_main4, UI_TEXT_DEBUGGING,      ui_menu_debugging);
+#define DEBUGGING_MENU_ENTRY    &ui_menu_main4,
+#define DEBUGGING_MENU_COUNT    1
 #else
-#define DEBUGGING_MENU_ENTRY	
-#define DEBUGGING_MENU_COUNT	0
+#define DEBUGGING_MENU_ENTRY    
+#define DEBUGGING_MENU_COUNT    0
 #endif // SHOW_DEBUGGING_MENU
 
 UI_MENU_SUBMENU(ui_menu_main5, UI_TEXT_CONFIGURATION,  ui_menu_configuration);

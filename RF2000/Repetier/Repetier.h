@@ -42,10 +42,10 @@
 
 #if SDSUPPORT
 inline void memcopy2(void *dest,void *source) {
-	*((int16_t*)dest) = *((int16_t*)source);
+    *((int16_t*)dest) = *((int16_t*)source);
 }
 inline void memcopy4(void *dest,void *source) {
-	*((int32_t*)dest) = *((int32_t*)source);
+    *((int32_t*)dest) = *((int32_t*)source);
 }
 #include "SdFat.h"
 #endif // SDSUPPORT
@@ -57,79 +57,79 @@ inline void memcopy4(void *dest,void *source) {
 class RMath {
 public:
     static inline float min(float a,float b)
-	{
+    {
         if(a<b) return a;
         return b;
     } // min
 
     static inline float max(float a,float b)
-	{
+    {
         if(a<b) return b;
         return a;
     } // max
 
     static inline long min(long a,long b)
-	{
+    {
         if(a<b) return a;
         return b;
     } // min
 
     static inline long max(long a,long b)
-	{
+    {
         if(a<b) return b;
         return a;
     } // max
 
     static inline int min(int a,int b)
-	{
+    {
         if(a<b) return a;
         return b;
     } // min
 
     static inline int max(int a,int b)
-	{
+    {
         if(a<b) return b;
         return a;
     } // max
 
     static inline unsigned int min(unsigned int a,unsigned int b)
-	{
+    {
         if(a<b) return a;
         return b;
     } // min
 
     static inline unsigned int max(unsigned int a,unsigned int b)
-	{
+    {
         if(a<b) return b;
         return a;
     } // max
 
     static inline long sqr(long a)
-	{
-		return a*a;
-	} // sqr
+    {
+        return a*a;
+    } // sqr
 
     static inline float sqr(float a)
-	{
-		return a*a;
-	} // sqr
+    {
+        return a*a;
+    } // sqr
 
 };
 
-extern const uint8		osAnalogInputChannels[] PROGMEM;
-extern volatile uint8	osAnalogInputCounter[ANALOG_INPUTS];
-extern volatile uint	osAnalogInputBuildup[ANALOG_INPUTS];
-extern volatile uint8	osAnalogInputPos; // Current sampling position
-extern volatile uint	osAnalogInputValues[ANALOG_INPUTS];
-extern uint8_t			pwm_pos[NUM_EXTRUDER+3]; // 0-NUM_EXTRUDER = Heater 0-NUM_EXTRUDER of extruder, NUM_EXTRUDER = Heated bed, NUM_EXTRUDER+1 Board fan, NUM_EXTRUDER+2 = Fan
+extern const uint8      osAnalogInputChannels[] PROGMEM;
+extern volatile uint8   osAnalogInputCounter[ANALOG_INPUTS];
+extern volatile uint    osAnalogInputBuildup[ANALOG_INPUTS];
+extern volatile uint8   osAnalogInputPos; // Current sampling position
+extern volatile uint    osAnalogInputValues[ANALOG_INPUTS];
+extern uint8_t          pwm_pos[NUM_EXTRUDER+3]; // 0-NUM_EXTRUDER = Heater 0-NUM_EXTRUDER of extruder, NUM_EXTRUDER = Heated bed, NUM_EXTRUDER+1 Board fan, NUM_EXTRUDER+2 = Fan
 
 #ifdef USE_ADVANCE
 #ifdef ENABLE_QUADRATIC_ADVANCE
-extern int				maxadv;
+extern int              maxadv;
 #endif // ENABLE_QUADRATIC_ADVANCE
 
-extern int				maxadv2;
-extern float			maxadvspeed;
+extern int              maxadv2;
+extern float            maxadvspeed;
 #endif // USE_ADVANCE
 
 
@@ -169,16 +169,16 @@ extern volatile uint osAnalogInputValues[OS_ANALOG_INPUTS];
 #include "HAL.h"
 
 
-extern unsigned int			counterPeriodical;
-extern volatile uint8_t		executePeriodical;
-extern uint8_t				counter250ms;
+extern unsigned int         counterPeriodical;
+extern volatile uint8_t     executePeriodical;
+extern uint8_t              counter250ms;
 
 
 extern void writeMonitor();
 
 #if SDSUPPORT
-extern char					tempLongFilename[LONG_FILENAME_LENGTH+1];
-extern char					fullName[LONG_FILENAME_LENGTH*SD_MAX_FOLDER_DEPTH+SD_MAX_FOLDER_DEPTH+1];
+extern char                 tempLongFilename[LONG_FILENAME_LENGTH+1];
+extern char                 fullName[LONG_FILENAME_LENGTH*SD_MAX_FOLDER_DEPTH+SD_MAX_FOLDER_DEPTH+1];
 
 #define SHORT_FILENAME_LENGTH 14
 #include "SdFat.h"
@@ -188,50 +188,50 @@ enum LsAction {LS_SerialPrint,LS_Count,LS_GetFilename};
 class SDCard
 {
 public:
-	SdFat		fat;
-	SdFile		file;
-	uint32_t	filesize;
-	uint32_t	sdpos;
-	char*		shortname;	// Pointer to start of filename itself
-	char*		pathend;	// File to char where pathname in fullname ends
-	bool		sdmode;		// true if we are printing from sd card
-	bool		sdactive;
-	bool		savetosd;
-	SdBaseFile	parentFound;
+    SdFat       fat;
+    SdFile      file;
+    uint32_t    filesize;
+    uint32_t    sdpos;
+    char*       shortname;  // Pointer to start of filename itself
+    char*       pathend;    // File to char where pathname in fullname ends
+    bool        sdmode;     // true if we are printing from sd card
+    bool        sdactive;
+    bool        savetosd;
+    SdBaseFile  parentFound;
 
-	SDCard();
-	void initsd();
-	void writeCommand(GCode *code);
-	bool selectFile(char *filename,bool silent=false);
-	void mount();
-	void unmount();
-	void startPrint();
-	void abortPrint();
+    SDCard();
+    void initsd();
+    void writeCommand(GCode *code);
+    bool selectFile(char *filename,bool silent=false);
+    void mount();
+    void unmount();
+    void startPrint();
+    void abortPrint();
 
-	inline void setIndex(uint32_t  newpos)
-	{
-		if(!sdactive) return;
-		sdpos = newpos;
-		file.seekSet(sdpos);
+    inline void setIndex(uint32_t  newpos)
+    {
+        if(!sdactive) return;
+        sdpos = newpos;
+        file.seekSet(sdpos);
 
-	} // setIndex
+    } // setIndex
 
-	void printStatus();
-	void ls();
-	void startWrite(char *filename);
-	void deleteFile(char *filename);
-	void finishWrite();
-	char *createFilename(char *buffer,const dir_t &p);
-	void makeDirectory(char *filename);
-	bool showFilename(const uint8_t *name);
-	void automount();
+    void printStatus();
+    void ls();
+    void startWrite(char *filename);
+    void deleteFile(char *filename);
+    void finishWrite();
+    char *createFilename(char *buffer,const dir_t &p);
+    void makeDirectory(char *filename);
+    bool showFilename(const uint8_t *name);
+    void automount();
 
 #ifdef GLENN_DEBUG
-	void writeToFile();
+    void writeToFile();
 #endif // GLENN_DEBUG
 
 private:
-	uint8_t lsRecursive(SdBaseFile *parent,uint8_t level,char *findFilename);
+    uint8_t lsRecursive(SdBaseFile *parent,uint8_t level,char *findFilename);
 
 };
 
@@ -243,11 +243,11 @@ extern volatile int waitRelax; // Delay filament relax at the end of print, coul
 extern void updateStepsParameter(PrintLine *p);
 
 #ifdef DEBUG_PRINT
-extern int					debugWaitLoop;
+extern int                  debugWaitLoop;
 #endif // DEBUG_PRINT
 
-#define STR(s)		#s
-#define XSTR(s)		STR(s)
+#define STR(s)      #s
+#define XSTR(s)     STR(s)
 
 #include "Commands.h"
 #include "Eeprom.h"

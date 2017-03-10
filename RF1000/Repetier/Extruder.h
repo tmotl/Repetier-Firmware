@@ -25,8 +25,8 @@
 
 // Updates the temperature of all extruders and heated bed if it's time.
 // Toggels the heater power if necessary.
-extern bool		reportTempsensorError(); ///< Report defect sensors
-extern uint8_t	manageMonitor;
+extern bool     reportTempsensorError(); ///< Report defect sensors
+extern uint8_t  manageMonitor;
 
 #define TEMPERATURE_CONTROLLER_FLAG_ALARM 1
 /** TemperatureController manages one heater-temperature sensore loop. You can have up to
@@ -36,36 +36,36 @@ extern uint8_t	manageMonitor;
 class TemperatureController
 {
 public:
-    uint8_t		pwmIndex;				///< pwm index for output control. 0-2 = Extruder, 3 = Fan, 4 = Heated Bed
-    uint8_t		sensorType;				///< Type of temperature sensor.
-    uint8_t		sensorPin;				///< Pin to read extruder temperature.
-    int16_t		currentTemperature;		///< Currenttemperature value read from sensor.
-    int16_t		targetTemperature;		///< Target temperature value in units of sensor.
-    float		currentTemperatureC;	///< Current temperature in degC.
-    float		targetTemperatureC;		///< Target temperature in degC.
+    uint8_t     pwmIndex;               ///< pwm index for output control. 0-2 = Extruder, 3 = Fan, 4 = Heated Bed
+    uint8_t     sensorType;             ///< Type of temperature sensor.
+    uint8_t     sensorPin;              ///< Pin to read extruder temperature.
+    int16_t     currentTemperature;     ///< Currenttemperature value read from sensor.
+    int16_t     targetTemperature;      ///< Target temperature value in units of sensor.
+    float       currentTemperatureC;    ///< Current temperature in degC.
+    float       targetTemperatureC;     ///< Target temperature in degC.
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-	float		offsetC;				///< offset in degC.
+    float       offsetC;                ///< offset in degC.
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-	uint32_t	lastTemperatureUpdate;	///< Time in millis of the last temperature update.
-    int8_t		heatManager;			///< How is temperature controled. 0 = on/off, 1 = PID-Control, 3 = dead time control
+    uint32_t    lastTemperatureUpdate;  ///< Time in millis of the last temperature update.
+    int8_t      heatManager;            ///< How is temperature controled. 0 = on/off, 1 = PID-Control, 3 = dead time control
 
 #ifdef TEMP_PID
-    float		tempIState;				///< Temp. var. for PID computation.
-    uint8_t		pidDriveMax;			///< Used for windup in PID calculation.
-    uint8_t		pidDriveMin;			///< Used for windup in PID calculation.
-    float		pidPGain;				///< Pgain (proportional gain) for PID temperature control [0,01 Units].
-    float		pidIGain;				///< Igain (integral) for PID temperature control [0,01 Units].
-    float		pidDGain;				///< Dgain (damping) for PID temperature control [0,01 Units].
-    uint8_t		pidMax;					///< Maximum PWM value, the heater should be set.
-    float		tempIStateLimitMax;
-    float		tempIStateLimitMin;
-    uint8_t		tempPointer;
-    float		tempArray[4];
+    float       tempIState;             ///< Temp. var. for PID computation.
+    uint8_t     pidDriveMax;            ///< Used for windup in PID calculation.
+    uint8_t     pidDriveMin;            ///< Used for windup in PID calculation.
+    float       pidPGain;               ///< Pgain (proportional gain) for PID temperature control [0,01 Units].
+    float       pidIGain;               ///< Igain (integral) for PID temperature control [0,01 Units].
+    float       pidDGain;               ///< Dgain (damping) for PID temperature control [0,01 Units].
+    uint8_t     pidMax;                 ///< Maximum PWM value, the heater should be set.
+    float       tempIStateLimitMax;
+    float       tempIStateLimitMin;
+    uint8_t     tempPointer;
+    float       tempArray[4];
 #endif // TEMP_PID
 
-    uint8_t		flags;
+    uint8_t     flags;
 
     void setTargetTemperature(float target, float offset);
     void updateCurrentTemperature();
@@ -91,46 +91,46 @@ current state variables, like current temperature, feeder position etc.
 class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 {
     public:
-    static		Extruder*	current;
+    static      Extruder*   current;
 
 #if FEATURE_DITTO_PRINTING
-    static		uint8_t		dittoMode;
+    static      uint8_t     dittoMode;
 #endif // FEATURE_DITTO_PRINTING
 
-    uint8_t		id;
-    int32_t		xOffset;
-    int32_t		yOffset;
-    float		stepsPerMM;					///< Steps per mm.
-    int8_t		enablePin;					///< Pin to enable extruder stepper motor.
-    uint8_t		enableOn;
-    float		maxFeedrate;				///< Maximum feedrate in mm/s.
-    float		maxAcceleration;			///< Maximum acceleration in mm/s^2.
-    float		maxStartFeedrate;			///< Maximum start feedrate in mm/s.
-    int32_t		extrudePosition;			///< Current extruder position in steps.
-    int16_t		watchPeriod;				///< Time in seconds, a M109 command will wait to stabalize temperature
-    int16_t		waitRetractTemperature;		///< Temperature to retract the filament when waiting for heatup
-    int16_t		waitRetractUnits;			///< Units to retract the filament when waiting for heatup
-	volatile int8_t	stepperDirection;
+    uint8_t     id;
+    int32_t     xOffset;
+    int32_t     yOffset;
+    float       stepsPerMM;                 ///< Steps per mm.
+    int8_t      enablePin;                  ///< Pin to enable extruder stepper motor.
+    uint8_t     enableOn;
+    float       maxFeedrate;                ///< Maximum feedrate in mm/s.
+    float       maxAcceleration;            ///< Maximum acceleration in mm/s^2.
+    float       maxStartFeedrate;           ///< Maximum start feedrate in mm/s.
+    int32_t     extrudePosition;            ///< Current extruder position in steps.
+    int16_t     watchPeriod;                ///< Time in seconds, a M109 command will wait to stabalize temperature
+    int16_t     waitRetractTemperature;     ///< Temperature to retract the filament when waiting for heatup
+    int16_t     waitRetractUnits;           ///< Units to retract the filament when waiting for heatup
+    volatile int8_t stepperDirection;
 
 #ifdef USE_ADVANCE
 #ifdef ENABLE_QUADRATIC_ADVANCE
-    float		advanceK;					///< Koefficient for advance algorithm. 0 = off
+    float       advanceK;                   ///< Koefficient for advance algorithm. 0 = off
 #endif // ENABLE_QUADRATIC_ADVANCE
 
-    float		advanceL;
-    int16_t		advanceBacklash;
+    float       advanceL;
+    int16_t     advanceBacklash;
 #endif // USE_ADVANCE
 
-    TemperatureController	tempControl;
-    const char * PROGMEM	selectCommands;
-    const char * PROGMEM	deselectCommands;
-    uint8_t		coolerSpeed;				///< Speed to use when enabled
-    uint8_t		coolerPWM;					///< current PWM setting
+    TemperatureController   tempControl;
+    const char * PROGMEM    selectCommands;
+    const char * PROGMEM    deselectCommands;
+    uint8_t     coolerSpeed;                ///< Speed to use when enabled
+    uint8_t     coolerPWM;                  ///< current PWM setting
 
 #if STEPPER_ON_DELAY
-	char		enabled;
+    char        enabled;
 #endif // STEPPER_ON_DELAY
-	
+    
     /** \brief Sends the high-signal to the stepper for next extruder step.
     Call this function only, if interrupts are disabled.
     */
@@ -141,59 +141,59 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 #else
         switch(Extruder::current->id)
         {
-			case 0:
-			{
+            case 0:
+            {
 #if NUM_EXTRUDER>0
-				WRITE(EXT0_STEP_PIN,HIGH);
+                WRITE(EXT0_STEP_PIN,HIGH);
 
 #if FEATURE_DITTO_PRINTING
-	            if(Extruder::dittoMode)
-				{
-		            WRITE(EXT1_STEP_PIN,HIGH);
-			    }
+                if(Extruder::dittoMode)
+                {
+                    WRITE(EXT1_STEP_PIN,HIGH);
+                }
 #endif // FEATURE_DITTO_PRINTING
 #endif // NUM_EXTRUDER>0
-				break;
-			}
+                break;
+            }
 
 #if defined(EXT1_STEP_PIN) && NUM_EXTRUDER>1
-			case 1:
-			{
-				WRITE(EXT1_STEP_PIN,HIGH);
-				break;
-			}
+            case 1:
+            {
+                WRITE(EXT1_STEP_PIN,HIGH);
+                break;
+            }
 #endif // defined(EXT1_STEP_PIN) && NUM_EXTRUDER>1
 
 #if defined(EXT2_STEP_PIN) && NUM_EXTRUDER>2
-			case 2:
-			{
-				WRITE(EXT2_STEP_PIN,HIGH);
-				break;
-			}
+            case 2:
+            {
+                WRITE(EXT2_STEP_PIN,HIGH);
+                break;
+            }
 #endif // defined(EXT2_STEP_PIN) && NUM_EXTRUDER>2
 
 #if defined(EXT3_STEP_PIN) && NUM_EXTRUDER>3
-			case 3:
-			{
-				WRITE(EXT3_STEP_PIN,HIGH);
-				break;
-			}
+            case 3:
+            {
+                WRITE(EXT3_STEP_PIN,HIGH);
+                break;
+            }
 #endif // defined(EXT3_STEP_PIN) && NUM_EXTRUDER>3
 
 #if defined(EXT4_STEP_PIN) && NUM_EXTRUDER>4
-			case 4:
-			{
-	            WRITE(EXT4_STEP_PIN,HIGH);
-		        break;
-			}
+            case 4:
+            {
+                WRITE(EXT4_STEP_PIN,HIGH);
+                break;
+            }
 #endif // defined(EXT4_STEP_PIN) && NUM_EXTRUDER>4
 
 #if defined(EXT5_STEP_PIN) && NUM_EXTRUDER>5
-			case 5:
-			{
-				WRITE(EXT5_STEP_PIN,HIGH);
-				break;
-			}
+            case 5:
+            {
+                WRITE(EXT5_STEP_PIN,HIGH);
+                break;
+            }
 #endif // defined(EXT5_STEP_PIN) && NUM_EXTRUDER>5
         }
 #endif
@@ -209,59 +209,59 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 #else
         switch(Extruder::current->id)
         {
-			case 0:
-			{
+            case 0:
+            {
 #if NUM_EXTRUDER>0
-				WRITE(EXT0_STEP_PIN,LOW);
+                WRITE(EXT0_STEP_PIN,LOW);
 
 #if FEATURE_DITTO_PRINTING
-				if(Extruder::dittoMode)
-				{
-					WRITE(EXT1_STEP_PIN,LOW);
-				}
+                if(Extruder::dittoMode)
+                {
+                    WRITE(EXT1_STEP_PIN,LOW);
+                }
 #endif // FEATURE_DITTO_PRINTING
 #endif // NUM_EXTRUDER>0
-				break;
-			}
+                break;
+            }
 
 #if defined(EXT1_STEP_PIN) && NUM_EXTRUDER>1
-			case 1:
-			{
-				WRITE(EXT1_STEP_PIN,LOW);
-				break;
-			}
+            case 1:
+            {
+                WRITE(EXT1_STEP_PIN,LOW);
+                break;
+            }
 #endif // defined(EXT1_STEP_PIN) && NUM_EXTRUDER>1
 
 #if defined(EXT2_STEP_PIN) && NUM_EXTRUDER>2
-			case 2:
-			{
-				WRITE(EXT2_STEP_PIN,LOW);
-				break;
-			}
+            case 2:
+            {
+                WRITE(EXT2_STEP_PIN,LOW);
+                break;
+            }
 #endif // defined(EXT2_STEP_PIN) && NUM_EXTRUDER>2
 
 #if defined(EXT3_STEP_PIN) && NUM_EXTRUDER>3
-			case 3:
-			{
-				WRITE(EXT3_STEP_PIN,LOW);
-				break;
-			}
+            case 3:
+            {
+                WRITE(EXT3_STEP_PIN,LOW);
+                break;
+            }
 #endif // defined(EXT3_STEP_PIN) && NUM_EXTRUDER>3
 
 #if defined(EXT4_STEP_PIN) && NUM_EXTRUDER>4
-			case 4:
-			{
-				WRITE(EXT4_STEP_PIN,LOW);
-				break;
-			}
+            case 4:
+            {
+                WRITE(EXT4_STEP_PIN,LOW);
+                break;
+            }
 #endif // defined(EXT4_STEP_PIN) && NUM_EXTRUDER>4
 
 #if defined(EXT5_STEP_PIN) && NUM_EXTRUDER>5
-			case 5:
-			{
-				WRITE(EXT5_STEP_PIN,LOW);
-				break;
-			}
+            case 5:
+            {
+                WRITE(EXT5_STEP_PIN,LOW);
+                break;
+            }
 #endif // defined(EXT5_STEP_PIN) && NUM_EXTRUDER>5
         }
 #endif // NUM_EXTRUDER==1
@@ -293,78 +293,78 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
         switch(Extruder::current->id)
         {
 #if NUM_EXTRUDER>0
-			case 0:
-			{
-				if(dir)
-					WRITE(EXT0_DIR_PIN,!EXT0_INVERSE);
-				else
-					WRITE(EXT0_DIR_PIN,EXT0_INVERSE);
+            case 0:
+            {
+                if(dir)
+                    WRITE(EXT0_DIR_PIN,!EXT0_INVERSE);
+                else
+                    WRITE(EXT0_DIR_PIN,EXT0_INVERSE);
 
 #if FEATURE_DITTO_PRINTING
-				if(Extruder::dittoMode) {
-					if(dir)
-						WRITE(EXT1_DIR_PIN,!EXT1_INVERSE);
-					else
-						WRITE(EXT1_DIR_PIN,EXT1_INVERSE);
-				}
+                if(Extruder::dittoMode) {
+                    if(dir)
+                        WRITE(EXT1_DIR_PIN,!EXT1_INVERSE);
+                    else
+                        WRITE(EXT1_DIR_PIN,EXT1_INVERSE);
+                }
 #endif // FEATURE_DITTO_PRINTING
-				break;
-			}
+                break;
+            }
 #endif // NUM_EXTRUDER>0
 
 #if defined(EXT1_DIR_PIN) && NUM_EXTRUDER>1
-			case 1:
-			{
-				if(dir)
-					WRITE(EXT1_DIR_PIN,!EXT1_INVERSE);
-				else
-					WRITE(EXT1_DIR_PIN,EXT1_INVERSE);
-				break;
-			}
+            case 1:
+            {
+                if(dir)
+                    WRITE(EXT1_DIR_PIN,!EXT1_INVERSE);
+                else
+                    WRITE(EXT1_DIR_PIN,EXT1_INVERSE);
+                break;
+            }
 #endif // defined(EXT1_DIR_PIN) && NUM_EXTRUDER>1
 
 #if defined(EXT2_DIR_PIN) && NUM_EXTRUDER>2
-			case 2:
-			{
-				if(dir)
-					WRITE(EXT2_DIR_PIN,!EXT2_INVERSE);
-				else
-					WRITE(EXT2_DIR_PIN,EXT2_INVERSE);
-				break;
-			}
+            case 2:
+            {
+                if(dir)
+                    WRITE(EXT2_DIR_PIN,!EXT2_INVERSE);
+                else
+                    WRITE(EXT2_DIR_PIN,EXT2_INVERSE);
+                break;
+            }
 #endif // defined(EXT2_DIR_PIN) && NUM_EXTRUDER>2
 
 #if defined(EXT3_DIR_PIN) && NUM_EXTRUDER>3
-			case 3:
-			{
-				if(dir)
-					WRITE(EXT3_DIR_PIN,!EXT3_INVERSE);
-				else
-					WRITE(EXT3_DIR_PIN,EXT3_INVERSE);
-				break;
-			}
+            case 3:
+            {
+                if(dir)
+                    WRITE(EXT3_DIR_PIN,!EXT3_INVERSE);
+                else
+                    WRITE(EXT3_DIR_PIN,EXT3_INVERSE);
+                break;
+            }
 #endif // defined(EXT3_DIR_PIN) && NUM_EXTRUDER>3
 
 #if defined(EXT4_DIR_PIN) && NUM_EXTRUDER>4
-			case 4:
-			{
-				if(dir)
-					WRITE(EXT4_DIR_PIN,!EXT4_INVERSE);
-				else
-					WRITE(EXT4_DIR_PIN,EXT4_INVERSE);
-				break;
-			}
+            case 4:
+            {
+                if(dir)
+                    WRITE(EXT4_DIR_PIN,!EXT4_INVERSE);
+                else
+                    WRITE(EXT4_DIR_PIN,EXT4_INVERSE);
+                break;
+            }
 #endif // defined(EXT4_DIR_PIN) && NUM_EXTRUDER>4
 
 #if defined(EXT5_DIR_PIN) && NUM_EXTRUDER>5
-			case 5:
-			{
-				if(dir)
-					WRITE(EXT5_DIR_PIN,!EXT5_INVERSE);
-				else
-					WRITE(EXT5_DIR_PIN,EXT5_INVERSE);
-				break;
-			}
+            case 5:
+            {
+                if(dir)
+                    WRITE(EXT5_DIR_PIN,!EXT5_INVERSE);
+                else
+                    WRITE(EXT5_DIR_PIN,EXT5_INVERSE);
+                break;
+            }
 #endif // defined(EXT5_DIR_PIN) && NUM_EXTRUDER>5
         }
 #endif // NUM_EXTRUDER>0
@@ -384,7 +384,7 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 
 #if FEATURE_DITTO_PRINTING
         if(Extruder::dittoMode)
-		{
+        {
             if(extruder[1].enablePin > -1)
                 digitalWrite(extruder[1].enablePin,extruder[1].enableOn);
         }
@@ -392,11 +392,11 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 #endif // NUM_EXTRUDER==1
 
 #if STEPPER_ON_DELAY
-		if( !Extruder::current->enabled )
-		{
-			Extruder::current->enabled = 1;
-			HAL::delayMilliseconds( STEPPER_ON_DELAY );
-		}
+        if( !Extruder::current->enabled )
+        {
+            Extruder::current->enabled = 1;
+            HAL::delayMilliseconds( STEPPER_ON_DELAY );
+        }
 #endif // STEPPER_ON_DELAY
 
     } // enable
@@ -408,14 +408,14 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 
     static void manageTemperatures();
     static void disableCurrentExtruderMotor();
-	static void disableAllExtruders();
+    static void disableAllExtruders();
     static void selectExtruderById(uint8_t extruderId);
     static void disableAllHeater();
     static void initExtruder();
     static void initHeatedBed();
     static void setHeatedBedTemperature(float temp_celsius,bool beep = false);
 #if FEATURE_BEDTEMP_DECREASE
-	static void decreaseHeatedBedTemperature(float min_temperatureInCelsius);
+    static void decreaseHeatedBedTemperature(float min_temperatureInCelsius);
 #endif // FEATURE_BEDTEMP_DECREASE
     static float getHeatedBedTemperature();
     static void setTemperatureForExtruder(float temp_celsius,uint8_t extr,bool beep = false);
@@ -436,8 +436,8 @@ extern TemperatureController optTempController;
 
 
 
-#define TEMP_INT_TO_FLOAT(temp)		((float)(temp)/(float)(1<<CELSIUS_EXTRA_BITS))
-#define TEMP_FLOAT_TO_INT(temp)		((int)((temp)*(1<<CELSIUS_EXTRA_BITS)))
+#define TEMP_INT_TO_FLOAT(temp)     ((float)(temp)/(float)(1<<CELSIUS_EXTRA_BITS))
+#define TEMP_FLOAT_TO_INT(temp)     ((int)((temp)*(1<<CELSIUS_EXTRA_BITS)))
 
 extern TemperatureController *tempController[NUM_TEMPERATURE_LOOPS];
 extern uint8_t autotuneIndex;

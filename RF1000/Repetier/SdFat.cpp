@@ -658,7 +658,7 @@ uint8_t SdBaseFile::lsRecursive(SdBaseFile *parent, uint8_t level, char *findFil
 
     while ((p = parent->getLongFilename(p, tempLongFilename, 0, NULL)))
     {
-		if (! (DIR_IS_FILE(p) || DIR_IS_SUBDIR(p))) continue;
+        if (! (DIR_IS_FILE(p) || DIR_IS_SUBDIR(p))) continue;
         if (strcmp(tempLongFilename, "..") == 0) continue;
         if( DIR_IS_SUBDIR(p))
         {
@@ -1136,7 +1136,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile,const uint8_t *dname, uint8_t oflag, b
 
   while ((p = dirFile->getLongFilename(p, tempLongFilename, cVFATNeeded, &wIndexPos)))
     {
-		index = (0XF & ((dirFile->curPosition_-31) >> 5));
+        index = (0XF & ((dirFile->curPosition_-31) >> 5));
         if (RFstricmp(tempLongFilename, (char *)dname) == 0)
           {
 #ifdef GLENN_DEBUG
@@ -1990,28 +1990,28 @@ dir_t *SdBaseFile::getLongFilename(dir_t *dir, char *longFilename, int8_t cVFATN
         {
        if (longFilename != NULL)
         {
-    	vfat_t *VFAT = (vfat_t*)dir;
+        vfat_t *VFAT = (vfat_t*)dir;
         int8_t nSeq = VFAT->sequenceNumber & 0x1F;
 
-	// Sanity check the VFAT entry. The first cluster is always set to zero. And the sequence number should be higher then 0
-    	if (VFAT->firstClusterLow == 0 && nSeq > 0 && nSeq <= MAX_VFAT_ENTRIES)
-    	      {
-    		n = (nSeq - 1) * 13;
+    // Sanity check the VFAT entry. The first cluster is always set to zero. And the sequence number should be higher then 0
+        if (VFAT->firstClusterLow == 0 && nSeq > 0 && nSeq <= MAX_VFAT_ENTRIES)
+              {
+            n = (nSeq - 1) * 13;
 
-		longFilename[n+0] = (char)VFAT->name1[0];
+        longFilename[n+0] = (char)VFAT->name1[0];
 
-      		longFilename[n+1] = (char)VFAT->name1[1];
-      		longFilename[n+2] = (char)VFAT->name1[2];
-     		longFilename[n+3] = (char)VFAT->name1[3];
-     		longFilename[n+4] = (char)VFAT->name1[4];
-     		longFilename[n+5] = (char)VFAT->name2[0];
-     		longFilename[n+6] = (char)VFAT->name2[1];
-     		longFilename[n+7] = (char)VFAT->name2[2];
-      		longFilename[n+8] = (char)VFAT->name2[3];
-      		longFilename[n+9] = (char)VFAT->name2[4];
-      		longFilename[n+10] = (char)VFAT->name2[5];
-      		longFilename[n+11] = (char)VFAT->name3[0];
-      		longFilename[n+12] = (char)VFAT->name3[1];
+            longFilename[n+1] = (char)VFAT->name1[1];
+            longFilename[n+2] = (char)VFAT->name1[2];
+            longFilename[n+3] = (char)VFAT->name1[3];
+            longFilename[n+4] = (char)VFAT->name1[4];
+            longFilename[n+5] = (char)VFAT->name2[0];
+            longFilename[n+6] = (char)VFAT->name2[1];
+            longFilename[n+7] = (char)VFAT->name2[2];
+            longFilename[n+8] = (char)VFAT->name2[3];
+            longFilename[n+9] = (char)VFAT->name2[4];
+            longFilename[n+10] = (char)VFAT->name2[5];
+            longFilename[n+11] = (char)VFAT->name3[0];
+            longFilename[n+12] = (char)VFAT->name3[1];
 
                 if (bLastPart)
                   {
@@ -2019,7 +2019,7 @@ dir_t *SdBaseFile::getLongFilename(dir_t *dir, char *longFilename, int8_t cVFATN
                   longFilename[n+13] = 0;
                   }
                 bLastPart = false;
-		}
+        }
         }
         }
         else
@@ -2059,7 +2059,7 @@ bool SdBaseFile::findSpace(dir_t *dir, int8_t cVFATNeeded, int8_t *pcVFATFound, 
 
   while (1)
   {
-	dir = readDirCache();
+    dir = readDirCache();
     if (!dir) return false;
     // last entry if DIR_NAME_FREE
     if (dir->name[0] == DIR_NAME_FREE) return 0;
@@ -3195,7 +3195,7 @@ uint8_t Sd2Card::cardCommand(uint8_t cmd, uint32_t arg) {
 
 #if USE_SD_CRC
   // form message
-  //uint8_t d[6] = {cmd | 0X40, pa[3], pa[2], pa[1], pa[0]}; Nibbels	
+  //uint8_t d[6] = {cmd | 0X40, pa[3], pa[2], pa[1], pa[0]}; Nibbels    
   uint8_t d[6] = {(uint8_t)(cmd | 0X40), pa[3], pa[2], pa[1], pa[0]};
 
   // add crc

@@ -117,7 +117,7 @@ Custom M Codes
 void setup()
 {
     Printer::setup();
-	initRF();  
+    initRF();  
 
 } // setup
 

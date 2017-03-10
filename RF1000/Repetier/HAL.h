@@ -27,7 +27,7 @@
 
 #include <avr/pgmspace.h>
 #include <avr/io.h>
-#define prog_char	char
+#define prog_char   char
 
 #define PACK
 
@@ -58,7 +58,7 @@ All known arduino boards use 64. This value is needed for the extruder timing. *
 
 
 #if FEATURE_WATCHDOG
-extern	unsigned char	g_bPingWatchdog;
+extern  unsigned char   g_bPingWatchdog;
 #endif // FEATURE_WATCHDOG
 
 
@@ -67,27 +67,27 @@ extern	unsigned char	g_bPingWatchdog;
 #define ESCAPE_INTERRUPT_PROTECTED SREG=sreg;
 
 #define EEPROM_OFFSET               0
-#define SECONDS_TO_TICKS(s)			(unsigned long)(s*(float)F_CPU)
-#define ANALOG_REDUCE_BITS			0
-#define ANALOG_REDUCE_FACTOR		1
+#define SECONDS_TO_TICKS(s)         (unsigned long)(s*(float)F_CPU)
+#define ANALOG_REDUCE_BITS          0
+#define ANALOG_REDUCE_FACTOR        1
 
-#define MAX_RAM						32767
+#define MAX_RAM                     32767
 
-#define bit_clear(x,y)				x&= ~(1<<y)
-#define bit_set(x,y)				x|= (1<<y)
+#define bit_clear(x,y)              x&= ~(1<<y)
+#define bit_set(x,y)                x|= (1<<y)
 
 /** defines the data direction (reading from I2C device) in i2cStart(),i2cRepStart() */
-#define I2C_READ					1
+#define I2C_READ                    1
 
 /** defines the data direction (writing to I2C device) in i2cStart(),i2cRepStart() */
-#define I2C_WRITE					0
+#define I2C_WRITE                   0
 
-#define LIMIT_INTERVAL				((F_CPU/40000)+1)
+#define LIMIT_INTERVAL              ((F_CPU/40000)+1)
 
-typedef uint16_t	speed_t;
-typedef uint32_t	ticks_t;
-typedef uint32_t	millis_t;
-typedef uint8_t		flag8_t;
+typedef uint16_t    speed_t;
+typedef uint32_t    ticks_t;
+typedef uint32_t    millis_t;
+typedef uint8_t     flag8_t;
 
 #define FAST_INTEGER_SQRT
 
@@ -118,10 +118,10 @@ typedef uint8_t		flag8_t;
 
 #undef SERIAL_RX_BUFFER_SIZE
 //undef fix gegen compiler warning   
-#define SERIAL_RX_BUFFER_SIZE	128
-#define SERIAL_RX_BUFFER_MASK	127
-#define SERIAL_TX_BUFFER_SIZE	 64
-#define SERIAL_TX_BUFFER_MASK	 63
+#define SERIAL_RX_BUFFER_SIZE   128
+#define SERIAL_RX_BUFFER_MASK   127
+#define SERIAL_TX_BUFFER_SIZE    64
+#define SERIAL_TX_BUFFER_MASK    63
 
 struct ring_buffer_rx
 {
@@ -140,18 +140,18 @@ struct ring_buffer_tx
 class RFHardwareSerial : public Print
 {
 public:
-    ring_buffer_rx		*_rx_buffer;
-    ring_buffer_tx		*_tx_buffer;
-    volatile uint8_t	*_ubrrh;
-    volatile uint8_t	*_ubrrl;
-    volatile uint8_t	*_ucsra;
-    volatile uint8_t	*_ucsrb;
-    volatile uint8_t	*_udr;
-    uint8_t				_rxen;
-    uint8_t				_txen;
-    uint8_t				_rxcie;
-    uint8_t				_udrie;
-    uint8_t				_u2x;
+    ring_buffer_rx      *_rx_buffer;
+    ring_buffer_tx      *_tx_buffer;
+    volatile uint8_t    *_ubrrh;
+    volatile uint8_t    *_ubrrl;
+    volatile uint8_t    *_ucsra;
+    volatile uint8_t    *_ucsrb;
+    volatile uint8_t    *_udr;
+    uint8_t             _rxen;
+    uint8_t             _txen;
+    uint8_t             _rxcie;
+    uint8_t             _udrie;
+    uint8_t             _u2x;
 public:
     RFHardwareSerial(ring_buffer_rx *rx_buffer, ring_buffer_tx *tx_buffer,
                      volatile uint8_t *ubrrh, volatile uint8_t *ubrrl,
@@ -177,20 +177,20 @@ extern RFHardwareSerial RFSerial;
 #define RFSERIAL Serial
 #endif // EXTERNALSERIAL
 
-#define OUT_P_I(p,i)		Com::printF(PSTR(p),(int)(i))
-#define OUT_P_I_LN(p,i)		Com::printFLN(PSTR(p),(int)(i))
-#define OUT_P_L(p,i)		Com::printF(PSTR(p),(long)(i))
-#define OUT_P_L_LN(p,i)		Com::printFLN(PSTR(p),(long)(i))
-#define OUT_P_F(p,i)		Com::printF(PSTR(p),(float)(i))
-#define OUT_P_F_LN(p,i)		Com::printFLN(PSTR(p),(float)(i))
-#define OUT_P_FX(p,i,x)		Com::printF(PSTR(p),(float)(i),x)
-#define OUT_P_FX_LN(p,i,x)	Com::printFLN(PSTR(p),(float)(i),x)
-#define OUT_P(p)			Com::printF(PSTR(p))
-#define OUT_P_LN(p)			Com::printFLN(PSTR(p))
-#define OUT_ERROR_P(p)		Com::printErrorF(PSTR(p))
-#define OUT_ERROR_P_LN(p)	{Com::printErrorF(PSTR(p));Com::println();}
-#define OUT(v)				Com::print(v)
-#define OUT_LN				Com::println()
+#define OUT_P_I(p,i)        Com::printF(PSTR(p),(int)(i))
+#define OUT_P_I_LN(p,i)     Com::printFLN(PSTR(p),(int)(i))
+#define OUT_P_L(p,i)        Com::printF(PSTR(p),(long)(i))
+#define OUT_P_L_LN(p,i)     Com::printFLN(PSTR(p),(long)(i))
+#define OUT_P_F(p,i)        Com::printF(PSTR(p),(float)(i))
+#define OUT_P_F_LN(p,i)     Com::printFLN(PSTR(p),(float)(i))
+#define OUT_P_FX(p,i,x)     Com::printF(PSTR(p),(float)(i),x)
+#define OUT_P_FX_LN(p,i,x)  Com::printFLN(PSTR(p),(float)(i),x)
+#define OUT_P(p)            Com::printF(PSTR(p))
+#define OUT_P_LN(p)         Com::printFLN(PSTR(p))
+#define OUT_ERROR_P(p)      Com::printErrorF(PSTR(p))
+#define OUT_ERROR_P_LN(p)   {Com::printErrorF(PSTR(p));Com::println();}
+#define OUT(v)              Com::print(v)
+#define OUT_LN              Com::println()
 
 
 class HAL
@@ -199,15 +199,15 @@ public:
     HAL();
     virtual ~HAL();
     
-	static inline void hwSetup(void)
+    static inline void hwSetup(void)
     {
-	} // hwSetup
+    } // hwSetup
 
     // return val'val
     static uint16_t integerSqrt(int32_t a);
 
     /** \brief Optimized division
-	Normally the C compiler will compute a long/long division, which takes ~670 Ticks.
+    Normally the C compiler will compute a long/long division, which takes ~670 Ticks.
     This version is optimized for a 16 bit dividend and recognises the special cases
     of a 24 bit and 16 bit dividend, which offen, but not always occur in updating the
     interval.
@@ -228,13 +228,13 @@ public:
             "d16u_1%=:" "rol %A0 \n\t"
             "rol %B0 \n\t"
             "dec r16 \n\t"
-            "brne	d16u_2%= \n\t"
+            "brne   d16u_2%= \n\t"
             "rjmp end%= \n\t"
             "d16u_2%=:" "rol r14 \n\t"
             "rol r15 \n\t"
             "sub r14,%A2 \n\t"
             "sbc r15,%B2 \n\t"
-            "brcc	d16u_3%= \n\t"
+            "brcc   d16u_3%= \n\t"
             "add r14,%A2 \n\t"
             "adc r15,%B2 \n\t"
             "clc \n\t"
@@ -250,13 +250,13 @@ public:
             "rol %B0 \n\t"
             "rol %C0 \n\t"
             "dec r16 \n\t"
-            "brne	d24u_2%= \n\t"
+            "brne   d24u_2%= \n\t"
             "rjmp end%= \n\t"
             "d24u_2%=:" "rol r14 \n\t"
             "rol r15 \n\t"
             "sub r14,%A2 \n\t"
             "sbc r15,%B2 \n\t"
-            "brcc	d24u_3%= \n\t"
+            "brcc   d24u_3%= \n\t"
             "add r14,%A2 \n\t"
             "adc r15,%B2 \n\t"
             "clc \n\t"
@@ -272,13 +272,13 @@ public:
             "rol %C0 \n\t"
             "rol %D0 \n\t"
             "dec r16 \n\t"
-            "brne	d32u_2%= \n\t"
+            "brne   d32u_2%= \n\t"
             "rjmp end%= \n\t"
             "d32u_2%=:" "rol r14 \n\t"
             "rol r15 \n\t"
             "sub r14,%A2 \n\t"
             "sbc r15,%B2 \n\t"
-            "brcc	d32u_3%= \n\t"
+            "brcc   d32u_3%= \n\t"
             "add r14,%A2 \n\t"
             "adc r15,%B2 \n\t"
             "clc \n\t"
@@ -367,7 +367,7 @@ public:
 
     } // ComputeV
 
-	// Multiply two 16 bit values and return 32 bit result
+    // Multiply two 16 bit values and return 32 bit result
     static inline uint32_t mulu16xu16to32(unsigned int a,unsigned int b)
     {
         uint32_t res;
@@ -398,7 +398,7 @@ public:
 
     } // mulu16xu16to32
 
-	// Multiply two 16 bit values and return 32 bit result
+    // Multiply two 16 bit values and return 32 bit result
     static inline unsigned int mulu6xu16shift16(unsigned int a,unsigned int b)
     {
         unsigned int res;
@@ -444,13 +444,13 @@ public:
     {
         ::pinMode(pin,mode);
 
-	} // pinMode
+    } // pinMode
 
     static int32_t CPUDivU2(unsigned int divisor);
 
     static inline void delayMicroseconds(unsigned int delayUs)
     {
-		pingWatchdog();
+        pingWatchdog();
         ::delayMicroseconds(delayUs);
 
     } // delayMicroseconds
@@ -458,22 +458,22 @@ public:
     static inline void delayMilliseconds(unsigned int delayMs)
     {
 #if FEATURE_WATCHDOG
-		// external watchdog
-		unsigned int	doneMs = 0;
-		unsigned int	tempMs;
+        // external watchdog
+        unsigned int    doneMs = 0;
+        unsigned int    tempMs;
 
-		pingWatchdog();
-		while( doneMs < delayMs )
-		{
-			tempMs = delayMs - doneMs;
-			if( tempMs > WATCHDOG_TIMEOUT )	tempMs = WATCHDOG_TIMEOUT;
+        pingWatchdog();
+        while( doneMs < delayMs )
+        {
+            tempMs = delayMs - doneMs;
+            if( tempMs > WATCHDOG_TIMEOUT ) tempMs = WATCHDOG_TIMEOUT;
 
-			::delay(tempMs);
-			doneMs += tempMs;
-			pingWatchdog();
-		}
+            ::delay(tempMs);
+            doneMs += tempMs;
+            pingWatchdog();
+        }
 #else
-		// internal watchdog
+        // internal watchdog
         ::delay(delayMs);
 #endif // FEATURE_WATCHDOG
 
@@ -494,17 +494,17 @@ public:
     static inline void eprSetByte(unsigned int pos,uint8_t value)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         eeprom_write_byte((unsigned char *)(EEPROM_OFFSET+pos), value);
 
-	} // eprSetByte
+    } // eprSetByte
 
     static inline void eprSetInt16(unsigned int pos,int16_t value)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         eeprom_write_word((unsigned int*)(EEPROM_OFFSET+pos),value);
@@ -514,7 +514,7 @@ public:
     static inline void eprSetInt32(unsigned int pos,int32_t value)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         eeprom_write_dword((uint32_t*)(EEPROM_OFFSET+pos),value);
@@ -524,7 +524,7 @@ public:
     static inline void eprSetFloat(unsigned int pos,float value)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         eeprom_write_block(&value,(void*)(EEPROM_OFFSET+pos), 4);
@@ -534,7 +534,7 @@ public:
     static inline uint8_t eprGetByte(unsigned int pos)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         return eeprom_read_byte ((unsigned char *)(EEPROM_OFFSET+pos));
@@ -544,7 +544,7 @@ public:
     static inline int16_t eprGetInt16(unsigned int pos)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         return eeprom_read_word((uint16_t *)(EEPROM_OFFSET+pos));
@@ -554,7 +554,7 @@ public:
     static inline int32_t eprGetInt32(unsigned int pos)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         return eeprom_read_dword((uint32_t*)(EEPROM_OFFSET+pos));
@@ -564,7 +564,7 @@ public:
     static inline float eprGetFloat(unsigned int pos)
     {
 #if FEATURE_WATCHDOG
-		HAL::pingWatchdog();
+        HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
         float v;
@@ -581,7 +581,7 @@ public:
     static inline void forbidInterrupts()
     {
         cli();
-	} // forbidInterrupts
+    } // forbidInterrupts
 
     static inline unsigned long timeInMilliseconds()
     {
@@ -644,7 +644,7 @@ public:
         SET_OUTPUT(MOSI_PIN);
         SET_OUTPUT(SCK_PIN);
         
-		// SS must be in output mode even it is not chip select
+        // SS must be in output mode even it is not chip select
         SET_OUTPUT(SDSS);
 
 #if SDSSORIG >- 1
@@ -668,7 +668,7 @@ public:
         SET_OUTPUT(MOSI_PIN);
         SET_INPUT(MISO_PIN);
 
-#ifdef	PRR
+#ifdef  PRR
         PRR &= ~(1<<PRSPI);
 #elif defined PRR0
         PRR0 &= ~(1<<PRSPI);
@@ -757,27 +757,27 @@ public:
     inline static void startWatchdog()
     {
 #if FEATURE_WATCHDOG && WATCHDOG_PIN>-1
-		// external watchdog
-		SET_OUTPUT(WATCHDOG_PIN);
-		pingWatchdog();
+        // external watchdog
+        SET_OUTPUT(WATCHDOG_PIN);
+        pingWatchdog();
 #else
-		// internal watchdog
+        // internal watchdog
         //wdt_enable(WDTO_1S);
 #endif // FEATURE_WATCHDOG && WATCHDOG_PIN>-1
 
-		g_bPingWatchdog = 1;
+        g_bPingWatchdog = 1;
 
     } // startWatchdog
 
     inline static void stopWatchdog()
     {
-		g_bPingWatchdog = 0;
+        g_bPingWatchdog = 0;
 
 #if FEATURE_WATCHDOG && WATCHDOG_PIN>-1
-		// external watchdog
-		SET_INPUT(WATCHDOG_PIN);
+        // external watchdog
+        SET_INPUT(WATCHDOG_PIN);
 #else
-		// internal watchdog
+        // internal watchdog
         //wdt_disable();
 #endif // FEATURE_WATCHDOG && WATCHDOG_PIN>-1
 
@@ -785,17 +785,17 @@ public:
 
     inline static void pingWatchdog()
     {
-		if( !g_bPingWatchdog )
-		{
-			// do not trigger the watchdog in case it is not enabled
-			return;
-		}
+        if( !g_bPingWatchdog )
+        {
+            // do not trigger the watchdog in case it is not enabled
+            return;
+        }
 
 #if FEATURE_WATCHDOG && WATCHDOG_PIN>-1
-		// external watchdog
-		WRITE(WATCHDOG_PIN,READ(WATCHDOG_PIN) ? 0 : 1);
+        // external watchdog
+        WRITE(WATCHDOG_PIN,READ(WATCHDOG_PIN) ? 0 : 1);
 #else
-		// internal watchdog
+        // internal watchdog
         //wdt_reset();
 #endif // FEATURE_WATCHDOG && WATCHDOG_PIN>-1
 
@@ -803,14 +803,14 @@ public:
 
     inline static void testWatchdog()
     {
-		// start the watchdog
-		startWatchdog();
+        // start the watchdog
+        startWatchdog();
 
-		// force the watchdog to fire
-		HAL::forbidInterrupts();
-		while( 1 )
-		{
-		}
+        // force the watchdog to fire
+        HAL::forbidInterrupts();
+        while( 1 )
+        {
+        }
 
     } // testWatchdog
 
@@ -821,8 +821,8 @@ public:
     } // maxExtruderTimerFrequency
 
 #if FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF1000
-    static unsigned int		servoTimings[4];
-    static void				servoMicroseconds(uint8_t servo,int ms);
+    static unsigned int     servoTimings[4];
+    static void             servoMicroseconds(uint8_t servo,int ms);
 #endif // FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF1000
 
     static void analogStart();
@@ -830,15 +830,15 @@ protected:
 private:
 };
 
-#define EXTRUDER_TIMER_VECTOR	TIMER0_COMPA_vect
-#define EXTRUDER_OCR			OCR0A
-#define EXTRUDER_TCCR			TCCR0A
-#define EXTRUDER_TIMSK			TIMSK0
-#define EXTRUDER_OCIE			OCIE0A
-#define PWM_TIMER_VECTOR		TIMER0_COMPB_vect
-#define PWM_OCR					OCR0B
-#define PWM_TCCR				TCCR0A
-#define PWM_TIMSK				TIMSK0
-#define PWM_OCIE				OCIE0B
+#define EXTRUDER_TIMER_VECTOR   TIMER0_COMPA_vect
+#define EXTRUDER_OCR            OCR0A
+#define EXTRUDER_TCCR           TCCR0A
+#define EXTRUDER_TIMSK          TIMSK0
+#define EXTRUDER_OCIE           OCIE0A
+#define PWM_TIMER_VECTOR        TIMER0_COMPB_vect
+#define PWM_OCR                 OCR0B
+#define PWM_TCCR                TCCR0A
+#define PWM_TIMSK               TIMSK0
+#define PWM_OCIE                OCIE0B
 
 #endif // HAL_H

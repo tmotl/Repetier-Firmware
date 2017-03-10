@@ -25,26 +25,26 @@ void EEPROM::update(GCode *com)
     if(com->hasT() && com->hasP()) switch(com->T)
     {
         case 0:
-		{
+        {
             if(com->hasS()) HAL::eprSetByte(com->P,(uint8_t)com->S);
             break;
-		}
+        }
         case 1:
-		{
+        {
             if(com->hasS()) HAL::eprSetInt16(com->P,(int)com->S);
             break;
-		}
+        }
         case 2:
-		{
+        {
             if(com->hasS()) HAL::eprSetInt32(com->P,(int32_t)com->S);
             break;
-		}
+        }
         case 3:
-		{
+        {
             if(com->hasX()) HAL::eprSetFloat(com->P,com->X);
             break;
-		}
-	}
+        }
+    }
     uint8_t newcheck = computeChecksum();
     if(newcheck != HAL::eprGetByte(EPR_INTEGRITY_BYTE))
         HAL::eprSetByte(EPR_INTEGRITY_BYTE,newcheck);
@@ -52,10 +52,10 @@ void EEPROM::update(GCode *com)
     readDataFromEEPROM();
     Extruder::selectExtruderById(Extruder::current->id);
 #else
-	if( Printer::debugErrors() )
-	{
-	    Com::printErrorF(Com::tNoEEPROMSupport);
-	}
+    if( Printer::debugErrors() )
+    {
+        Com::printErrorF(Com::tNoEEPROMSupport);
+    }
 #endif // EEPROM_MODE!=0
 
 } // update
@@ -77,18 +77,18 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     Printer::maxFeedrate[Z_AXIS] = MAX_FEEDRATE_Z;
 
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		Printer::homingFeedrate[X_AXIS] = HOMING_FEEDRATE_X_PRINT;
-		Printer::homingFeedrate[Y_AXIS] = HOMING_FEEDRATE_Y_PRINT;
-		Printer::homingFeedrate[Z_AXIS] = HOMING_FEEDRATE_Z_PRINT;
-	}
-	else
-	{
-		Printer::homingFeedrate[X_AXIS] = HOMING_FEEDRATE_X_MILL;
-		Printer::homingFeedrate[Y_AXIS] = HOMING_FEEDRATE_Y_MILL;
-		Printer::homingFeedrate[Z_AXIS] = HOMING_FEEDRATE_Z_MILL;
-	}
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        Printer::homingFeedrate[X_AXIS] = HOMING_FEEDRATE_X_PRINT;
+        Printer::homingFeedrate[Y_AXIS] = HOMING_FEEDRATE_Y_PRINT;
+        Printer::homingFeedrate[Z_AXIS] = HOMING_FEEDRATE_Z_PRINT;
+    }
+    else
+    {
+        Printer::homingFeedrate[X_AXIS] = HOMING_FEEDRATE_X_MILL;
+        Printer::homingFeedrate[Y_AXIS] = HOMING_FEEDRATE_Y_MILL;
+        Printer::homingFeedrate[Z_AXIS] = HOMING_FEEDRATE_Z_MILL;
+    }
 #else
     Printer::homingFeedrate[X_AXIS] = HOMING_FEEDRATE_X_PRINT;
     Printer::homingFeedrate[Y_AXIS] = HOMING_FEEDRATE_Y_PRINT;
@@ -97,14 +97,14 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
 #if MOTHERBOARD == DEVICE_TYPE_RF1000
-	Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
+    Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
-	Printer::HotendType = HOTEND_TYPE_V2_DUAL;
+    Printer::HotendType = HOTEND_TYPE_V2_DUAL;
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
 
-	Printer::maxJerk = MAX_JERK;
+    Printer::maxJerk = MAX_JERK;
     Printer::maxZJerk = MAX_ZJERK;
 
 #ifdef RAMP_ACCELERATION
@@ -130,16 +130,16 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 #endif // HAVE_HEATED_BED
 
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
-	}
-	else
-	{
-		Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_MILL;
-	}
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
+    }
+    else
+    {
+        Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_MILL;
+    }
 #else
-	Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
+    Printer::lengthMM[X_AXIS] = X_MAX_LENGTH_PRINT;
 #endif // FEATURE_MILLING_MODE
 
     Printer::lengthMM[Y_AXIS] = Y_MAX_LENGTH;
@@ -378,15 +378,15 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     Extruder::selectExtruderById(Extruder::current->id);
     Extruder::initHeatedBed();
 
-	if( Printer::debugInfo() )
-	{
-		Com::printInfoF(Com::tEPRConfigResetDefaults);
-	}
+    if( Printer::debugInfo() )
+    {
+        Com::printInfoF(Com::tEPRConfigResetDefaults);
+    }
 #else
-	if( Printer::debugErrors() )
-	{
-	    Com::printErrorF(Com::tNoEEPROMSupport);
-	}
+    if( Printer::debugErrors() )
+    {
+        Com::printErrorF(Com::tNoEEPROMSupport);
+    }
 #endif // EEPROM_MODE!=0
 
 } // restoreEEPROMSettingsFromConfiguration
@@ -394,21 +394,21 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
 
 void EEPROM::clearEEPROM()
 {
-	millis_t		lastTime	= HAL::timeInMilliseconds();
-	millis_t		currentTime;
-	unsigned int	i;
+    millis_t        lastTime    = HAL::timeInMilliseconds();
+    millis_t        currentTime;
+    unsigned int    i;
 
 
     for( i=0; i<2048; i++ )
     {
         HAL::eprSetByte( i, 0 );
 
-		currentTime = HAL::timeInMilliseconds();
-		if( (currentTime - lastTime) > PERIODICAL_ACTIONS_CALL_INTERVAL )
-		{
-			Commands::checkForPeriodicalActions();
-			lastTime = currentTime;
-		}
+        currentTime = HAL::timeInMilliseconds();
+        if( (currentTime - lastTime) > PERIODICAL_ACTIONS_CALL_INTERVAL )
+        {
+            Commands::checkForPeriodicalActions();
+            lastTime = currentTime;
+        }
     }
 
 } // clearEEPROM
@@ -417,7 +417,7 @@ void EEPROM::clearEEPROM()
 void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
 {
 #if EEPROM_MODE!=0
-	HAL::eprSetByte(EPR_MAGIC_BYTE,EEPROM_MODE);
+    HAL::eprSetByte(EPR_MAGIC_BYTE,EEPROM_MODE);
     HAL::eprSetInt32(EPR_BAUDRATE,baudrate);
     HAL::eprSetInt32(EPR_MAX_INACTIVE_TIME,maxInactiveTime);
     HAL::eprSetInt32(EPR_STEPPER_INACTIVE_TIME,stepperInactiveTime);
@@ -427,32 +427,32 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
     HAL::eprSetFloat(EPR_X_MAX_FEEDRATE,Printer::maxFeedrate[X_AXIS]);
     HAL::eprSetFloat(EPR_Y_MAX_FEEDRATE,Printer::maxFeedrate[Y_AXIS]);
     HAL::eprSetFloat(EPR_Z_MAX_FEEDRATE,Printer::maxFeedrate[Z_AXIS]);
-	HAL::eprSetInt32(EPR_RF_Z_OFFSET,Printer::ZOffset);
-	HAL::eprSetByte(EPR_RF_Z_MODE,Printer::ZMode);
-	HAL::eprSetByte(EPR_RF_MOVE_MODE_X,Printer::moveMode[X_AXIS]);
-	HAL::eprSetByte(EPR_RF_MOVE_MODE_Y,Printer::moveMode[Y_AXIS]);
-	HAL::eprSetByte(EPR_RF_MOVE_MODE_Z,Printer::moveMode[Z_AXIS]);
+    HAL::eprSetInt32(EPR_RF_Z_OFFSET,Printer::ZOffset);
+    HAL::eprSetByte(EPR_RF_Z_MODE,Printer::ZMode);
+    HAL::eprSetByte(EPR_RF_MOVE_MODE_X,Printer::moveMode[X_AXIS]);
+    HAL::eprSetByte(EPR_RF_MOVE_MODE_Y,Printer::moveMode[Y_AXIS]);
+    HAL::eprSetByte(EPR_RF_MOVE_MODE_Z,Printer::moveMode[Z_AXIS]);
 
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-	    HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[X_AXIS]);
-		HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[Y_AXIS]);
-		HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[Z_AXIS]);
-	}
-	else
-	{
-	    HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_MILL,Printer::homingFeedrate[X_AXIS]);
-		HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_MILL,Printer::homingFeedrate[Y_AXIS]);
-		HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_MILL,Printer::homingFeedrate[Z_AXIS]);
-	}
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[X_AXIS]);
+        HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[Y_AXIS]);
+        HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[Z_AXIS]);
+    }
+    else
+    {
+        HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_MILL,Printer::homingFeedrate[X_AXIS]);
+        HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_MILL,Printer::homingFeedrate[Y_AXIS]);
+        HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_MILL,Printer::homingFeedrate[Z_AXIS]);
+    }
 #else
     HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[X_AXIS]);
     HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[Y_AXIS]);
     HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Printer::homingFeedrate[Z_AXIS]);
 #endif // FEATURE_MILLING_MODE
 
-	HAL::eprSetFloat(EPR_MAX_JERK,Printer::maxJerk);
+    HAL::eprSetFloat(EPR_MAX_JERK,Printer::maxJerk);
     HAL::eprSetFloat(EPR_MAX_ZJERK,Printer::maxZJerk);
 
 #ifdef RAMP_ACCELERATION
@@ -554,72 +554,72 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
     if(corrupted)
     {
 #if FEATURE_MILLING_MODE
-		if( Printer::operatingMode == OPERATING_MODE_PRINT )
-		{
-			HAL::eprSetInt32(EPR_PRINTING_TIME,0);
-			HAL::eprSetFloat(EPR_PRINTING_DISTANCE,0);
+        if( Printer::operatingMode == OPERATING_MODE_PRINT )
+        {
+            HAL::eprSetInt32(EPR_PRINTING_TIME,0);
+            HAL::eprSetFloat(EPR_PRINTING_DISTANCE,0);
 #if FEATURE_SERVICE_INTERVAL
-			HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,0);
-			HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,0);
+            HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,0);
+            HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,0);
 #endif // FEATURE_SERVICE_INTERVAL
-		}
-		else
-		{
-			HAL::eprSetInt32(EPR_MILLING_TIME,0);
+        }
+        else
+        {
+            HAL::eprSetInt32(EPR_MILLING_TIME,0);
 #if FEATURE_SERVICE_INTERVAL
-			HAL::eprSetInt32(EPR_MILLING_TIME_SERVICE,0);
+            HAL::eprSetInt32(EPR_MILLING_TIME_SERVICE,0);
 #endif // FEATURE_SERVICE_INTERVAL
-		}
+        }
 #else
-		HAL::eprSetInt32(EPR_PRINTING_TIME,0);
-		HAL::eprSetFloat(EPR_PRINTING_DISTANCE,0);
+        HAL::eprSetInt32(EPR_PRINTING_TIME,0);
+        HAL::eprSetFloat(EPR_PRINTING_DISTANCE,0);
 #if FEATURE_SERVICE_INTERVAL
-		HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,0);
-		HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,0);
+        HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,0);
+        HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,0);
 #endif // FEATURE_SERVICE_INTERVAL
 #endif // FEATURE_MILLING_MODE
-	}
+    }
 
 #if FEATURE_BEEPER
-	HAL::eprSetByte( EPR_RF_BEEPER_MODE, Printer::enableBeeper );
+    HAL::eprSetByte( EPR_RF_BEEPER_MODE, Printer::enableBeeper );
 #endif // FEATURE_BEEPER
 
 #if FEATURE_CASE_LIGHT
-	HAL::eprSetByte( EPR_RF_CASE_LIGHT_MODE, Printer::enableCaseLight );
+    HAL::eprSetByte( EPR_RF_CASE_LIGHT_MODE, Printer::enableCaseLight );
 #endif // FEATURE_CASE_LIGHT
 
 #if FEATURE_RGB_LIGHT_EFFECTS
-	HAL::eprSetByte( EPR_RF_RGB_LIGHT_MODE, Printer::RGBLightMode );
+    HAL::eprSetByte( EPR_RF_RGB_LIGHT_MODE, Printer::RGBLightMode );
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
 #if FEATURE_24V_FET_OUTPUTS
-	HAL::eprSetByte( EPR_RF_FET1_MODE, Printer::enableFET1 );
-	HAL::eprSetByte( EPR_RF_FET2_MODE, Printer::enableFET2 );
-	HAL::eprSetByte( EPR_RF_FET3_MODE, Printer::enableFET3 );
+    HAL::eprSetByte( EPR_RF_FET1_MODE, Printer::enableFET1 );
+    HAL::eprSetByte( EPR_RF_FET2_MODE, Printer::enableFET2 );
+    HAL::eprSetByte( EPR_RF_FET3_MODE, Printer::enableFET3 );
 #endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_230V_OUTPUT
-	// after a power-on, the 230 V plug always shall be turned off - thus, we do not store this setting to the EEPROM
-	// HAL::eprSetByte( EPR_RF_230V_OUTPUT_MODE, Printer::enable230VOutput );
+    // after a power-on, the 230 V plug always shall be turned off - thus, we do not store this setting to the EEPROM
+    // HAL::eprSetByte( EPR_RF_230V_OUTPUT_MODE, Printer::enable230VOutput );
 #endif // FEATURE_230V_OUTPUT
 
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-	HAL::eprSetByte( EPR_RF_Z_ENDSTOP_TYPE, Printer::ZEndstopType );
+    HAL::eprSetByte( EPR_RF_Z_ENDSTOP_TYPE, Printer::ZEndstopType );
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 #if FEATURE_MILLING_MODE
-	HAL::eprSetByte( EPR_RF_OPERATING_MODE, Printer::operatingMode );
+    HAL::eprSetByte( EPR_RF_OPERATING_MODE, Printer::operatingMode );
 #endif // FEATURE_MILLING_MODE > 0
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
-	HAL::eprSetByte( EPR_RF_HOTEND_TYPE, Printer::HotendType );
+    HAL::eprSetByte( EPR_RF_HOTEND_TYPE, Printer::HotendType );
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
 
 #if FEATURE_CONFIGURABLE_MILLER_TYPE
-	HAL::eprSetByte( EPR_RF_MILLER_TYPE, Printer::MillerType );
+    HAL::eprSetByte( EPR_RF_MILLER_TYPE, Printer::MillerType );
 #endif // FEATURE_CONFIGURABLE_MILLER_TYPE
 
-	// Save version and build checksum
+    // Save version and build checksum
     HAL::eprSetByte(EPR_VERSION,EEPROM_PROTOCOL_VERSION);
     HAL::eprSetByte(EPR_INTEGRITY_BYTE,computeChecksum());
 #endif // EEPROM_MODE!=0
@@ -630,7 +630,7 @@ void EEPROM::storeDataIntoEEPROM(uint8_t corrupted)
 void EEPROM::updateChecksum()
 {
 #if EEPROM_MODE!=0
-	HAL::eprSetByte(EPR_INTEGRITY_BYTE,computeChecksum());
+    HAL::eprSetByte(EPR_INTEGRITY_BYTE,computeChecksum());
 #endif // EEPROM_MODE!=0
 
 } // updateChecksum
@@ -638,20 +638,20 @@ void EEPROM::updateChecksum()
 void EEPROM::initializeAllOperatingModes()
 {
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		// initialize the EEPROM values of the operating mode which is not active at the moment
-	    HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_MILL,HOMING_FEEDRATE_X_MILL);
-		HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_MILL,HOMING_FEEDRATE_Y_MILL);
-		HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_MILL,HOMING_FEEDRATE_Z_MILL);
-	}
-	else
-	{
-		// initialize the EEPROM values of the operating mode which is not active at the moment
-	    HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_PRINT,HOMING_FEEDRATE_X_PRINT);
-		HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_PRINT,HOMING_FEEDRATE_Y_PRINT);
-		HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_PRINT,HOMING_FEEDRATE_Z_PRINT);
-	}
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        // initialize the EEPROM values of the operating mode which is not active at the moment
+        HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_MILL,HOMING_FEEDRATE_X_MILL);
+        HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_MILL,HOMING_FEEDRATE_Y_MILL);
+        HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_MILL,HOMING_FEEDRATE_Z_MILL);
+    }
+    else
+    {
+        // initialize the EEPROM values of the operating mode which is not active at the moment
+        HAL::eprSetFloat(EPR_X_HOMING_FEEDRATE_PRINT,HOMING_FEEDRATE_X_PRINT);
+        HAL::eprSetFloat(EPR_Y_HOMING_FEEDRATE_PRINT,HOMING_FEEDRATE_Y_PRINT);
+        HAL::eprSetFloat(EPR_Z_HOMING_FEEDRATE_PRINT,HOMING_FEEDRATE_Z_PRINT);
+    }
 #endif // FEATURE_MILLING_MODE
 
 } // initializeAllOperatingModes
@@ -670,12 +670,12 @@ void EEPROM::readDataFromEEPROM()
     Printer::maxFeedrate[X_AXIS] = HAL::eprGetFloat(EPR_X_MAX_FEEDRATE);
     Printer::maxFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_MAX_FEEDRATE);
     Printer::maxFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_MAX_FEEDRATE);
-	Printer::ZOffset = HAL::eprGetInt32(EPR_RF_Z_OFFSET);
-	Printer::ZMode = HAL::eprGetByte(EPR_RF_Z_MODE);
-	g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-	Printer::moveMode[X_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_X);
-	Printer::moveMode[Y_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_Y);
-	Printer::moveMode[Z_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_Z);
+    Printer::ZOffset = HAL::eprGetInt32(EPR_RF_Z_OFFSET);
+    Printer::ZMode = HAL::eprGetByte(EPR_RF_Z_MODE);
+    g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+    Printer::moveMode[X_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_X);
+    Printer::moveMode[Y_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_Y);
+    Printer::moveMode[Z_AXIS] = HAL::eprGetByte(EPR_RF_MOVE_MODE_Z);
 
     Printer::maxJerk = HAL::eprGetFloat(EPR_MAX_JERK);
     Printer::maxZJerk = HAL::eprGetFloat(EPR_MAX_ZJERK);
@@ -730,9 +730,9 @@ void EEPROM::readDataFromEEPROM()
         e->tempControl.pidDriveMax = HAL::eprGetByte(o+EPR_EXTRUDER_DRIVE_MAX);
         e->tempControl.pidDriveMin = HAL::eprGetByte(o+EPR_EXTRUDER_DRIVE_MIN);
         e->tempControl.pidPGain    = HAL::eprGetFloat(o+EPR_EXTRUDER_PID_PGAIN);
-        e->tempControl.pidIGain	   = HAL::eprGetFloat(o+EPR_EXTRUDER_PID_IGAIN);
-        e->tempControl.pidDGain	   = HAL::eprGetFloat(o+EPR_EXTRUDER_PID_DGAIN);
-        e->tempControl.pidMax	   = HAL::eprGetByte(o+EPR_EXTRUDER_PID_MAX);
+        e->tempControl.pidIGain    = HAL::eprGetFloat(o+EPR_EXTRUDER_PID_IGAIN);
+        e->tempControl.pidDGain    = HAL::eprGetFloat(o+EPR_EXTRUDER_PID_DGAIN);
+        e->tempControl.pidMax      = HAL::eprGetByte(o+EPR_EXTRUDER_PID_MAX);
 #endif // TEMP_PID
 
         e->xOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_X_OFFSET)*Printer::axisStepsPerMM[X_AXIS]);
@@ -756,55 +756,55 @@ void EEPROM::readDataFromEEPROM()
     }
 
 #if FEATURE_BEEPER
-	Printer::enableBeeper = HAL::eprGetByte( EPR_RF_BEEPER_MODE );
+    Printer::enableBeeper = HAL::eprGetByte( EPR_RF_BEEPER_MODE );
 #endif // FEATURE_BEEPER
 
 #if FEATURE_CASE_LIGHT
-	Printer::enableCaseLight = HAL::eprGetByte( EPR_RF_CASE_LIGHT_MODE );
+    Printer::enableCaseLight = HAL::eprGetByte( EPR_RF_CASE_LIGHT_MODE );
 #endif // FEATURE_CASE_LIGHT
 
 #if FEATURE_RGB_LIGHT_EFFECTS
-	Printer::RGBLightMode = HAL::eprGetByte( EPR_RF_RGB_LIGHT_MODE );
-	if ( Printer::RGBLightMode == RGB_MODE_AUTOMATIC)
-	{
-		Printer::RGBLightStatus	   = RGB_STATUS_AUTOMATIC;
-		Printer::RGBLightIdleStart = 0;
-	}
-	else
-	{
-		Printer::RGBLightStatus = RGB_STATUS_NOT_AUTOMATIC;
-	}
+    Printer::RGBLightMode = HAL::eprGetByte( EPR_RF_RGB_LIGHT_MODE );
+    if ( Printer::RGBLightMode == RGB_MODE_AUTOMATIC)
+    {
+        Printer::RGBLightStatus    = RGB_STATUS_AUTOMATIC;
+        Printer::RGBLightIdleStart = 0;
+    }
+    else
+    {
+        Printer::RGBLightStatus = RGB_STATUS_NOT_AUTOMATIC;
+    }
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
 #if FEATURE_24V_FET_OUTPUTS
-	Printer::enableFET1 = HAL::eprGetByte( EPR_RF_FET1_MODE );
-	Printer::enableFET2 = HAL::eprGetByte( EPR_RF_FET2_MODE );
-	Printer::enableFET3 = HAL::eprGetByte( EPR_RF_FET3_MODE );
+    Printer::enableFET1 = HAL::eprGetByte( EPR_RF_FET1_MODE );
+    Printer::enableFET2 = HAL::eprGetByte( EPR_RF_FET2_MODE );
+    Printer::enableFET3 = HAL::eprGetByte( EPR_RF_FET3_MODE );
 #endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_230V_OUTPUT
-	// after a power-on, the 230 V plug always shall be turned off - thus, we do not store this setting to the EEPROM
-	// Printer::enable230VOutput = HAL::eprGetByte( EPR_RF_230V_OUTPUT_MODE );
+    // after a power-on, the 230 V plug always shall be turned off - thus, we do not store this setting to the EEPROM
+    // Printer::enable230VOutput = HAL::eprGetByte( EPR_RF_230V_OUTPUT_MODE );
 #endif // FEATURE_230V_OUTPUT
 
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-	Printer::ZEndstopType  = HAL::eprGetByte( EPR_RF_Z_ENDSTOP_TYPE ) == ENDSTOP_TYPE_CIRCUIT ? ENDSTOP_TYPE_CIRCUIT : ENDSTOP_TYPE_SINGLE;
+    Printer::ZEndstopType  = HAL::eprGetByte( EPR_RF_Z_ENDSTOP_TYPE ) == ENDSTOP_TYPE_CIRCUIT ? ENDSTOP_TYPE_CIRCUIT : ENDSTOP_TYPE_SINGLE;
 #endif //FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 #if FEATURE_MILLING_MODE
-	Printer::operatingMode = HAL::eprGetByte( EPR_RF_OPERATING_MODE ) == OPERATING_MODE_MILL ? OPERATING_MODE_MILL : OPERATING_MODE_PRINT;
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		Printer::homingFeedrate[X_AXIS] = HAL::eprGetFloat(EPR_X_HOMING_FEEDRATE_PRINT);
-		Printer::homingFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_HOMING_FEEDRATE_PRINT);
-		Printer::homingFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_HOMING_FEEDRATE_PRINT);
-	}
-	else
-	{
-		Printer::homingFeedrate[X_AXIS] = HAL::eprGetFloat(EPR_X_HOMING_FEEDRATE_MILL);
-		Printer::homingFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_HOMING_FEEDRATE_MILL);
-		Printer::homingFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_HOMING_FEEDRATE_MILL);
-	}
+    Printer::operatingMode = HAL::eprGetByte( EPR_RF_OPERATING_MODE ) == OPERATING_MODE_MILL ? OPERATING_MODE_MILL : OPERATING_MODE_PRINT;
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        Printer::homingFeedrate[X_AXIS] = HAL::eprGetFloat(EPR_X_HOMING_FEEDRATE_PRINT);
+        Printer::homingFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_HOMING_FEEDRATE_PRINT);
+        Printer::homingFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_HOMING_FEEDRATE_PRINT);
+    }
+    else
+    {
+        Printer::homingFeedrate[X_AXIS] = HAL::eprGetFloat(EPR_X_HOMING_FEEDRATE_MILL);
+        Printer::homingFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_HOMING_FEEDRATE_MILL);
+        Printer::homingFeedrate[Z_AXIS] = HAL::eprGetFloat(EPR_Z_HOMING_FEEDRATE_MILL);
+    }
 #else
     Printer::homingFeedrate[X_AXIS] = HAL::eprGetFloat(EPR_X_HOMING_FEEDRATE_PRINT);
     Printer::homingFeedrate[Y_AXIS] = HAL::eprGetFloat(EPR_Y_HOMING_FEEDRATE_PRINT);
@@ -812,31 +812,31 @@ void EEPROM::readDataFromEEPROM()
 #endif // FEATURE_MILLING_MODE
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
-	Printer::HotendType = HAL::eprGetByte( EPR_RF_HOTEND_TYPE );
-	if( Printer::HotendType < HOTEND_TYPE_1 || Printer::HotendType == HOTEND_TYPE_V2_DUAL )
-	{
+    Printer::HotendType = HAL::eprGetByte( EPR_RF_HOTEND_TYPE );
+    if( Printer::HotendType < HOTEND_TYPE_1 || Printer::HotendType == HOTEND_TYPE_V2_DUAL )
+    {
 #if MOTHERBOARD == DEVICE_TYPE_RF1000
-		Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
+        Printer::HotendType = HOTEND_TYPE_V2_SINGLE;
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
-		Printer::HotendType = HOTEND_TYPE_V2_DUAL;
+        Printer::HotendType = HOTEND_TYPE_V2_DUAL;
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
-	}
+    }
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
 
 #if FEATURE_CONFIGURABLE_MILLER_TYPE
-	Printer::MillerType = HAL::eprGetByte( EPR_RF_MILLER_TYPE ) == MILLER_TYPE_ONE_TRACK ? MILLER_TYPE_ONE_TRACK : MILLER_TYPE_TWO_TRACKS;
+    Printer::MillerType = HAL::eprGetByte( EPR_RF_MILLER_TYPE ) == MILLER_TYPE_ONE_TRACK ? MILLER_TYPE_ONE_TRACK : MILLER_TYPE_TWO_TRACKS;
 #endif // FEATURE_CONFIGURABLE_MILLER_TYPE
 
-	if(version!=EEPROM_PROTOCOL_VERSION)
+    if(version!=EEPROM_PROTOCOL_VERSION)
     {
-		if( Printer::debugInfo() )
-		{
-	        Com::printInfoFLN(Com::tEPRProtocolChanged);
-		}
+        if( Printer::debugInfo() )
+        {
+            Com::printInfoFLN(Com::tEPRProtocolChanged);
+        }
 
-		storeDataIntoEEPROM(false); // Store new fields for changed version
+        storeDataIntoEEPROM(false); // Store new fields for changed version
     }
     Printer::updateDerivedParameter();
     Extruder::initHeatedBed();
@@ -871,12 +871,12 @@ void EEPROM::init()
     else
     {
 #if FEATURE_FULL_EEPROM_RESET
-		clearEEPROM();
-		restoreEEPROMSettingsFromConfiguration();
+        clearEEPROM();
+        restoreEEPROMSettingsFromConfiguration();
 #endif // FEATURE_FULL_EEPROM_RESET
 
         storeDataIntoEEPROM(storedcheck!=check);
-		initializeAllOperatingModes();
+        initializeAllOperatingModes();
     }
 #endif // EEPROM_MODE!=0
 
@@ -887,70 +887,70 @@ void EEPROM::updatePrinterUsage()
 {
 #if EEPROM_MODE!=0
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		if(Printer::filamentPrinted==0) return; // No miles only enabled
-		uint32_t seconds = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
-		seconds += HAL::eprGetInt32(EPR_PRINTING_TIME);
-		HAL::eprSetInt32(EPR_PRINTING_TIME,seconds);
-		HAL::eprSetFloat(EPR_PRINTING_DISTANCE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE)+Printer::filamentPrinted*0.001);
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        if(Printer::filamentPrinted==0) return; // No miles only enabled
+        uint32_t seconds = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
+        seconds += HAL::eprGetInt32(EPR_PRINTING_TIME);
+        HAL::eprSetInt32(EPR_PRINTING_TIME,seconds);
+        HAL::eprSetFloat(EPR_PRINTING_DISTANCE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE)+Printer::filamentPrinted*0.001);
 
 #if FEATURE_SERVICE_INTERVAL
-		uint32_t uSecondsServicePrint = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
-		uSecondsServicePrint += HAL::eprGetInt32(EPR_PRINTING_TIME_SERVICE);
-		HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,uSecondsServicePrint);
-		HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE_SERVICE)+Printer::filamentPrinted*0.001);
+        uint32_t uSecondsServicePrint = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
+        uSecondsServicePrint += HAL::eprGetInt32(EPR_PRINTING_TIME_SERVICE);
+        HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,uSecondsServicePrint);
+        HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE_SERVICE)+Printer::filamentPrinted*0.001);
 #endif // FEATURE_SERVICE_INTERVAL
 
-		Printer::filamentPrinted = 0;
-		Printer::msecondsPrinting = HAL::timeInMilliseconds();
-		uint8_t newcheck = computeChecksum();
-		if(newcheck!=HAL::eprGetByte(EPR_INTEGRITY_BYTE))
-		{
-			HAL::eprSetByte(EPR_INTEGRITY_BYTE,newcheck);
-		}
-		Commands::reportPrinterUsage();
-	}
-	if( Printer::operatingMode == OPERATING_MODE_MILL )
-	{
-		uint32_t seconds = (HAL::timeInMilliseconds()-Printer::msecondsMilling)/1000;
-		seconds += HAL::eprGetInt32(EPR_MILLING_TIME);
-		HAL::eprSetInt32(EPR_MILLING_TIME,seconds);
+        Printer::filamentPrinted = 0;
+        Printer::msecondsPrinting = HAL::timeInMilliseconds();
+        uint8_t newcheck = computeChecksum();
+        if(newcheck!=HAL::eprGetByte(EPR_INTEGRITY_BYTE))
+        {
+            HAL::eprSetByte(EPR_INTEGRITY_BYTE,newcheck);
+        }
+        Commands::reportPrinterUsage();
+    }
+    if( Printer::operatingMode == OPERATING_MODE_MILL )
+    {
+        uint32_t seconds = (HAL::timeInMilliseconds()-Printer::msecondsMilling)/1000;
+        seconds += HAL::eprGetInt32(EPR_MILLING_TIME);
+        HAL::eprSetInt32(EPR_MILLING_TIME,seconds);
 #if FEATURE_SERVICE_INTERVAL
-		uint32_t uSecondsServicePrint = (HAL::timeInMilliseconds()-Printer::msecondsMilling)/1000;
-		uSecondsServicePrint += HAL::eprGetInt32(EPR_MILLING_TIME_SERVICE);
-		HAL::eprSetInt32(EPR_MILLING_TIME_SERVICE,uSecondsServicePrint);
+        uint32_t uSecondsServicePrint = (HAL::timeInMilliseconds()-Printer::msecondsMilling)/1000;
+        uSecondsServicePrint += HAL::eprGetInt32(EPR_MILLING_TIME_SERVICE);
+        HAL::eprSetInt32(EPR_MILLING_TIME_SERVICE,uSecondsServicePrint);
 #endif // FEATURE_SERVICE_INTERVAL
 
-		Printer::msecondsMilling = HAL::timeInMilliseconds();
-		uint8_t newcheck = computeChecksum();
-		if(newcheck!=HAL::eprGetByte(EPR_INTEGRITY_BYTE))
-		{
-			HAL::eprSetByte(EPR_INTEGRITY_BYTE,newcheck);
-		}
-		Commands::reportPrinterUsage();
-	}
+        Printer::msecondsMilling = HAL::timeInMilliseconds();
+        uint8_t newcheck = computeChecksum();
+        if(newcheck!=HAL::eprGetByte(EPR_INTEGRITY_BYTE))
+        {
+            HAL::eprSetByte(EPR_INTEGRITY_BYTE,newcheck);
+        }
+        Commands::reportPrinterUsage();
+    }
 #else
-	if(Printer::filamentPrinted==0) return; // No miles only enabled
+    if(Printer::filamentPrinted==0) return; // No miles only enabled
     uint32_t seconds = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
     seconds += HAL::eprGetInt32(EPR_PRINTING_TIME);
     HAL::eprSetInt32(EPR_PRINTING_TIME,seconds);
     HAL::eprSetFloat(EPR_PRINTING_DISTANCE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE)+Printer::filamentPrinted*0.001);
 
 #if FEATURE_SERVICE_INTERVAL
-	uint32_t uSecondsServicePrint = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
-	uSecondsServicePrint += HAL::eprGetInt32(EPR_PRINTING_TIME_SERVICE);
-	HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,uSecondsServicePrint);
-	HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE_SERVICE)+Printer::filamentPrinted*0.001);
+    uint32_t uSecondsServicePrint = (HAL::timeInMilliseconds()-Printer::msecondsPrinting)/1000;
+    uSecondsServicePrint += HAL::eprGetInt32(EPR_PRINTING_TIME_SERVICE);
+    HAL::eprSetInt32(EPR_PRINTING_TIME_SERVICE,uSecondsServicePrint);
+    HAL::eprSetFloat(EPR_PRINTING_DISTANCE_SERVICE,HAL::eprGetFloat(EPR_PRINTING_DISTANCE_SERVICE)+Printer::filamentPrinted*0.001);
 #endif // FEATURE_SERVICE_INTERVAL
 
-	Printer::filamentPrinted = 0;
+    Printer::filamentPrinted = 0;
     Printer::msecondsPrinting = HAL::timeInMilliseconds();
     uint8_t newcheck = computeChecksum();
     if(newcheck!=HAL::eprGetByte(EPR_INTEGRITY_BYTE))
-	{
+    {
         HAL::eprSetByte(EPR_INTEGRITY_BYTE,newcheck);
-	}
+    }
     Commands::reportPrinterUsage();
 
 #endif // FEATURE_MILLING_MODE
@@ -961,7 +961,7 @@ void EEPROM::updatePrinterUsage()
 
 int EEPROM::getExtruderOffset(uint8_t extruder)
 {
-	return extruder * EEPROM_EXTRUDER_LENGTH + EEPROM_EXTRUDER_OFFSET;
+    return extruder * EEPROM_EXTRUDER_LENGTH + EEPROM_EXTRUDER_OFFSET;
 
 } // getExtruderOffset
 
@@ -985,61 +985,61 @@ void EEPROM::writeSettings()
     writeLong(EPR_STEPPER_INACTIVE_TIME,Com::tEPRStopAfterInactivty);
     writeFloat(EPR_XAXIS_STEPS_PER_MM,Com::tEPRXStepsPerMM,4);
     writeFloat(EPR_YAXIS_STEPS_PER_MM,Com::tEPRYStepsPerMM,4);
-	writeFloat(EPR_ZAXIS_STEPS_PER_MM,Com::tEPRZStepsPerMM,4);
-	writeFloat(EPR_X_MAX_FEEDRATE,Com::tEPRXMaxFeedrate);
+    writeFloat(EPR_ZAXIS_STEPS_PER_MM,Com::tEPRZStepsPerMM,4);
+    writeFloat(EPR_X_MAX_FEEDRATE,Com::tEPRXMaxFeedrate);
     writeFloat(EPR_Y_MAX_FEEDRATE,Com::tEPRYMaxFeedrate);
     writeFloat(EPR_Z_MAX_FEEDRATE,Com::tEPRZMaxFeedrate);
-	writeLong(EPR_RF_Z_OFFSET,Com::tEPRZOffset);
-	writeByte(EPR_RF_Z_MODE,Com::tEPRZMode);
+    writeLong(EPR_RF_Z_OFFSET,Com::tEPRZOffset);
+    writeByte(EPR_RF_Z_MODE,Com::tEPRZMode);
 
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		writeFloat(EPR_PRINTING_DISTANCE,Com::tEPRFilamentPrinted);
-		writeLong(EPR_PRINTING_TIME,Com::tEPRPrinterActive);
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        writeFloat(EPR_PRINTING_DISTANCE,Com::tEPRFilamentPrinted);
+        writeLong(EPR_PRINTING_TIME,Com::tEPRPrinterActive);
 
 #if FEATURE_SERVICE_INTERVAL
-		writeFloat(EPR_PRINTING_DISTANCE_SERVICE,Com::tEPRFilamentPrintedService);
-		writeLong(EPR_PRINTING_TIME_SERVICE,Com::tEPRPrinterActiveService);
+        writeFloat(EPR_PRINTING_DISTANCE_SERVICE,Com::tEPRFilamentPrintedService);
+        writeLong(EPR_PRINTING_TIME_SERVICE,Com::tEPRPrinterActiveService);
 #endif // FEATURE_SERVICE_INTERVAL
-	}
-	else
-	{
-		writeLong(EPR_MILLING_TIME,Com::tEPRMillerActive);
+    }
+    else
+    {
+        writeLong(EPR_MILLING_TIME,Com::tEPRMillerActive);
 #if FEATURE_SERVICE_INTERVAL
-		writeLong(EPR_MILLING_TIME_SERVICE,Com::tEPRMillerActiveService);
+        writeLong(EPR_MILLING_TIME_SERVICE,Com::tEPRMillerActiveService);
 #endif // FEATURE_SERVICE_INTERVAL
-	}
+    }
 #else
-	writeFloat(EPR_PRINTING_DISTANCE,Com::tEPRFilamentPrinted);
-	writeLong(EPR_PRINTING_TIME,Com::tEPRPrinterActive);
+    writeFloat(EPR_PRINTING_DISTANCE,Com::tEPRFilamentPrinted);
+    writeLong(EPR_PRINTING_TIME,Com::tEPRPrinterActive);
 
 #if FEATURE_SERVICE_INTERVAL
-	writeFloat(EPR_PRINTING_DISTANCE_SERVICE,Com::tEPRFilamentPrintedService);
-	writeLong(EPR_PRINTING_TIME_SERVICE,Com::tEPRPrinterActiveService);
+    writeFloat(EPR_PRINTING_DISTANCE_SERVICE,Com::tEPRFilamentPrintedService);
+    writeLong(EPR_PRINTING_TIME_SERVICE,Com::tEPRPrinterActiveService);
 #endif // FEATURE_SERVICE_INTERVAL
 #endif // FEATURE_MILLING_MODE
 
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-	    writeFloat(EPR_X_HOMING_FEEDRATE_PRINT,Com::tEPRXHomingFeedrate);
-		writeFloat(EPR_Y_HOMING_FEEDRATE_PRINT,Com::tEPRYHomingFeedrate);
-		writeFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Com::tEPRZHomingFeedrate);
-	}
-	else
-	{
-		writeFloat(EPR_X_HOMING_FEEDRATE_MILL,Com::tEPRXHomingFeedrate);
-		writeFloat(EPR_Y_HOMING_FEEDRATE_MILL,Com::tEPRYHomingFeedrate);
-		writeFloat(EPR_Z_HOMING_FEEDRATE_MILL,Com::tEPRZHomingFeedrate);
-	}
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        writeFloat(EPR_X_HOMING_FEEDRATE_PRINT,Com::tEPRXHomingFeedrate);
+        writeFloat(EPR_Y_HOMING_FEEDRATE_PRINT,Com::tEPRYHomingFeedrate);
+        writeFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Com::tEPRZHomingFeedrate);
+    }
+    else
+    {
+        writeFloat(EPR_X_HOMING_FEEDRATE_MILL,Com::tEPRXHomingFeedrate);
+        writeFloat(EPR_Y_HOMING_FEEDRATE_MILL,Com::tEPRYHomingFeedrate);
+        writeFloat(EPR_Z_HOMING_FEEDRATE_MILL,Com::tEPRZHomingFeedrate);
+    }
 #else
     writeFloat(EPR_X_HOMING_FEEDRATE_PRINT,Com::tEPRXHomingFeedrate);
     writeFloat(EPR_Y_HOMING_FEEDRATE_PRINT,Com::tEPRYHomingFeedrate);
-	writeFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Com::tEPRZHomingFeedrate);
+    writeFloat(EPR_Z_HOMING_FEEDRATE_PRINT,Com::tEPRZHomingFeedrate);
 #endif // FEATURE_MILLING_MODE
 
-	writeFloat(EPR_MAX_JERK,Com::tEPRMaxJerk);
+    writeFloat(EPR_MAX_JERK,Com::tEPRMaxJerk);
     writeFloat(EPR_MAX_ZJERK,Com::tEPRMaxZJerk);
     writeFloat(EPR_X_HOME_OFFSET,Com::tEPRXHomePos);
     writeFloat(EPR_Y_HOME_OFFSET,Com::tEPRYHomePos);
@@ -1079,7 +1079,7 @@ void EEPROM::writeSettings()
     // now the extruder
     for(uint8_t i=0; i<NUM_EXTRUDER; i++)
     {
-		int o=i*EEPROM_EXTRUDER_LENGTH+EEPROM_EXTRUDER_OFFSET;
+        int o=i*EEPROM_EXTRUDER_LENGTH+EEPROM_EXTRUDER_OFFSET;
         //Extruder *e = &extruder[i];
         writeFloat(o+EPR_EXTRUDER_STEPS_PER_MM,Com::tEPRStepsPerMM);
         writeFloat(o+EPR_EXTRUDER_MAX_FEEDRATE,Com::tEPRMaxFeedrate);
@@ -1114,51 +1114,51 @@ void EEPROM::writeSettings()
 #endif // USE_ADVANCE
     }
 
-	// RF specific
+    // RF specific
 #if FEATURE_BEEPER
-	writeByte(EPR_RF_BEEPER_MODE,Com::tEPRBeeperMode);
+    writeByte(EPR_RF_BEEPER_MODE,Com::tEPRBeeperMode);
 #endif // FEATURE_BEEPER
 
 #if FEATURE_CASE_LIGHT
-	writeByte(EPR_RF_CASE_LIGHT_MODE,Com::tEPRCaseLightsMode);
+    writeByte(EPR_RF_CASE_LIGHT_MODE,Com::tEPRCaseLightsMode);
 #endif // FEATURE_CASE_LIGHT
 
 #if FEATURE_MILLING_MODE
-	writeByte(EPR_RF_OPERATING_MODE,Com::tEPROperatingMode);
+    writeByte(EPR_RF_OPERATING_MODE,Com::tEPROperatingMode);
 #endif // FEATURE_MILLING_MODE
 
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-	writeByte(EPR_RF_Z_ENDSTOP_TYPE,Com::tEPRZEndstopType);
+    writeByte(EPR_RF_Z_ENDSTOP_TYPE,Com::tEPRZEndstopType);
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 #if FEATURE_RGB_LIGHT_EFFECTS
-	writeByte(EPR_RF_RGB_LIGHT_MODE,Com::tEPRRGBLightMode);
+    writeByte(EPR_RF_RGB_LIGHT_MODE,Com::tEPRRGBLightMode);
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
 #if FEATURE_24V_FET_OUTPUTS
-	writeByte(EPR_RF_FET1_MODE,Com::tEPRFET1Mode);
-	writeByte(EPR_RF_FET2_MODE,Com::tEPRFET2Mode);
-	writeByte(EPR_RF_FET3_MODE,Com::tEPRFET3Mode);
+    writeByte(EPR_RF_FET1_MODE,Com::tEPRFET1Mode);
+    writeByte(EPR_RF_FET2_MODE,Com::tEPRFET2Mode);
+    writeByte(EPR_RF_FET3_MODE,Com::tEPRFET3Mode);
 #endif // FEATURE_24V_FET_OUTPUTS
 
 #if FEATURE_230V_OUTPUT
-	// after a power-on, the 230 V plug always shall be turned off - thus, we do not store this setting to the EEPROM
-	// writeByte(EPR_RF_230V_OUTPUT_MODE,Com::tEPR230VOutputMode);
+    // after a power-on, the 230 V plug always shall be turned off - thus, we do not store this setting to the EEPROM
+    // writeByte(EPR_RF_230V_OUTPUT_MODE,Com::tEPR230VOutputMode);
 #endif // FEATURE_230V_OUTPUT
 
 #if FEATURE_CONFIGURABLE_HOTEND_TYPE
-	writeByte(EPR_RF_HOTEND_TYPE,Com::tEPRHotendType);
+    writeByte(EPR_RF_HOTEND_TYPE,Com::tEPRHotendType);
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
 
 #if FEATURE_CONFIGURABLE_MILLER_TYPE
-	writeByte(EPR_RF_MILLER_TYPE,Com::tEPRMillerType);
+    writeByte(EPR_RF_MILLER_TYPE,Com::tEPRMillerType);
 #endif // FEATURE_CONFIGURABLE_MILLER_TYPE
 
 #else
-	if( Printer::debugErrors() )
-	{
-	    Com::printErrorF(Com::tNoEEPROMSupport);
-	}
+    if( Printer::debugErrors() )
+    {
+        Com::printErrorF(Com::tNoEEPROMSupport);
+    }
 #endif // EEPROM_MODE!=0
 
 } // writeSettings
@@ -1167,23 +1167,23 @@ void EEPROM::writeSettings()
 #if EEPROM_MODE!=0
 uint8_t EEPROM::computeChecksum()
 {
-	millis_t		lastTime	= HAL::timeInMilliseconds();
-	millis_t		currentTime;
-    unsigned int	i;
-    uint8_t			checksum=0;
+    millis_t        lastTime    = HAL::timeInMilliseconds();
+    millis_t        currentTime;
+    unsigned int    i;
+    uint8_t         checksum=0;
 
 
     for(i=0; i<2048; i++)
     {
-	if(i==EEPROM_OFFSET+EPR_INTEGRITY_BYTE) continue;
+    if(i==EEPROM_OFFSET+EPR_INTEGRITY_BYTE) continue;
         checksum += HAL::eprGetByte(i);
 
-		currentTime = HAL::timeInMilliseconds();
-		if( (currentTime - lastTime) > PERIODICAL_ACTIONS_CALL_INTERVAL )
-		{
-			Commands::checkForPeriodicalActions();
-			lastTime = currentTime;
-		}
+        currentTime = HAL::timeInMilliseconds();
+        if( (currentTime - lastTime) > PERIODICAL_ACTIONS_CALL_INTERVAL )
+        {
+            Commands::checkForPeriodicalActions();
+            lastTime = currentTime;
+        }
     }
     return checksum;
 
@@ -1194,7 +1194,7 @@ void EEPROM::writeExtruderPrefix(uint pos)
 {
     if(pos<EEPROM_EXTRUDER_OFFSET || pos>=800) return;
     int n = (pos-EEPROM_EXTRUDER_OFFSET)/EEPROM_EXTRUDER_LENGTH+1;
-	Com::printF(Com::tExtrDot,n);
+    Com::printF(Com::tExtrDot,n);
     Com::print(' ');
 
 } // writeExtruderPrefix

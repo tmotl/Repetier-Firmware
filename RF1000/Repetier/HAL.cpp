@@ -21,7 +21,7 @@
 
 
 #if FEATURE_WATCHDOG
-unsigned char	g_bPingWatchdog		= 0;
+unsigned char   g_bPingWatchdog     = 0;
 #endif // FEATURE_WATCHDOG
 
 
@@ -37,15 +37,15 @@ HAL::~HAL()
 
 uint16_t HAL::integerSqrt(long a)
 {
-	// http://www.mikrocontroller.net/articles/AVR_Arithmetik#32_Bit_.2F_32_Bit
-	//-----------------------------------------------------------
-	// Fast and short 32 bits AVR sqrt routine, avr-gcc ABI compliant
-	// R25:R24 = SQRT (R25:R24:R23:R22) rounded to the
-	// nearest integer (0.5 rounds up)
-	// Destroys R18-R19,R22-R23,R26-R27
-	// Cycles incl call & ret = 265-310
-	// Stack incl call = 2-3
-	//-----------------------------------------------------------
+    // http://www.mikrocontroller.net/articles/AVR_Arithmetik#32_Bit_.2F_32_Bit
+    //-----------------------------------------------------------
+    // Fast and short 32 bits AVR sqrt routine, avr-gcc ABI compliant
+    // R25:R24 = SQRT (R25:R24:R23:R22) rounded to the
+    // nearest integer (0.5 rounds up)
+    // Destroys R18-R19,R22-R23,R26-R27
+    // Cycles incl call & ret = 265-310
+    // Stack incl call = 2-3
+    //-----------------------------------------------------------
 
     uint16_t b;
 
@@ -100,27 +100,27 @@ uint16_t HAL::integerSqrt(long a)
 
 
 const uint16_t fast_div_lut[17] PROGMEM = { 0,F_CPU/4096,F_CPU/8192,F_CPU/12288,F_CPU/16384,F_CPU/20480,F_CPU/24576,F_CPU/28672,F_CPU/32768,F_CPU/36864
-											,F_CPU/40960,F_CPU/45056,F_CPU/49152,F_CPU/53248,F_CPU/57344,F_CPU/61440,F_CPU/65536 };
+                                            ,F_CPU/40960,F_CPU/45056,F_CPU/49152,F_CPU/53248,F_CPU/57344,F_CPU/61440,F_CPU/65536 };
 
 const uint16_t slow_div_lut[257] PROGMEM = { 0,0,0,0,0,0,0,0,F_CPU/256,F_CPU/288,F_CPU/320,F_CPU/352
-											 ,F_CPU/384,F_CPU/416,F_CPU/448,F_CPU/480,F_CPU/512,F_CPU/544,F_CPU/576,F_CPU/608,F_CPU/640,F_CPU/672,F_CPU/704,F_CPU/736,F_CPU/768,F_CPU/800,F_CPU/832
-											 ,F_CPU/864,F_CPU/896,F_CPU/928,F_CPU/960,F_CPU/992,F_CPU/1024,F_CPU/1056,F_CPU/1088,F_CPU/1120,F_CPU/1152,F_CPU/1184,F_CPU/1216,F_CPU/1248,F_CPU/1280,F_CPU/1312
-											 ,F_CPU/1344,F_CPU/1376,F_CPU/1408,F_CPU/1440,F_CPU/1472,F_CPU/1504,F_CPU/1536,F_CPU/1568,F_CPU/1600,F_CPU/1632,F_CPU/1664,F_CPU/1696,F_CPU/1728,F_CPU/1760,F_CPU/1792
-											 ,F_CPU/1824,F_CPU/1856,F_CPU/1888,F_CPU/1920,F_CPU/1952,F_CPU/1984,F_CPU/2016
-											 ,F_CPU/2048,F_CPU/2080,F_CPU/2112,F_CPU/2144,F_CPU/2176,F_CPU/2208,F_CPU/2240,F_CPU/2272,F_CPU/2304,F_CPU/2336,F_CPU/2368,F_CPU/2400
-											 ,F_CPU/2432,F_CPU/2464,F_CPU/2496,F_CPU/2528,F_CPU/2560,F_CPU/2592,F_CPU/2624,F_CPU/2656,F_CPU/2688,F_CPU/2720,F_CPU/2752,F_CPU/2784,F_CPU/2816,F_CPU/2848,F_CPU/2880
-											 ,F_CPU/2912,F_CPU/2944,F_CPU/2976,F_CPU/3008,F_CPU/3040,F_CPU/3072,F_CPU/3104,F_CPU/3136,F_CPU/3168,F_CPU/3200,F_CPU/3232,F_CPU/3264,F_CPU/3296,F_CPU/3328,F_CPU/3360
-											 ,F_CPU/3392,F_CPU/3424,F_CPU/3456,F_CPU/3488,F_CPU/3520,F_CPU/3552,F_CPU/3584,F_CPU/3616,F_CPU/3648,F_CPU/3680,F_CPU/3712,F_CPU/3744,F_CPU/3776,F_CPU/3808,F_CPU/3840
-											 ,F_CPU/3872,F_CPU/3904,F_CPU/3936,F_CPU/3968,F_CPU/4000,F_CPU/4032,F_CPU/4064
-											 ,F_CPU/4096,F_CPU/4128,F_CPU/4160,F_CPU/4192,F_CPU/4224,F_CPU/4256,F_CPU/4288,F_CPU/4320,F_CPU/4352,F_CPU/4384,F_CPU/4416,F_CPU/4448,F_CPU/4480,F_CPU/4512,F_CPU/4544
-											 ,F_CPU/4576,F_CPU/4608,F_CPU/4640,F_CPU/4672,F_CPU/4704,F_CPU/4736,F_CPU/4768,F_CPU/4800,F_CPU/4832,F_CPU/4864,F_CPU/4896,F_CPU/4928,F_CPU/4960,F_CPU/4992,F_CPU/5024
-											 ,F_CPU/5056,F_CPU/5088,F_CPU/5120,F_CPU/5152,F_CPU/5184,F_CPU/5216,F_CPU/5248,F_CPU/5280,F_CPU/5312,F_CPU/5344,F_CPU/5376,F_CPU/5408,F_CPU/5440,F_CPU/5472,F_CPU/5504
-											 ,F_CPU/5536,F_CPU/5568,F_CPU/5600,F_CPU/5632,F_CPU/5664,F_CPU/5696,F_CPU/5728,F_CPU/5760,F_CPU/5792,F_CPU/5824,F_CPU/5856,F_CPU/5888,F_CPU/5920,F_CPU/5952,F_CPU/5984
-											 ,F_CPU/6016,F_CPU/6048,F_CPU/6080,F_CPU/6112,F_CPU/6144,F_CPU/6176,F_CPU/6208,F_CPU/6240,F_CPU/6272,F_CPU/6304,F_CPU/6336,F_CPU/6368,F_CPU/6400,F_CPU/6432,F_CPU/6464
-											 ,F_CPU/6496,F_CPU/6528,F_CPU/6560,F_CPU/6592,F_CPU/6624,F_CPU/6656,F_CPU/6688,F_CPU/6720,F_CPU/6752,F_CPU/6784,F_CPU/6816,F_CPU/6848,F_CPU/6880,F_CPU/6912,F_CPU/6944
-											 ,F_CPU/6976,F_CPU/7008,F_CPU/7040,F_CPU/7072,F_CPU/7104,F_CPU/7136,F_CPU/7168,F_CPU/7200,F_CPU/7232,F_CPU/7264,F_CPU/7296,F_CPU/7328,F_CPU/7360,F_CPU/7392,F_CPU/7424
-											 ,F_CPU/7456,F_CPU/7488,F_CPU/7520,F_CPU/7552,F_CPU/7584,F_CPU/7616,F_CPU/7648,F_CPU/7680,F_CPU/7712,F_CPU/7744,F_CPU/7776,F_CPU/7808,F_CPU/7840,F_CPU/7872,F_CPU/7904
-											 ,F_CPU/7936,F_CPU/7968,F_CPU/8000,F_CPU/8032,F_CPU/8064,F_CPU/8096,F_CPU/8128,F_CPU/8160,F_CPU/8192 };
+                                             ,F_CPU/384,F_CPU/416,F_CPU/448,F_CPU/480,F_CPU/512,F_CPU/544,F_CPU/576,F_CPU/608,F_CPU/640,F_CPU/672,F_CPU/704,F_CPU/736,F_CPU/768,F_CPU/800,F_CPU/832
+                                             ,F_CPU/864,F_CPU/896,F_CPU/928,F_CPU/960,F_CPU/992,F_CPU/1024,F_CPU/1056,F_CPU/1088,F_CPU/1120,F_CPU/1152,F_CPU/1184,F_CPU/1216,F_CPU/1248,F_CPU/1280,F_CPU/1312
+                                             ,F_CPU/1344,F_CPU/1376,F_CPU/1408,F_CPU/1440,F_CPU/1472,F_CPU/1504,F_CPU/1536,F_CPU/1568,F_CPU/1600,F_CPU/1632,F_CPU/1664,F_CPU/1696,F_CPU/1728,F_CPU/1760,F_CPU/1792
+                                             ,F_CPU/1824,F_CPU/1856,F_CPU/1888,F_CPU/1920,F_CPU/1952,F_CPU/1984,F_CPU/2016
+                                             ,F_CPU/2048,F_CPU/2080,F_CPU/2112,F_CPU/2144,F_CPU/2176,F_CPU/2208,F_CPU/2240,F_CPU/2272,F_CPU/2304,F_CPU/2336,F_CPU/2368,F_CPU/2400
+                                             ,F_CPU/2432,F_CPU/2464,F_CPU/2496,F_CPU/2528,F_CPU/2560,F_CPU/2592,F_CPU/2624,F_CPU/2656,F_CPU/2688,F_CPU/2720,F_CPU/2752,F_CPU/2784,F_CPU/2816,F_CPU/2848,F_CPU/2880
+                                             ,F_CPU/2912,F_CPU/2944,F_CPU/2976,F_CPU/3008,F_CPU/3040,F_CPU/3072,F_CPU/3104,F_CPU/3136,F_CPU/3168,F_CPU/3200,F_CPU/3232,F_CPU/3264,F_CPU/3296,F_CPU/3328,F_CPU/3360
+                                             ,F_CPU/3392,F_CPU/3424,F_CPU/3456,F_CPU/3488,F_CPU/3520,F_CPU/3552,F_CPU/3584,F_CPU/3616,F_CPU/3648,F_CPU/3680,F_CPU/3712,F_CPU/3744,F_CPU/3776,F_CPU/3808,F_CPU/3840
+                                             ,F_CPU/3872,F_CPU/3904,F_CPU/3936,F_CPU/3968,F_CPU/4000,F_CPU/4032,F_CPU/4064
+                                             ,F_CPU/4096,F_CPU/4128,F_CPU/4160,F_CPU/4192,F_CPU/4224,F_CPU/4256,F_CPU/4288,F_CPU/4320,F_CPU/4352,F_CPU/4384,F_CPU/4416,F_CPU/4448,F_CPU/4480,F_CPU/4512,F_CPU/4544
+                                             ,F_CPU/4576,F_CPU/4608,F_CPU/4640,F_CPU/4672,F_CPU/4704,F_CPU/4736,F_CPU/4768,F_CPU/4800,F_CPU/4832,F_CPU/4864,F_CPU/4896,F_CPU/4928,F_CPU/4960,F_CPU/4992,F_CPU/5024
+                                             ,F_CPU/5056,F_CPU/5088,F_CPU/5120,F_CPU/5152,F_CPU/5184,F_CPU/5216,F_CPU/5248,F_CPU/5280,F_CPU/5312,F_CPU/5344,F_CPU/5376,F_CPU/5408,F_CPU/5440,F_CPU/5472,F_CPU/5504
+                                             ,F_CPU/5536,F_CPU/5568,F_CPU/5600,F_CPU/5632,F_CPU/5664,F_CPU/5696,F_CPU/5728,F_CPU/5760,F_CPU/5792,F_CPU/5824,F_CPU/5856,F_CPU/5888,F_CPU/5920,F_CPU/5952,F_CPU/5984
+                                             ,F_CPU/6016,F_CPU/6048,F_CPU/6080,F_CPU/6112,F_CPU/6144,F_CPU/6176,F_CPU/6208,F_CPU/6240,F_CPU/6272,F_CPU/6304,F_CPU/6336,F_CPU/6368,F_CPU/6400,F_CPU/6432,F_CPU/6464
+                                             ,F_CPU/6496,F_CPU/6528,F_CPU/6560,F_CPU/6592,F_CPU/6624,F_CPU/6656,F_CPU/6688,F_CPU/6720,F_CPU/6752,F_CPU/6784,F_CPU/6816,F_CPU/6848,F_CPU/6880,F_CPU/6912,F_CPU/6944
+                                             ,F_CPU/6976,F_CPU/7008,F_CPU/7040,F_CPU/7072,F_CPU/7104,F_CPU/7136,F_CPU/7168,F_CPU/7200,F_CPU/7232,F_CPU/7264,F_CPU/7296,F_CPU/7328,F_CPU/7360,F_CPU/7392,F_CPU/7424
+                                             ,F_CPU/7456,F_CPU/7488,F_CPU/7520,F_CPU/7552,F_CPU/7584,F_CPU/7616,F_CPU/7648,F_CPU/7680,F_CPU/7712,F_CPU/7744,F_CPU/7776,F_CPU/7808,F_CPU/7840,F_CPU/7872,F_CPU/7904
+                                             ,F_CPU/7936,F_CPU/7968,F_CPU/8000,F_CPU/8032,F_CPU/8064,F_CPU/8096,F_CPU/8128,F_CPU/8160,F_CPU/8192 };
 
 
 /** \brief approximates division of F_CPU/divisor
@@ -185,7 +185,7 @@ int32_t HAL::CPUDivU2(unsigned int divisor)
             : "=&r" (res),"=&d"(divisor),"=&z"(table) : "1"(divisor),"2"(table) : "r18","r4","r5");
         return res;
         /*unsigned short adr0 = (unsigned short)&slow_div_lut+(divisor>>4)&1022;
-        long y0=	pgm_read_dword_near(adr0);
+        long y0=    pgm_read_dword_near(adr0);
         long gain = y0-pgm_read_dword_near(adr0+2);
         return y0-((gain*(divisor & 31))>>5);*/
     }
@@ -235,7 +235,7 @@ int32_t HAL::CPUDivU2(unsigned int divisor)
         /*
         // The asm mimics the following code
         unsigned short adr0 = (unsigned short)&fast_div_lut+(divisor>>11)&254;
-        unsigned short y0=	pgm_read_word_near(adr0);
+        unsigned short y0=  pgm_read_word_near(adr0);
         unsigned short gain = y0-pgm_read_word_near(adr0+2);
         return y0-(((long)gain*(divisor & 4095))>>12);*/
     }
@@ -246,61 +246,61 @@ int32_t HAL::CPUDivU2(unsigned int divisor)
 void HAL::setupTimer()
 {
 #if defined(USE_ADVANCE)
-    EXTRUDER_TCCR = 0;								// need Normal not fastPWM set by arduino init
-    EXTRUDER_TIMSK |= (1<<EXTRUDER_OCIE);			// Activate compa interrupt on timer 0
+    EXTRUDER_TCCR = 0;                              // need Normal not fastPWM set by arduino init
+    EXTRUDER_TIMSK |= (1<<EXTRUDER_OCIE);           // Activate compa interrupt on timer 0
 #endif // defined(USE_ADVANCE)
 
-    PWM_TCCR = 0;									// Setup PWM interrupt
+    PWM_TCCR = 0;                                   // Setup PWM interrupt
     PWM_OCR = 64;
     PWM_TIMSK |= (1<<PWM_OCIE);
 
-    TCCR1A = 0;										// Setup timer 1 interrupt to no prescale CTC mode
+    TCCR1A = 0;                                     // Setup timer 1 interrupt to no prescale CTC mode
     TCCR1C = 0;
     TIMSK1 = 0;
-    TCCR1B =  (_BV(WGM12) | _BV(CS10));				// no prescaler == 0.0625 usec tick | 001 = clk/1
-    OCR1A=65500;									// start off with a slow frequency.
-    TIMSK1 |= (1<<OCIE1A);							// Enable interrupt
+    TCCR1B =  (_BV(WGM12) | _BV(CS10));             // no prescaler == 0.0625 usec tick | 001 = clk/1
+    OCR1A=65500;                                    // start off with a slow frequency.
+    TIMSK1 |= (1<<OCIE1A);                          // Enable interrupt
 
 #if FEATURE_RGB_LIGHT_EFFECTS
-	// Configure Timer 4 for RGB-PWM 
-	TCCR4A	= 0;									// clear Register
-	TCCR4B  = 0;
+    // Configure Timer 4 for RGB-PWM 
+    TCCR4A  = 0;                                    // clear Register
+    TCCR4B  = 0;
 
-	ICR4	= 20480;								// set frequency to 100Hz = 10ms
+    ICR4    = 20480;                                // set frequency to 100Hz = 10ms
 
-	TCCR4A |= (1<<WGM41);							// Fast PWM
-	TCCR4B |= (1<<WGM42)|(1<<WGM43)|(1<<CS41);		// Prescaler = 8
+    TCCR4A |= (1<<WGM41);                           // Fast PWM
+    TCCR4B |= (1<<WGM42)|(1<<WGM43)|(1<<CS41);      // Prescaler = 8
 
-	SET_OUTPUT(RGB_LIGHT_R_PIN);					// PH3 - Pin 15 ( OC4A )
-	SET_OUTPUT(RGB_LIGHT_G_PIN);					// PH4 - Pin 16 ( OC4B )
-	SET_OUTPUT(RGB_LIGHT_B_PIN);					// PH5 - Pin 17 ( OC4C )
+    SET_OUTPUT(RGB_LIGHT_R_PIN);                    // PH3 - Pin 15 ( OC4A )
+    SET_OUTPUT(RGB_LIGHT_G_PIN);                    // PH4 - Pin 16 ( OC4B )
+    SET_OUTPUT(RGB_LIGHT_B_PIN);                    // PH5 - Pin 17 ( OC4C )
 
-	TCCR4A |= (1<<COM4A1)|(1<<COM4B1)|(1<<COM4C1);	// enable fast PWM						
+    TCCR4A |= (1<<COM4A1)|(1<<COM4B1)|(1<<COM4C1);  // enable fast PWM                      
 
-	OCR4A = 0;										// default R = 0 at startup
-	OCR4B = 0;										// default G = 0 at startup
-	OCR4C = 0;										// default B = 0 at startup
+    OCR4A = 0;                                      // default R = 0 at startup
+    OCR4B = 0;                                      // default G = 0 at startup
+    OCR4C = 0;                                      // default B = 0 at startup
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
 #if FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF2000
-	//Configure Timer 5
-	TCCR5A	= 0;									// clear Register
-	TCCR5B  = 0;
+    //Configure Timer 5
+    TCCR5A  = 0;                                    // clear Register
+    TCCR5B  = 0;
 
-	ICR5	= 39999;								// set frequency to 50Hz = 20ms
+    ICR5    = 39999;                                // set frequency to 50Hz = 20ms
 
-	TCCR5A |= (1<<WGM51);							// Fast PWM
-	TCCR5B |= (1<<WGM52)|(1<<WGM53)|(1<<CS51);		// Prescaler = 8
+    TCCR5A |= (1<<WGM51);                           // Fast PWM
+    TCCR5B |= (1<<WGM52)|(1<<WGM53)|(1<<CS51);      // Prescaler = 8
 
-	SET_OUTPUT(SERVO1_PIN);							// PL3 - Pin 38 ( OC5A )
-	SET_OUTPUT(SERVO2_PIN);							// PL4 - Pin 39 ( OC5B )
-	SET_OUTPUT(SERVO3_PIN);							// PL5 - Pin 40 ( OC5C )
+    SET_OUTPUT(SERVO1_PIN);                         // PL3 - Pin 38 ( OC5A )
+    SET_OUTPUT(SERVO2_PIN);                         // PL4 - Pin 39 ( OC5B )
+    SET_OUTPUT(SERVO3_PIN);                         // PL5 - Pin 40 ( OC5C )
 
-	TCCR5A |= (1<<COM5A1)|(1<<COM5B1)|(1<<COM5C1);	// enable Fast PWM
+    TCCR5A |= (1<<COM5A1)|(1<<COM5B1)|(1<<COM5C1);  // enable Fast PWM
 
-	OCR5A = 1600;									// default ( 800 [uS] )
-	OCR5B = 1600;									// default ( 800 [uS] )
-	OCR5C = 1600;									// default ( 800 [uS] )
+    OCR5A = 1600;                                   // default ( 800 [uS] )
+    OCR5B = 1600;                                   // default ( 800 [uS] )
+    OCR5C = 1600;                                   // default ( 800 [uS] )
 #endif // FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF2000
 
 #if FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF1000
@@ -340,14 +340,14 @@ void HAL::showStartReason()
     // Check startup - does nothing if bootloader sets MCUSR to 0
     uint8_t mcu = MCUSR;
 
-	if( Printer::debugInfo() )
-	{
-		if(mcu & 1) Com::printInfoFLN(Com::tPowerUp);
-		if(mcu & 2) Com::printInfoFLN(Com::tExternalReset);
-		if(mcu & 4) Com::printInfoFLN(Com::tBrownOut);
-		if(mcu & 8) Com::printInfoFLN(Com::tWatchdog);
-		if(mcu & 32) Com::printInfoFLN(Com::tSoftwareReset);
-	}
+    if( Printer::debugInfo() )
+    {
+        if(mcu & 1) Com::printInfoFLN(Com::tPowerUp);
+        if(mcu & 2) Com::printInfoFLN(Com::tExternalReset);
+        if(mcu & 4) Com::printInfoFLN(Com::tBrownOut);
+        if(mcu & 8) Com::printInfoFLN(Com::tWatchdog);
+        if(mcu & 32) Com::printInfoFLN(Com::tSoftwareReset);
+    }
     MCUSR=0;
 
 } // showStartReason
@@ -360,9 +360,9 @@ int HAL::getFreeRam()
 
     BEGIN_INTERRUPT_PROTECTED
     uint8_t * heapptr, * stackptr;
-    heapptr = (uint8_t *)malloc(4);			// get heap pointer
-    free(heapptr);							// free up the memory again (sets heapptr to 0)
-    stackptr =  (uint8_t *)(SP);			// save value of stack pointer
+    heapptr = (uint8_t *)malloc(4);         // get heap pointer
+    free(heapptr);                          // free up the memory again (sets heapptr to 0)
+    stackptr =  (uint8_t *)(SP);            // save value of stack pointer
     freeram = (int)stackptr-(int)heapptr;
     END_INTERRUPT_PROTECTED
     return freeram;
@@ -396,7 +396,7 @@ void HAL::analogStart()
     /* ADCW must be read once, otherwise the next result is wrong. */
     uint dummyADCResult;
     dummyADCResult = ADCW;
-	(void)dummyADCResult;
+    (void)dummyADCResult;
     // Enable interrupt driven conversion loop
     uint8_t channel = pgm_read_byte(&osAnalogInputChannels[osAnalogInputPos]);
 
@@ -433,8 +433,8 @@ void HAL::analogStart()
 void HAL::i2cInit(unsigned long clockSpeedHz)
 {
     // initialize TWI clock: 100 kHz clock, TWPS = 0 => prescaler = 1
-    TWSR = 0;								// no prescaler
-    TWBR = ((F_CPU/clockSpeedHz)-16)/2;		// must be > 10 for stable operation
+    TWSR = 0;                               // no prescaler
+    TWBR = ((F_CPU/clockSpeedHz)-16)/2;     // must be > 10 for stable operation
 
 } // i2cInit
 
@@ -612,84 +612,84 @@ SIGNAL (TIMER3_COMPA_vect)
 {
     switch(servoIndex)
     {
-		case 0:
-		{
-			TCNT3 = 0;
-			if(HAL::servoTimings[0])
-			{
+        case 0:
+        {
+            TCNT3 = 0;
+            if(HAL::servoTimings[0])
+            {
 #if SERVO0_PIN>-1
-				WRITE(SERVO0_PIN,HIGH);
+                WRITE(SERVO0_PIN,HIGH);
 #endif // SERVO0_PIN>-1
 
-				OCR3A = HAL::servoTimings[0];
-			}
-			else
-			{
-				OCR3A = SERVO2500US;
-			}
-	        break;
-		}
-		case 1:
-		{
+                OCR3A = HAL::servoTimings[0];
+            }
+            else
+            {
+                OCR3A = SERVO2500US;
+            }
+            break;
+        }
+        case 1:
+        {
 #if SERVO0_PIN>-1
-			WRITE(SERVO0_PIN,LOW);
+            WRITE(SERVO0_PIN,LOW);
 #endif // SERVO0_PIN>-1
 
-			OCR3A = SERVO5000US;
-			break;
-		}
-		case 2:
-		{
-			TCNT3 = 0;
-			if(HAL::servoTimings[1])
-			{
+            OCR3A = SERVO5000US;
+            break;
+        }
+        case 2:
+        {
+            TCNT3 = 0;
+            if(HAL::servoTimings[1])
+            {
 #if SERVO1_PIN>-1
-				WRITE(SERVO1_PIN,HIGH);
+                WRITE(SERVO1_PIN,HIGH);
 #endif // SERVO1_PIN>-1
 
-				OCR3A = HAL::servoTimings[1];
-			}
-			else
-			{
-				OCR3A = SERVO2500US;
-			}
-			break;
-		}
-		case 3:
-		{
+                OCR3A = HAL::servoTimings[1];
+            }
+            else
+            {
+                OCR3A = SERVO2500US;
+            }
+            break;
+        }
+        case 3:
+        {
 #if SERVO1_PIN>-1
-			WRITE(SERVO1_PIN,LOW);
+            WRITE(SERVO1_PIN,LOW);
 #endif // SERVO1_PIN>-1
 
-			OCR3A = SERVO5000US;
-			break;
-		}
-		case 4:
-		{
-			TCNT3 = 0;
-			if(HAL::servoTimings[2])
-			{
+            OCR3A = SERVO5000US;
+            break;
+        }
+        case 4:
+        {
+            TCNT3 = 0;
+            if(HAL::servoTimings[2])
+            {
 #if SERVO2_PIN>-1
-	            WRITE(SERVO2_PIN,HIGH);
+                WRITE(SERVO2_PIN,HIGH);
 #endif // SERVO2_PIN>-1
 
-				OCR3A = HAL::servoTimings[2];
-			}
-			else
-			{
-				OCR3A = SERVO2500US;
-			}
-			break;
-		}
-		case 5:
-		{
+                OCR3A = HAL::servoTimings[2];
+            }
+            else
+            {
+                OCR3A = SERVO2500US;
+            }
+            break;
+        }
+        case 5:
+        {
 #if SERVO2_PIN>-1
-			WRITE(SERVO2_PIN,LOW);
+            WRITE(SERVO2_PIN,LOW);
 #endif // SERVO2_PIN>-1
 
-			OCR3A = SERVO5000US;
-			break;
-		}
+            OCR3A = SERVO5000US;
+            break;
+        }
     }
     servoIndex++;
     if(servoIndex>5)
@@ -730,14 +730,14 @@ inline void setTimer(uint32_t delay)
         "exact%=: sts %[ocr]+1,%B[delay] \n\t" //  OCR1A = delay;
         "sts %[ocr],%A[delay] \n\t"
         "rjmp end%= \n\t"
-        "else%=: subi	%B[delay], 0x80 \n\t" //} else { stepperWait = delay-32768;
-        "sbci	%C[delay], 0x00 \n\t"
+        "else%=: subi   %B[delay], 0x80 \n\t" //} else { stepperWait = delay-32768;
+        "sbci   %C[delay], 0x00 \n\t"
         "sts stepperWait,%A[delay] \n\t"
         "sts stepperWait+1,%B[delay] \n\t"
         "sts stepperWait+2,%C[delay] \n\t"
-        "ldi	%D[delay], 0x80 \n\t" //OCR1A = 32768;
-        "sts	%[ocr]+1, %D[delay] \n\t"
-        "sts	%[ocr], r1 \n\t"
+        "ldi    %D[delay], 0x80 \n\t" //OCR1A = 32768;
+        "sts    %[ocr]+1, %D[delay] \n\t"
+        "sts    %[ocr], r1 \n\t"
         "end%=: \n\t"
         :[delay]"=&d"(delay) // Output
         :"0"(delay),[ocr]"i" (_SFR_MEM_ADDR(OCR1A)),[time]"i"(_SFR_MEM_ADDR(TCNT1)) // Input
@@ -759,7 +759,7 @@ inline void setTimer(uint32_t delay)
 } // setTimer
 
 
-volatile uint8_t	insideTimer1 = 0;
+volatile uint8_t    insideTimer1 = 0;
 long __attribute__((used)) stepperWait  = 0;
 
 /** \brief Timer interrupt routine to drive the stepper motors.
@@ -767,11 +767,11 @@ long __attribute__((used)) stepperWait  = 0;
 ISR(TIMER1_COMPA_vect)
 {
 #if FEATURE_WATCHDOG
-	if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
-	{
-		// ping the watchdog only in case the mainloop is still being called
-		HAL::pingWatchdog();
-	}
+    if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
+    {
+        // ping the watchdog only in case the mainloop is still being called
+        HAL::pingWatchdog();
+    }
 #endif // FEATURE_WATCHDOG
 
     if(insideTimer1) return;
@@ -793,9 +793,9 @@ ISR(TIMER1_COMPA_vect)
         "sts stepperWait+1,r1 \n\t"
         "rjmp end1%= \n\t"
         "else%=: lds r22,stepperWait+1 \n\t" //} else { stepperWait = stepperWait-32768;
-        "subi	r22, 0x80 \n\t"
-        "sbci	r23, 0x00 \n\t"
-        "sts stepperWait+1,r22 \n\t"	// ocr1a stays 32768
+        "subi   r22, 0x80 \n\t"
+        "sbci   r23, 0x00 \n\t"
+        "sts stepperWait+1,r22 \n\t"    // ocr1a stays 32768
         "sts stepperWait+2,r23 \n\t"
         "end1%=: ldi %[ex],1 \n\t"
         "end%=: \n\t"
@@ -803,38 +803,38 @@ ISR(TIMER1_COMPA_vect)
     if(doExit) return;
 
     insideTimer1 = 1;
-	OCR1A		 = 61000;
+    OCR1A        = 61000;
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-	Printer::performZCompensation();
+    Printer::performZCompensation();
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-	if( Printer::allowDirectSteps() )
-	{
-		PrintLine::performDirectSteps();
-	}
+    if( Printer::allowDirectSteps() )
+    {
+        PrintLine::performDirectSteps();
+    }
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
-	if(Printer::allowQueueMove())
+    if(Printer::allowQueueMove())
     {
         setTimer(PrintLine::performQueueMove()); //hier drin volatile markieren??
 
-		DEBUG_MEMORY;
-	    insideTimer1 = 0;
-		return;
+        DEBUG_MEMORY;
+        insideTimer1 = 0;
+        return;
     }
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-	if(Printer::allowDirectMove())
-	{
+    if(Printer::allowDirectMove())
+    {
         setTimer(PrintLine::performDirectMove());
-		
-		DEBUG_MEMORY;
-	    insideTimer1 = 0;
-		return;
-	}
+        
+        DEBUG_MEMORY;
+        insideTimer1 = 0;
+        return;
+    }
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
     if(waitRelax == 0)
@@ -849,20 +849,20 @@ ISR(TIMER1_COMPA_vect)
             Printer::advanceStepsSet = 0;
         }
 
-		if(!Printer::extruderStepsNeeded) if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
+        if(!Printer::extruderStepsNeeded) if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
 #else
         if(DISABLE_E) Extruder::disableCurrentExtruderMotor();
 #endif // USE_ADVANCE
     }
     else
-	{
-		waitRelax--;
-	}
+    {
+        waitRelax--;
+    }
 
-    stepperWait = 0;		// Important because of optimization in asm at begin
-    OCR1A = 1000;			// Wait for next move
+    stepperWait = 0;        // Important because of optimization in asm at begin
+    OCR1A = 1000;           // Wait for next move
 
-	DEBUG_MEMORY;
+    DEBUG_MEMORY;
     insideTimer1 = 0;
 
 } // ISR(TIMER1_COMPA_vect)
@@ -939,7 +939,7 @@ ISR(PWM_TIMER_VECTOR)
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
     }
 
-	if(pwm_count_cooler == 0)
+    if(pwm_count_cooler == 0)
     {
 #if EXT0_HEATER_PIN>-1 && EXT0_EXTRUDER_COOLER_PIN>-1
         if((pwm_cooler_pos_set[0] = extruder[0].coolerPWM)>0) WRITE(EXT0_EXTRUDER_COOLER_PIN,1);
@@ -981,11 +981,11 @@ ISR(PWM_TIMER_VECTOR)
 
 #if FAN_PIN>-1 && FEATURE_FAN_CONTROL
         if((pwm_heater_pos_set[NUM_EXTRUDER+2] = pwm_pos[NUM_EXTRUDER+2])>0)
-		{
-			WRITE(FAN_PIN,1);
-			//g_debugLog = 4;
-			//g_debugUInt16 ++;
-		}
+        {
+            WRITE(FAN_PIN,1);
+            //g_debugLog = 4;
+            //g_debugUInt16 ++;
+        }
 #endif // FAN_PIN>-1 && FEATURE_FAN_CONTROL
     }
 
@@ -1044,37 +1044,37 @@ ISR(PWM_TIMER_VECTOR)
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
     HAL::allowInterrupts();
-	
-	counterPeriodical++; // Approximate a 100ms timer
+    
+    counterPeriodical++; // Approximate a 100ms timer
     if(counterPeriodical>=(int)(F_CPU/40960))
     {
         counterPeriodical=0;
-		executePeriodical=1;
+        executePeriodical=1;
     }
 
 #if FEATURE_RGB_LIGHT_EFFECTS
-	if( (HAL::timeInMilliseconds() - Printer::RGBLightLastChange) > RGB_LIGHT_COLOR_CHANGE_SPEED )
-	{
-		char	change = 0;
+    if( (HAL::timeInMilliseconds() - Printer::RGBLightLastChange) > RGB_LIGHT_COLOR_CHANGE_SPEED )
+    {
+        char    change = 0;
 
 
-		Printer::RGBLightLastChange = HAL::timeInMilliseconds();
-			
-		if( g_uRGBTargetR > g_uRGBCurrentR )		{ g_uRGBCurrentR ++; change = 1; }
-		else if( g_uRGBTargetR < g_uRGBCurrentR )	{ g_uRGBCurrentR --; change = 1; }
-		if( g_uRGBTargetG > g_uRGBCurrentG )		{ g_uRGBCurrentG ++; change = 1; }
-		else if( g_uRGBTargetG < g_uRGBCurrentG )	{ g_uRGBCurrentG --; change = 1; }
-		if( g_uRGBTargetB > g_uRGBCurrentB )		{ g_uRGBCurrentB ++; change = 1; }
-		else if( g_uRGBTargetB < g_uRGBCurrentB )	{ g_uRGBCurrentB --; change = 1; }
+        Printer::RGBLightLastChange = HAL::timeInMilliseconds();
+            
+        if( g_uRGBTargetR > g_uRGBCurrentR )        { g_uRGBCurrentR ++; change = 1; }
+        else if( g_uRGBTargetR < g_uRGBCurrentR )   { g_uRGBCurrentR --; change = 1; }
+        if( g_uRGBTargetG > g_uRGBCurrentG )        { g_uRGBCurrentG ++; change = 1; }
+        else if( g_uRGBTargetG < g_uRGBCurrentG )   { g_uRGBCurrentG --; change = 1; }
+        if( g_uRGBTargetB > g_uRGBCurrentB )        { g_uRGBCurrentB ++; change = 1; }
+        else if( g_uRGBTargetB < g_uRGBCurrentB )   { g_uRGBCurrentB --; change = 1; }
 
-		if( change )
-		{
-			setRGBLEDs( g_uRGBCurrentR, g_uRGBCurrentG, g_uRGBCurrentB );
-		}
-	}
+        if( change )
+        {
+            setRGBLEDs( g_uRGBCurrentR, g_uRGBCurrentG, g_uRGBCurrentB );
+        }
+    }
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
-	// read analog values
+    // read analog values
 #if ANALOG_INPUTS>0
     if((ADCSRA & _BV(ADSC))==0)   // Conversion finished?
     {
@@ -1122,7 +1122,7 @@ ISR(PWM_TIMER_VECTOR)
     pwm_count_cooler += COOLER_PWM_STEP;
     pwm_count_heater += HEATER_PWM_STEP;
 
-	(void)pwm_cooler_pos_set;
+    (void)pwm_cooler_pos_set;
 } // ISR(PWM_TIMER_VECTOR)
 
 
@@ -1136,8 +1136,8 @@ wanted movement is achieved. This will be done with the maximum
 allowable speed for the extruder. */
 ISR(EXTRUDER_TIMER_VECTOR)
 {
-    static int8_t	extruderLastDirection = 0;
-    uint8_t			timer = EXTRUDER_OCR;
+    static int8_t   extruderLastDirection = 0;
+    uint8_t         timer = EXTRUDER_OCR;
 
 
     if(!Printer::isAdvanceActivated()) return; // currently no need
@@ -1316,8 +1316,8 @@ RFHardwareSerial::RFHardwareSerial(ring_buffer_rx *rx_buffer, ring_buffer_tx *tx
 
 void RFHardwareSerial::begin(unsigned long baud)
 {
-    uint16_t	baud_setting;
-    bool		use_u2x = true;
+    uint16_t    baud_setting;
+    bool        use_u2x = true;
 
 #if F_CPU == 16000000UL
     // hardcoded exception for compatibility with the bootloader shipped
@@ -1454,7 +1454,7 @@ RFHardwareSerial RFSerial(&rx_buffer, &tx_buffer, &UBRR0H, &UBRR0L, &UCSR0A, &UC
 
 #if FEATURE_CASE_LIGHT
 #if !defined CASE_LIGHT_PIN || CASE_LIGHT_PIN < 0
-	#error The case light pin must be defined in case the case light feature shall be used.
+    #error The case light pin must be defined in case the case light feature shall be used.
 #endif //!defined CASE_LIGHT_PIN || CASE_LIGHT_PIN < 0
 #endif // FEATURE_CASE_LIGHT
 

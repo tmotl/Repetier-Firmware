@@ -50,7 +50,7 @@ FSTRINGVALUE(Com::tExpectedLine,"Error:expected line ")
 FSTRINGVALUE(Com::tGot," got ")
 FSTRINGVALUE(Com::tSkip,"skip ")
 FSTRINGVALUE(Com::tBLK,"BLK ")
-FSTRINGVALUE(Com::tStart,"start")					// do not change "start" to "Start" because some applications might not be able to detect "Start" as "start"
+FSTRINGVALUE(Com::tStart,"start")                   // do not change "start" to "Start" because some applications might not be able to detect "Start" as "start"
 FSTRINGVALUE(Com::tStartWatchdog,"start Watchdog")
 FSTRINGVALUE(Com::tPowerUp,"PowerUp")
 FSTRINGVALUE(Com::tExternalReset,"External Reset")
@@ -453,17 +453,17 @@ void Com::printF(FSTRINGPARAM(text),float value,uint8_t digits,bool komma_as_dot
 
 void Com::print(const char *text)
 {
-	while(*text)
-	{
-		HAL::serialWriteByte(*text++);
-	}
+    while(*text)
+    {
+        HAL::serialWriteByte(*text++);
+    }
 } // print
 
 
 void Com::print(long value)
 {
     if(value<0)
-	{
+    {
         HAL::serialWriteByte('-');
         value = -value;
     }
@@ -473,19 +473,19 @@ void Com::print(long value)
 
 void Com::printNumber(uint32_t n)
 {
-	char buf[11]; // Assumes 8-bit chars plus zero byte.
-	char *str = &buf[10];
+    char buf[11]; // Assumes 8-bit chars plus zero byte.
+    char *str = &buf[10];
 
 
-	*str = '\0';
-	do
-	{
-		unsigned long m = n;
-		n /= 10;
-		*--str = '0'+(m - 10 * n);
-	}while(n);
+    *str = '\0';
+    do
+    {
+        unsigned long m = n;
+        n /= 10;
+        *--str = '0'+(m - 10 * n);
+    }while(n);
 
-	print(str);
+    print(str);
 } // printNumber
 
 
@@ -509,48 +509,48 @@ void Com::printArrayFLN(FSTRINGPARAM(text),int32_t *arr,uint8_t n)
 
 void Com::printFloat(float number, uint8_t digits, bool komma_as_dot)
 {
-	if (isnan(number))
-	{
-		printF(tNAN);
-		return;
-	}
-	if (isinf(number))
-	{
-		printF(tINF);
-		return;
-	}
+    if (isnan(number))
+    {
+        printF(tNAN);
+        return;
+    }
+    if (isinf(number))
+    {
+        printF(tINF);
+        return;
+    }
 
-	// Handle negative numbers
-	if (number < 0.0)
-	{
-		print('-');
-		number = -number;
-	}
+    // Handle negative numbers
+    if (number < 0.0)
+    {
+        print('-');
+        number = -number;
+    }
 
-	// Round correctly so that print(1.999, 2) prints as "2.00"
-	float rounding = 0.5;
-	for (uint8_t i=0; i<digits; ++i)
-		rounding /= 10.0;
+    // Round correctly so that print(1.999, 2) prints as "2.00"
+    float rounding = 0.5;
+    for (uint8_t i=0; i<digits; ++i)
+        rounding /= 10.0;
 
-	number += rounding;
+    number += rounding;
 
-	// Extract the integer part of the number and print it
-	unsigned long	int_part  = (unsigned long)number;
-	float			remainder = number - (float)int_part;
+    // Extract the integer part of the number and print it
+    unsigned long   int_part  = (unsigned long)number;
+    float           remainder = number - (float)int_part;
   
-	
-	printNumber(int_part);
+    
+    printNumber(int_part);
 
-	// Print the decimal point, but only if there are digits beyond
-	if (digits > 0 && komma_as_dot) print(',');
-	if (digits > 0 && !komma_as_dot) print('.');
+    // Print the decimal point, but only if there are digits beyond
+    if (digits > 0 && komma_as_dot) print(',');
+    if (digits > 0 && !komma_as_dot) print('.');
 
-	// Extract digits from the remainder one at a time
-	while (digits-- > 0)
-	{
-		remainder *= 10.0;
-		int toPrint = int(remainder);
-		print(toPrint);
-		remainder -= toPrint;
-	}
+    // Extract digits from the remainder one at a time
+    while (digits-- > 0)
+    {
+        remainder *= 10.0;
+        int toPrint = int(remainder);
+        print(toPrint);
+        remainder -= toPrint;
+    }
 } // printFloat

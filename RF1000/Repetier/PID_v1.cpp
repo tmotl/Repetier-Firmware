@@ -20,23 +20,23 @@
 PID::PID(float* Input, float* Output, float* Setpoint,
         float Kp, float Ki, float Kd, int ControllerDirection)
 {
-	kp = 0.0f;
-	ki = 0.0f;
-	kd = 0.0f;
+    kp = 0.0f;
+    ki = 0.0f;
+    kd = 0.0f;
     myOutput = Output;
     myInput = Input;
     mySetpoint = Setpoint;
-	inAuto = false;
-	
-	PID::SetOutputLimits(0, 255);				//default output limit corresponds to 
-												//the arduino pwm limits
+    inAuto = false;
+    
+    PID::SetOutputLimits(0, 255);               //default output limit corresponds to 
+                                                //the arduino pwm limits
 
-    SampleTime = 100;							//default Controller Sample Time is 0.1 seconds
+    SampleTime = 100;                           //default Controller Sample Time is 0.1 seconds
 
     PID::SetControllerDirection(ControllerDirection);
     PID::SetTunings(Kp, Ki, Kd);
 
-    lastTime = millis()-SampleTime;				
+    lastTime = millis()-SampleTime;             
 }
  
  
@@ -54,7 +54,7 @@ bool PID::Compute()
    if(timeChange>=SampleTime)
    {
       /*Compute all the working error variables*/
-	  float input = *myInput;
+      float input = *myInput;
       float error = *mySetpoint - input;
       ITerm+= (ki * error);
       if(ITerm > outMax) ITerm= outMax;
@@ -64,14 +64,14 @@ bool PID::Compute()
       /*Compute PID Output*/
       float output = kp * error + ITerm- kd * dInput;
       
-	  if(output > outMax) output = outMax;
+      if(output > outMax) output = outMax;
       else if(output < outMin) output = outMin;
-	  *myOutput = output;
-	  
+      *myOutput = output;
+      
       /*Remember some variables for next time*/
       lastInput = input;
       lastTime = now;
-	  return true;
+      return true;
    }
    else return false;
 }
@@ -102,7 +102,7 @@ void PID::SetTunings(float Kp, float Ki, float Kd)
 }
   
 /* SetSampleTime(...) *********************************************************
- * sets the period, in Milliseconds, at which the calculation is performed	
+ * sets the period, in Milliseconds, at which the calculation is performed  
  ******************************************************************************/
 void PID::SetSampleTime(int NewSampleTime)
 {
@@ -132,11 +132,11 @@ void PID::SetOutputLimits(float Min, float Max)
  
    if(inAuto)
    {
-	   if(*myOutput > outMax) *myOutput = outMax;
-	   else if(*myOutput < outMin) *myOutput = outMin;
-	 
-	   if(ITerm > outMax) ITerm= outMax;
-	   else if(ITerm < outMin) ITerm= outMin;
+       if(*myOutput > outMax) *myOutput = outMax;
+       else if(*myOutput < outMin) *myOutput = outMin;
+     
+       if(ITerm > outMax) ITerm= outMax;
+       else if(ITerm < outMin) ITerm= outMin;
    }
 }
 
@@ -156,7 +156,7 @@ void PID::SetMode(int Mode)
 }
  
 /* Initialize()****************************************************************
- *	does all the things that need to happen to ensure a bumpless transfer
+ *  does all the things that need to happen to ensure a bumpless transfer
  *  from manual to automatic mode.
  ******************************************************************************/ 
 void PID::Initialize()
@@ -177,7 +177,7 @@ void PID::SetControllerDirection(int Direction)
 {
    if(inAuto && Direction !=controllerDirection)
    {
-	  kp = (0 - kp);
+      kp = (0 - kp);
       ki = (0 - ki);
       kd = (0 - kd);
    }   

@@ -25,37 +25,37 @@
 #endif // EEPROM_MODE!=0
 
 
-uint8_t				manageMonitor = 255; ///< Temp. we want to monitor with our host. 1+NUM_EXTRUDER is heated bed
-unsigned int		counterPeriodical = 0;
-volatile uint8_t	executePeriodical = 0;
-uint8_t				counter250ms=25;
+uint8_t             manageMonitor = 255; ///< Temp. we want to monitor with our host. 1+NUM_EXTRUDER is heated bed
+unsigned int        counterPeriodical = 0;
+volatile uint8_t    executePeriodical = 0;
+uint8_t             counter250ms=25;
 
 #if FEATURE_DITTO_PRINTING
-uint8_t				Extruder::dittoMode = 0;
+uint8_t             Extruder::dittoMode = 0;
 #endif // FEATURE_DITTO_PRINTING
 
 #if ANALOG_INPUTS>0
-const uint8			osAnalogInputChannels[] PROGMEM = ANALOG_INPUT_CHANNELS;
-volatile uint8		osAnalogInputCounter[ANALOG_INPUTS];
-volatile uint		osAnalogInputBuildup[ANALOG_INPUTS];
-volatile uint8		osAnalogInputPos=0; // Current sampling position
-volatile uint		osAnalogInputValues[ANALOG_INPUTS];
+const uint8         osAnalogInputChannels[] PROGMEM = ANALOG_INPUT_CHANNELS;
+volatile uint8      osAnalogInputCounter[ANALOG_INPUTS];
+volatile uint       osAnalogInputBuildup[ANALOG_INPUTS];
+volatile uint8      osAnalogInputPos=0; // Current sampling position
+volatile uint       osAnalogInputValues[ANALOG_INPUTS];
 #endif // ANALOG_INPUTS>0
 
 #ifdef USE_GENERIC_THERMISTORTABLE_1
-short				temptable_generic1[GENERIC_THERM_NUM_ENTRIES][2];
+short               temptable_generic1[GENERIC_THERM_NUM_ENTRIES][2];
 #endif
 #ifdef USE_GENERIC_THERMISTORTABLE_2
-short				temptable_generic2[GENERIC_THERM_NUM_ENTRIES][2];
+short               temptable_generic2[GENERIC_THERM_NUM_ENTRIES][2];
 #endif
 #ifdef USE_GENERIC_THERMISTORTABLE_3
-short				temptable_generic3[GENERIC_THERM_NUM_ENTRIES][2];
+short               temptable_generic3[GENERIC_THERM_NUM_ENTRIES][2];
 #endif
 
-#if	FEATURE_BEDTEMP_DECREASE
-uint8_t		Extruder::decreaseHeatedBedInterval = 5;	///< Current Decrease Interval (0..255s)
-uint32_t	Extruder::decreaseHeatedBedTimeStamp = 0;		///< Current Decrease last Timestamp
-float		Extruder::decreaseHeatedBedMinimum = 0.0;		///< Minimal Temp
+#if FEATURE_BEDTEMP_DECREASE
+uint8_t     Extruder::decreaseHeatedBedInterval = 5;    ///< Current Decrease Interval (0..255s)
+uint32_t    Extruder::decreaseHeatedBedTimeStamp = 0;       ///< Current Decrease last Timestamp
+float       Extruder::decreaseHeatedBedMinimum = 0.0;       ///< Minimal Temp
 #endif // FEATURE_BEDTEMP_DECREASE
 
 /** Makes updates to temperatures and heater state every call.
@@ -64,30 +64,30 @@ Is called every 100ms.
 static uint8_t extruderTempErrors = 0;
 void Extruder::manageTemperatures()
 {
-#if	FEATURE_BEDTEMP_DECREASE
-	if(decreaseHeatedBedMinimum > 0.0){
-		//uninit: springt sofort rein.
-		uint32_t ttime = HAL::timeInMilliseconds();
-		if( decreaseHeatedBedInterval < 1 ) decreaseHeatedBedInterval = 1; //min. jede sekunde ... oder mehr.
-		if( decreaseHeatedBedTimeStamp + decreaseHeatedBedInterval*1000 < ttime || ttime < decreaseHeatedBedTimeStamp ){
-			//work
-			if(heatedBedController.targetTemperatureC > decreaseHeatedBedMinimum && decreaseHeatedBedMinimum >= HEATED_BED_MIN_TEMP){ 
-				Extruder::decreaseHeatedBedTemperature(decreaseHeatedBedMinimum);
-				decreaseHeatedBedTimeStamp = ttime;
-			}else{
-				decreaseHeatedBedMinimum = 0.0; //STOP
-				decreaseHeatedBedTimeStamp = 0;
-			}
-			//end work
-		}
-	}
+#if FEATURE_BEDTEMP_DECREASE
+    if(decreaseHeatedBedMinimum > 0.0){
+        //uninit: springt sofort rein.
+        uint32_t ttime = HAL::timeInMilliseconds();
+        if( decreaseHeatedBedInterval < 1 ) decreaseHeatedBedInterval = 1; //min. jede sekunde ... oder mehr.
+        if( decreaseHeatedBedTimeStamp + decreaseHeatedBedInterval*1000 < ttime || ttime < decreaseHeatedBedTimeStamp ){
+            //work
+            if(heatedBedController.targetTemperatureC > decreaseHeatedBedMinimum && decreaseHeatedBedMinimum >= HEATED_BED_MIN_TEMP){ 
+                Extruder::decreaseHeatedBedTemperature(decreaseHeatedBedMinimum);
+                decreaseHeatedBedTimeStamp = ttime;
+            }else{
+                decreaseHeatedBedMinimum = 0.0; //STOP
+                decreaseHeatedBedTimeStamp = 0;
+            }
+            //end work
+        }
+    }
 #endif // FEATURE_BEDTEMP_DECREASE
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode != OPERATING_MODE_PRINT )
-	{
-		// we do not check temperatures in case we are not in operating mode print
-		return;
-	}
+    if( Printer::operatingMode != OPERATING_MODE_PRINT )
+    {
+        // we do not check temperatures in case we are not in operating mode print
+        return;
+    }
 #endif // FEATURE_MILLING_MODE
 
     uint8_t errorDetected = 0;
@@ -125,14 +125,14 @@ void Extruder::manageTemperatures()
                 Printer::flag0 |= PRINTER_FLAG0_TEMPSENSOR_DEFECT;
                 reportTempsensorError();
 
-				showError( (void*)ui_text_temperature_manager, (void*)ui_text_sensor_error );
+                showError( (void*)ui_text_temperature_manager, (void*)ui_text_sensor_error );
             }
         }
         if(Printer::isAnyTempsensorDefect()) continue;
         uint8_t on = act->currentTemperature>=act->targetTemperature ? LOW : HIGH;
 
         if(!on && act->isAlarm())
-		{
+        {
             beep(50*(controller+1),3);
             act->setAlarm(false);  //reset alarm
         }
@@ -169,10 +169,10 @@ void Extruder::manageTemperatures()
         else if(act->heatManager == 3)     // dead-time control
         {
             uint8_t output;
-            float error	 = act->targetTemperatureC - act->currentTemperatureC;
-			float target = act->targetTemperatureC;
+            float error  = act->targetTemperatureC - act->currentTemperatureC;
+            float target = act->targetTemperatureC;
 
-			if(act->targetTemperatureC<20.0f)
+            if(act->targetTemperatureC<20.0f)
                 output = 0; // off is off, even if damping term wants a heat peak!
             else if(error>PID_CONTROL_RANGE)
                 output = act->pidMax;
@@ -333,14 +333,14 @@ This function changes and initalizes a new extruder. This is also called, after 
 void Extruder::selectExtruderById(uint8_t extruderId)
 {
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_MILL )
-	{
-		// in operating mode mill, the extruders are not used
-		return;
-	}
+    if( Printer::operatingMode == OPERATING_MODE_MILL )
+    {
+        // in operating mode mill, the extruders are not used
+        return;
+    }
 #endif // FEATURE_MILLING_MODE
 
-	if(extruderId>=NUM_EXTRUDER)
+    if(extruderId>=NUM_EXTRUDER)
         extruderId = 0;
 
 #if NUM_EXTRUDER>1
@@ -353,10 +353,10 @@ void Extruder::selectExtruderById(uint8_t extruderId)
 #endif // NUM_EXTRUDER>1
 
 #if STEPPER_ON_DELAY
-	Extruder::current->enabled = 0;
+    Extruder::current->enabled = 0;
 #endif // STEPPER_ON_DELAY
 
-	Extruder::current->extrudePosition = Printer::queuePositionLastSteps[E_AXIS];
+    Extruder::current->extrudePosition = Printer::queuePositionLastSteps[E_AXIS];
     Extruder::current = &extruder[extruderId];
 
 #ifdef SEPERATE_EXTRUDER_POSITIONS
@@ -395,9 +395,9 @@ void Extruder::selectExtruderById(uint8_t extruderId)
     Printer::extruderOffset[X_AXIS] = -Extruder::current->xOffset*Printer::invAxisStepsPerMM[X_AXIS];
     Printer::extruderOffset[Y_AXIS] = -Extruder::current->yOffset*Printer::invAxisStepsPerMM[Y_AXIS];
     if(Printer::isHomed())
-	{
-		Printer::moveToReal(cx,cy,cz,IGNORE_COORDINATE,Printer::homingFeedrate[X_AXIS]);
-	}
+    {
+        Printer::moveToReal(cx,cy,cz,IGNORE_COORDINATE,Printer::homingFeedrate[X_AXIS]);
+    }
     Printer::feedrate = oldfeedrate;
     Printer::updateCurrentPosition();
 
@@ -411,12 +411,12 @@ void Extruder::selectExtruderById(uint8_t extruderId)
 
 void Extruder::setTemperatureForExtruder(float temperatureInCelsius,uint8_t extr,bool beep)
 {
-	if( extr >= NUM_EXTRUDER )
-	{
-		// do not set the temperature for an extruder which is not present - this attempt could heat up the extruder without any control and could significantly overheat the extruder
-		Com::printFLN( PSTR( "setTemperatureForExtruder(): aborted" ) );
-		return;
-	}
+    if( extr >= NUM_EXTRUDER )
+    {
+        // do not set the temperature for an extruder which is not present - this attempt could heat up the extruder without any control and could significantly overheat the extruder
+        Com::printFLN( PSTR( "setTemperatureForExtruder(): aborted" ) );
+        return;
+    }
 
     bool alloffs = true;
     for(uint8_t i=0; i<NUM_EXTRUDER; i++)
@@ -433,43 +433,43 @@ void Extruder::setTemperatureForExtruder(float temperatureInCelsius,uint8_t extr
         tc->setAlarm(true);
     if(temperatureInCelsius>=EXTRUDER_FAN_COOL_TEMP) extruder[extr].coolerPWM = extruder[extr].coolerSpeed;
 
-	if( Printer::debugInfo() )
-	{
-		Com::printF(Com::tTargetExtr,extr,0);
-		Com::printFLN(Com::tColon,temperatureInCelsius,0);
-	}
+    if( Printer::debugInfo() )
+    {
+        Com::printF(Com::tTargetExtr,extr,0);
+        Com::printFLN(Com::tColon,temperatureInCelsius,0);
+    }
 
 #if FEATURE_CASE_FAN && !CASE_FAN_ALWAYS_ON
-	if( temperatureInCelsius >= CASE_FAN_ON_TEMPERATURE )
-	{
-		if(Printer::ignoreFanOn){
-			//ignore the case fan whenever there is another cooling solution available // Nibbels
-			//the fan should still be connected within the rf2000 but might be avoided to suppress noise.
-			//the ignore-flag has to be set at runtime to prevent unlearned persons to risk overheat having the wrong startcode.
-			//enable and disable the fan with M3120 or M3121 or M3300 P3 S{1,0}
-			Printer::prepareFanOff = 0;
-			Printer::fanOffDelay = 0;
-		}else{
-			// enable the case fan in case the extruder is turned on
-			Printer::prepareFanOff = 0;
-			WRITE(CASE_FAN_PIN, 1);			
-		}
-	}
-	else
-	{
-		// disable the case fan in case the extruder is turned off
-		if( Printer::fanOffDelay )
-		{
-			// we are going to disable the case fan after the delay
-			Printer::prepareFanOff = HAL::timeInMilliseconds();
-		}
-		else
-		{
-			// we are going to disable the case fan now
-			Printer::prepareFanOff = 0;
-			WRITE(CASE_FAN_PIN, 0);
-		}
-	}
+    if( temperatureInCelsius >= CASE_FAN_ON_TEMPERATURE )
+    {
+        if(Printer::ignoreFanOn){
+            //ignore the case fan whenever there is another cooling solution available // Nibbels
+            //the fan should still be connected within the rf2000 but might be avoided to suppress noise.
+            //the ignore-flag has to be set at runtime to prevent unlearned persons to risk overheat having the wrong startcode.
+            //enable and disable the fan with M3120 or M3121 or M3300 P3 S{1,0}
+            Printer::prepareFanOff = 0;
+            Printer::fanOffDelay = 0;
+        }else{
+            // enable the case fan in case the extruder is turned on
+            Printer::prepareFanOff = 0;
+            WRITE(CASE_FAN_PIN, 1);         
+        }
+    }
+    else
+    {
+        // disable the case fan in case the extruder is turned off
+        if( Printer::fanOffDelay )
+        {
+            // we are going to disable the case fan after the delay
+            Printer::prepareFanOff = HAL::timeInMilliseconds();
+        }
+        else
+        {
+            // we are going to disable the case fan now
+            Printer::prepareFanOff = 0;
+            WRITE(CASE_FAN_PIN, 0);
+        }
+    }
 #endif // FEATURE_CASE_FAN && !CASE_FAN_ALWAYS_ON
 
 #if FEATURE_DITTO_PRINTING
@@ -487,22 +487,22 @@ void Extruder::setTemperatureForExtruder(float temperatureInCelsius,uint8_t extr
 
 #if EEPROM_MODE != 0
     if(alloff && !alloffs) // All heaters are now switched off?
-	{
+    {
 #if FEATURE_MILLING_MODE
-		if( Printer::operatingMode == OPERATING_MODE_PRINT )
-		{
-			EEPROM::updatePrinterUsage();
-		}
+        if( Printer::operatingMode == OPERATING_MODE_PRINT )
+        {
+            EEPROM::updatePrinterUsage();
+        }
 #else
-		EEPROM::updatePrinterUsage();
+        EEPROM::updatePrinterUsage();
 #endif // FEATURE_MILLING_MODE
-	}
+    }
 #endif // EEPROM_MODE != 0
 
     if(alloffs && !alloff) // heaters are turned on, start measuring printing time
-	{
+    {
         Printer::msecondsPrinting = HAL::timeInMilliseconds();
-	}
+    }
 
 } // setTemperatureForExtruder
 
@@ -510,28 +510,28 @@ void Extruder::setTemperatureForExtruder(float temperatureInCelsius,uint8_t extr
 void Extruder::setHeatedBedTemperature(float temperatureInCelsius,bool beep)
 {
 #if HAVE_HEATED_BED
-	float	offset = 0.0;
+    float   offset = 0.0;
 
     if(temperatureInCelsius>HEATED_BED_MAX_TEMP) temperatureInCelsius = HEATED_BED_MAX_TEMP;
     if(temperatureInCelsius<0) temperatureInCelsius = 0;
     if(heatedBedController.targetTemperatureC==temperatureInCelsius) return; // don't flood log with messages if killed
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-	offset = -getHeatBedTemperatureOffset( temperatureInCelsius );
+    offset = -getHeatBedTemperatureOffset( temperatureInCelsius );
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-	Com::printF( PSTR( "setHeatedBedTemperature(): " ), temperatureInCelsius );
-	Com::printFLN( PSTR( ", " ), offset );
+    Com::printF( PSTR( "setHeatedBedTemperature(): " ), temperatureInCelsius );
+    Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-	heatedBedController.setTargetTemperature(temperatureInCelsius, offset);
+    heatedBedController.setTargetTemperature(temperatureInCelsius, offset);
     if(beep && temperatureInCelsius>30) heatedBedController.setAlarm(true);
 
-	if( Printer::debugInfo() )
-	{
-		Com::printFLN(Com::tTargetBedColon,heatedBedController.targetTemperatureC,0);
-	}
+    if( Printer::debugInfo() )
+    {
+        Com::printFLN(Com::tTargetBedColon,heatedBedController.targetTemperatureC,0);
+    }
 #endif // HAVE_HEATED_BED
 
 } // setHeatedBedTemperature
@@ -541,10 +541,10 @@ void Extruder::decreaseHeatedBedTemperature(float min_temperatureInCelsius)
 {
 #if HAVE_HEATED_BED
     if(heatedBedController.targetTemperatureC > HEATED_BED_MIN_TEMP && heatedBedController.targetTemperatureC > min_temperatureInCelsius){
-		Extruder::setHeatedBedTemperature( heatedBedController.targetTemperatureC - 1, false );
-	} 
+        Extruder::setHeatedBedTemperature( heatedBedController.targetTemperatureC - 1, false );
+    } 
 #endif // HAVE_HEATED_BED
-	(void)min_temperatureInCelsius;
+    (void)min_temperatureInCelsius;
 return; 
 } // decreaseHeatedBedTemperature
 #endif // FEATURE_BEDTEMP_DECREASE
@@ -575,43 +575,43 @@ void Extruder::disableCurrentExtruderMotor()
 #endif // FEATURE_DITTO_PRINTING
 
 #if STEPPER_ON_DELAY
-	Extruder::current->enabled = 0;
+    Extruder::current->enabled = 0;
 #endif // STEPPER_ON_DELAY
 
-	cleanupEPositions();
+    cleanupEPositions();
 
 } // disableCurrentExtruderMotor
 
 
 void Extruder::disableAllExtruders()
 {
-	Extruder*	e;
-	uint8_t		mode = OPERATING_MODE_PRINT;
+    Extruder*   e;
+    uint8_t     mode = OPERATING_MODE_PRINT;
 
 
-#if	FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_MILL )
-	{
-		mode = OPERATING_MODE_MILL;
-	}
+#if FEATURE_MILLING_MODE
+    if( Printer::operatingMode == OPERATING_MODE_MILL )
+    {
+        mode = OPERATING_MODE_MILL;
+    }
 #endif // FEATURE_MILLING_MODE
 
-	if( mode == OPERATING_MODE_PRINT )
-	{
-		for(uint8_t i=0; i<NUM_EXTRUDER; i++ )
-		{
-			e = &extruder[i];
+    if( mode == OPERATING_MODE_PRINT )
+    {
+        for(uint8_t i=0; i<NUM_EXTRUDER; i++ )
+        {
+            e = &extruder[i];
 
-			if(e->enablePin > -1)
-				digitalWrite(e->enablePin,!e->enableOn);
+            if(e->enablePin > -1)
+                digitalWrite(e->enablePin,!e->enableOn);
 
 #if STEPPER_ON_DELAY
-			e->enabled = 0;
+            e->enabled = 0;
 #endif // STEPPER_ON_DELAY
-		}
-	}
+        }
+    }
 
-	cleanupEPositions();
+    cleanupEPositions();
 
 } // disableAllExtruders
 
@@ -702,15 +702,15 @@ const short temptable_13[NUMTEMPS_13][2] PROGMEM =
 };
 #define NUMTEMPS_14 46 // Thermistor NTC 3950 100k Ohm (result seems a bit to cold for my amazon-ntcs)
 const short temptable_14[NUMTEMPS_14][2] PROGMEM = {
-	{1*4,8*938}, {31*4,8*314}, {41*4,8*290}, {51*4,8*272}, {61*4,8*258}, {71*4,8*247}, {81*4,8*237}, {91*4,8*229}, {101*4,8*221}, {111*4,8*215}, {121*4,8*209},
-	{131*4,8*204}, {141*4,8*199}, {151*4,8*195}, {161*4,8*190}, {171*4,8*187}, {181*4,8*183}, {191*4,8*179}, {201*4,8*176}, {221*4,8*170}, {241*4,8*165}, 
-	{261*4,8*160}, {281*4,8*155}, {301*4,8*150}, {331*4,8*144}, {361*4,8*139}, {391*4,8*133}, {421*4,8*128}, {451*4,8*123}, {491*4,8*117}, {531*4,8*111}, 
-	{571*4,8*105}, {611*4,8*100}, {681*4,8*90}, {711*4,8*85}, {811*4,8*69}, {831*4,8*65}, {881*4,8*55}, 
-	{901*4,8*51},  {941*4,8*39}, {971*4,8*28}, {981*4,8*23}, {991*4,8*17}, {1001*4,8*9}, {1021*4,8*-27},{1023*4,8*-200}
+    {1*4,8*938}, {31*4,8*314}, {41*4,8*290}, {51*4,8*272}, {61*4,8*258}, {71*4,8*247}, {81*4,8*237}, {91*4,8*229}, {101*4,8*221}, {111*4,8*215}, {121*4,8*209},
+    {131*4,8*204}, {141*4,8*199}, {151*4,8*195}, {161*4,8*190}, {171*4,8*187}, {181*4,8*183}, {191*4,8*179}, {201*4,8*176}, {221*4,8*170}, {241*4,8*165}, 
+    {261*4,8*160}, {281*4,8*155}, {301*4,8*150}, {331*4,8*144}, {361*4,8*139}, {391*4,8*133}, {421*4,8*128}, {451*4,8*123}, {491*4,8*117}, {531*4,8*111}, 
+    {571*4,8*105}, {611*4,8*100}, {681*4,8*90}, {711*4,8*85}, {811*4,8*69}, {831*4,8*65}, {881*4,8*55}, 
+    {901*4,8*51},  {941*4,8*39}, {971*4,8*28}, {981*4,8*23}, {991*4,8*17}, {1001*4,8*9}, {1021*4,8*-27},{1023*4,8*-200}
 };
 #define NUMTEMPS_15 103 // Thermistor NTC 3950 100k Ohm (other source)
 const short temptable_15[NUMTEMPS_15][2] PROGMEM = {
-	{1*4,938*8},{11*4,423*8},{21*4,351*8},{31*4,314*8},{41*4,290*8},{51*4,272*8},{61*4,258*8},{71*4,247*8},\
+    {1*4,938*8},{11*4,423*8},{21*4,351*8},{31*4,314*8},{41*4,290*8},{51*4,272*8},{61*4,258*8},{71*4,247*8},\
 {81*4,237*8},{91*4,229*8},{101*4,221*8},{111*4,215*8},{121*4,209*8},{131*4,204*8},{141*4,199*8},{151*4,195*8},\
 {161*4,190*8},{171*4,187*8},{181*4,183*8},{191*4,179*8},{201*4,176*8},{211*4,173*8},{221*4,170*8},{231*4,167*8},\
 {241*4,165*8},{251*4,162*8},{261*4,160*8},{271*4,157*8},{281*4,155*8},{291*4,153*8},{301*4,150*8},{311*4,148*8},\
@@ -722,7 +722,7 @@ const short temptable_15[NUMTEMPS_15][2] PROGMEM = {
 {731*4,82*8},{741*4,81*8},{751*4,79*8},{761*4,77*8},{771*4,76*8},{781*4,74*8},{791*4,72*8},{801*4,71*8},{811*4,69*8},\
 {821*4,67*8},{831*4,65*8},{841*4,63*8},{851*4,62*8},{861*4,60*8},{871*4,57*8},{881*4,55*8},{891*4,53*8},{901*4,51*8},\
 {911*4,48*8},{921*4,45*8},{931*4,42*8},{941*4,39*8},{951*4,36*8},{961*4,32*8},{971*4,28*8},{981*4,23*8},{991*4,17*8},\
-{1001*4,9*8},{1011*4,-1*8},{1021*4,-26*8}	
+{1001*4,9*8},{1011*4,-1*8},{1021*4,-26*8}   
 };
 
 
@@ -780,267 +780,267 @@ void TemperatureController::updateCurrentTemperature()
     switch(type)
     {
 #if ANALOG_INPUTS>0
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 7:
-		case 8:
-		case 9:
-		case 10:
-		case 11:
-		case 12:
-		case 14: // Thermistor NTC 3950 100k Ohm
-		case 15: // Thermistor NTC 3950 100k Ohm
-		case 97: 
-		case 98:
-		case 99:
-		{
-			currentTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-(osAnalogInputValues[sensorPin]>>(ANALOG_REDUCE_BITS)); // Convert to 10 bit result
-			break;
-		}
-		case 13: // PT100 E3D
-		case 50: // User defined PTC table
-		case 51:
-		case 52:
-		case 60: // HEATER_USES_AD8495 (Delivers 5mV/degC)
-		case 100: // AD595
-		{
-			currentTemperature = (osAnalogInputValues[sensorPin]>>(ANALOG_REDUCE_BITS));
-			break;
-		}
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 14: // Thermistor NTC 3950 100k Ohm
+        case 15: // Thermistor NTC 3950 100k Ohm
+        case 97: 
+        case 98:
+        case 99:
+        {
+            currentTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-(osAnalogInputValues[sensorPin]>>(ANALOG_REDUCE_BITS)); // Convert to 10 bit result
+            break;
+        }
+        case 13: // PT100 E3D
+        case 50: // User defined PTC table
+        case 51:
+        case 52:
+        case 60: // HEATER_USES_AD8495 (Delivers 5mV/degC)
+        case 100: // AD595
+        {
+            currentTemperature = (osAnalogInputValues[sensorPin]>>(ANALOG_REDUCE_BITS));
+            break;
+        }
 #endif // ANALOG_INPUTS>0
     
-		default:
-		{
-			currentTemperature = 4095; // unknown method, return high value to switch heater off for safety
-			break;
-		}
+        default:
+        {
+            currentTemperature = 4095; // unknown method, return high value to switch heater off for safety
+            break;
+        }
     }
 
-	switch(type)
+    switch(type)
     {
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 7:
-		case 8:
-		case 9:
-		case 10:
-		case 11:
-		case 12:
-		case 14: // Thermistor NTC 3950 100k Ohm
-		case 15: // Thermistor NTC 3950 100k Ohm
-		{
-			type--;
-			uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
-			uint8_t i=2;
-			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word_near(&temptables[type]);
-			short oldraw = pgm_read_word(&temptable[0]);
-			short oldtemp = pgm_read_word(&temptable[1]);
-			short newtemp = 0;
-			int temp = (1023<<(2-ANALOG_REDUCE_BITS))-currentTemperature;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 14: // Thermistor NTC 3950 100k Ohm
+        case 15: // Thermistor NTC 3950 100k Ohm
+        {
+            type--;
+            uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
+            uint8_t i=2;
+            const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word_near(&temptables[type]);
+            short oldraw = pgm_read_word(&temptable[0]);
+            short oldtemp = pgm_read_word(&temptable[1]);
+            short newtemp = 0;
+            int temp = (1023<<(2-ANALOG_REDUCE_BITS))-currentTemperature;
 
 
-			while(i<num)
-			{
-				short newraw = pgm_read_word(&temptable[i++]);
-				newtemp = pgm_read_word(&temptable[i++]);
-				if (newraw > temp)
-				{
-					//OUT_P_I("RC O:",oldtemp);OUT_P_I_LN(" OR:",oldraw);
-					//OUT_P_I("RC N:",newtemp);OUT_P_I_LN(" NR:",newraw);
-					currentTemperatureC = TEMP_INT_TO_FLOAT(oldtemp + (float)(temp-oldraw)*(float)(newtemp-oldtemp)/(newraw-oldraw));
+            while(i<num)
+            {
+                short newraw = pgm_read_word(&temptable[i++]);
+                newtemp = pgm_read_word(&temptable[i++]);
+                if (newraw > temp)
+                {
+                    //OUT_P_I("RC O:",oldtemp);OUT_P_I_LN(" OR:",oldraw);
+                    //OUT_P_I("RC N:",newtemp);OUT_P_I_LN(" NR:",newraw);
+                    currentTemperatureC = TEMP_INT_TO_FLOAT(oldtemp + (float)(temp-oldraw)*(float)(newtemp-oldtemp)/(newraw-oldraw));
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-					float	offset = getHeatBedTemperatureOffset( currentTemperatureC );
+                    float   offset = getHeatBedTemperatureOffset( currentTemperatureC );
 
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-					if( targetTemperatureC > 50 )
-					{
-						Com::printF( PSTR( "updateCurrentTemperature().1: " ), currentTemperatureC );
-						Com::printF( PSTR( ", " ), offset );
-						Com::printF( PSTR( ", " ), currentTemperature );
-						Com::printFLN( PSTR( ", " ), targetTemperature );
-					}
+                    if( targetTemperatureC > 50 )
+                    {
+                        Com::printF( PSTR( "updateCurrentTemperature().1: " ), currentTemperatureC );
+                        Com::printF( PSTR( ", " ), offset );
+                        Com::printF( PSTR( ", " ), currentTemperature );
+                        Com::printFLN( PSTR( ", " ), targetTemperature );
+                    }
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-					currentTemperatureC += offset;
+                    currentTemperatureC += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-					return;
-				}
-				oldtemp = newtemp;
-				oldraw = newraw;
-			}
-			// Overflow: Set to last value in the table
-			currentTemperatureC = TEMP_INT_TO_FLOAT(newtemp);
+                    return;
+                }
+                oldtemp = newtemp;
+                oldraw = newraw;
+            }
+            // Overflow: Set to last value in the table
+            currentTemperatureC = TEMP_INT_TO_FLOAT(newtemp);
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			float offset = getHeatBedTemperatureOffset( currentTemperatureC );
+            float offset = getHeatBedTemperatureOffset( currentTemperatureC );
 
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printF( PSTR( "updateCurrentTemperature().2: " ), currentTemperatureC );
-			Com::printFLN( PSTR( ", " ), offset );
+            Com::printF( PSTR( "updateCurrentTemperature().2: " ), currentTemperatureC );
+            Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-			currentTemperatureC += offset;
+            currentTemperatureC += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-			break;
-		}
-		case 13:
-		case 50: // User defined PTC thermistor
-		case 51:
-		case 52:
-		{
-			type-=46;
-			uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
-			uint8_t i=2;
-			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word_near(&temptables[type]);
-			short oldraw = pgm_read_word(&temptable[0]);
-			short oldtemp = pgm_read_word(&temptable[1]);
-			short newtemp = 0;
+            break;
+        }
+        case 13:
+        case 50: // User defined PTC thermistor
+        case 51:
+        case 52:
+        {
+            type-=46;
+            uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
+            uint8_t i=2;
+            const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word_near(&temptables[type]);
+            short oldraw = pgm_read_word(&temptable[0]);
+            short oldtemp = pgm_read_word(&temptable[1]);
+            short newtemp = 0;
 
 
-			while(i<num)
-			{
-				short newraw = pgm_read_word(&temptable[i++]);
-				newtemp = pgm_read_word(&temptable[i++]);
-				if (newraw > currentTemperature)
-				{
-					currentTemperatureC = TEMP_INT_TO_FLOAT(oldtemp + (float)(currentTemperature-oldraw)*(float)(newtemp-oldtemp)/(newraw-oldraw));
+            while(i<num)
+            {
+                short newraw = pgm_read_word(&temptable[i++]);
+                newtemp = pgm_read_word(&temptable[i++]);
+                if (newraw > currentTemperature)
+                {
+                    currentTemperatureC = TEMP_INT_TO_FLOAT(oldtemp + (float)(currentTemperature-oldraw)*(float)(newtemp-oldtemp)/(newraw-oldraw));
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-					float offset = getHeatBedTemperatureOffset( currentTemperatureC );
+                    float offset = getHeatBedTemperatureOffset( currentTemperatureC );
 
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-					Com::printF( PSTR( "updateCurrentTemperature().3: " ), currentTemperatureC );
-					Com::printFLN( PSTR( ", " ), offset );
+                    Com::printF( PSTR( "updateCurrentTemperature().3: " ), currentTemperatureC );
+                    Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-					currentTemperatureC += offset;
+                    currentTemperatureC += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-					return;
-				}
-				oldtemp = newtemp;
-				oldraw = newraw;
-			}
-			// Overflow: Set to last value in the table
-			currentTemperatureC = TEMP_INT_TO_FLOAT(newtemp);
+                    return;
+                }
+                oldtemp = newtemp;
+                oldraw = newraw;
+            }
+            // Overflow: Set to last value in the table
+            currentTemperatureC = TEMP_INT_TO_FLOAT(newtemp);
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			float offset = getHeatBedTemperatureOffset( currentTemperatureC );
+            float offset = getHeatBedTemperatureOffset( currentTemperatureC );
 
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printF( PSTR( "updateCurrentTemperature().4: " ), currentTemperatureC );
-			Com::printFLN( PSTR( ", " ), offset );
+            Com::printF( PSTR( "updateCurrentTemperature().4: " ), currentTemperatureC );
+            Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-			currentTemperatureC += offset;
+            currentTemperatureC += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
-		case 60: // AD8495 (Delivers 5mV/degC vs the AD595's 10mV)
-		{
-			currentTemperatureC = ((float)currentTemperature * 1000.0f/(1024<<(2-ANALOG_REDUCE_BITS)));
+            break;
+        }
+        case 60: // AD8495 (Delivers 5mV/degC vs the AD595's 10mV)
+        {
+            currentTemperatureC = ((float)currentTemperature * 1000.0f/(1024<<(2-ANALOG_REDUCE_BITS)));
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			float	offset = getHeatBedTemperatureOffset( currentTemperatureC );
+            float   offset = getHeatBedTemperatureOffset( currentTemperatureC );
 
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printF( PSTR( "updateCurrentTemperature().5: " ), currentTemperatureC );
-			Com::printFLN( PSTR( ", " ), offset );
+            Com::printF( PSTR( "updateCurrentTemperature().5: " ), currentTemperatureC );
+            Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-			currentTemperatureC += offset;
+            currentTemperatureC += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
-		case 100: // AD595
-		{
-			currentTemperatureC = ((float)currentTemperature * 500.0f/(1024<<(2-ANALOG_REDUCE_BITS)));
+            break;
+        }
+        case 100: // AD595
+        {
+            currentTemperatureC = ((float)currentTemperature * 500.0f/(1024<<(2-ANALOG_REDUCE_BITS)));
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			float	offset = getHeatBedTemperatureOffset( currentTemperatureC );
+            float   offset = getHeatBedTemperatureOffset( currentTemperatureC );
 
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printF( PSTR( "updateCurrentTemperature().6: " ), currentTemperatureC );
-			Com::printFLN( PSTR( ", " ), offset );
+            Com::printF( PSTR( "updateCurrentTemperature().6: " ), currentTemperatureC );
+            Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-			currentTemperatureC += offset;
+            currentTemperatureC += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
+            break;
+        }
 
 #if defined(USE_GENERIC_THERMISTORTABLE_1) || defined(USE_GENERIC_THERMISTORTABLE_2) || defined(USE_GENERIC_THERMISTORTABLE_3)
-		case 97:
-		case 98:
-		case 99:
-		{
-			uint8_t i=2;
-			const short *temptable;
+        case 97:
+        case 98:
+        case 99:
+        {
+            uint8_t i=2;
+            const short *temptable;
 
 #ifdef USE_GENERIC_THERMISTORTABLE_1
-			if(type == 97)
-				temptable = (const short *)temptable_generic1;
+            if(type == 97)
+                temptable = (const short *)temptable_generic1;
 #endif // USE_GENERIC_THERMISTORTABLE_1
 
 #ifdef USE_GENERIC_THERMISTORTABLE_2
-			if(type == 98)
-				temptable = (const short *)temptable_generic2;
+            if(type == 98)
+                temptable = (const short *)temptable_generic2;
 #endif // USE_GENERIC_THERMISTORTABLE_2
 
 #ifdef USE_GENERIC_THERMISTORTABLE_3
-			if(type == 99)
-				temptable = (const short *)temptable_generic3;
+            if(type == 99)
+                temptable = (const short *)temptable_generic3;
 #endif // USE_GENERIC_THERMISTORTABLE_3
 
-			short oldraw = temptable[0];
-			short oldtemp = temptable[1];
-			short newraw,newtemp;
+            short oldraw = temptable[0];
+            short oldtemp = temptable[1];
+            short newraw,newtemp;
 
 
-			currentTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-currentTemperature;
-			while(i<GENERIC_THERM_NUM_ENTRIES*2)
-			{
-				newraw = temptable[i++];
-				newtemp = temptable[i++];
-				if (newraw > currentTemperature)
-				{
-					//OUT_P_I("RC O:",oldtemp);OUT_P_I_LN(" OR:",oldraw);
-					//OUT_P_I("RC N:",newtemp);OUT_P_I_LN(" NR:",newraw);
-					currentTemperatureC = TEMP_INT_TO_FLOAT(oldtemp + (float)(currentTemperature-oldraw)*(float)(newtemp-oldtemp)/(newraw-oldraw));
-
-#if FEATURE_HEAT_BED_TEMP_COMPENSATION
-					currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
-#endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-					return;
-				}
-				oldtemp = newtemp;
-				oldraw = newraw;
-			}
-			// Overflow: Set to last value in the table
-			currentTemperatureC = TEMP_INT_TO_FLOAT(newtemp);
+            currentTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-currentTemperature;
+            while(i<GENERIC_THERM_NUM_ENTRIES*2)
+            {
+                newraw = temptable[i++];
+                newtemp = temptable[i++];
+                if (newraw > currentTemperature)
+                {
+                    //OUT_P_I("RC O:",oldtemp);OUT_P_I_LN(" OR:",oldraw);
+                    //OUT_P_I("RC N:",newtemp);OUT_P_I_LN(" NR:",newraw);
+                    currentTemperatureC = TEMP_INT_TO_FLOAT(oldtemp + (float)(currentTemperature-oldraw)*(float)(newtemp-oldtemp)/(newraw-oldraw));
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
+                    currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
+                    return;
+                }
+                oldtemp = newtemp;
+                oldraw = newraw;
+            }
+            // Overflow: Set to last value in the table
+            currentTemperatureC = TEMP_INT_TO_FLOAT(newtemp);
+
+#if FEATURE_HEAT_BED_TEMP_COMPENSATION
+            currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
+#endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
+            break;
+        }
 #endif // defined(USE_GENERIC_THERMISTORTABLE_1) || defined(USE_GENERIC_THERMISTORTABLE_2) || defined(USE_GENERIC_THERMISTORTABLE_3)
     }
 
@@ -1053,177 +1053,177 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-	Com::printF( PSTR( "setTargetTemperature(): " ), target );
-	Com::printFLN( PSTR( ", " ), offset );
+    Com::printF( PSTR( "setTargetTemperature(): " ), target );
+    Com::printFLN( PSTR( ", " ), offset );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
 
-	offsetC =  offset;
-	target  += offset;
+    offsetC =  offset;
+    target  += offset;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-	int temp	 = TEMP_FLOAT_TO_INT(target);
+    int temp     = TEMP_FLOAT_TO_INT(target);
     uint8_t type = sensorType;
 
     switch(sensorType)
     {
-		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-		case 7:
-		case 8:
-		case 9:
-		case 10:
-		case 11:
-		case 12:
-		case 14: // Thermistor NTC 3950 100k Ohm
-		case 15: // Thermistor NTC 3950 100k Ohm
-		{
-			type--;
-			uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
-			uint8_t i=2;
-			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
-			short oldraw = pgm_read_word(&temptable[0]);
-			short oldtemp = pgm_read_word(&temptable[1]);
-			short newraw,newtemp;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 14: // Thermistor NTC 3950 100k Ohm
+        case 15: // Thermistor NTC 3950 100k Ohm
+        {
+            type--;
+            uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
+            uint8_t i=2;
+            const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
+            short oldraw = pgm_read_word(&temptable[0]);
+            short oldtemp = pgm_read_word(&temptable[1]);
+            short newraw,newtemp;
 
-			while(i<num)
-			{
-				newraw = pgm_read_word(&temptable[i++]);
-				newtemp = pgm_read_word(&temptable[i++]);
-				if (newtemp < temp)
-				{
-					targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
-
-#if DEBUG_HEAT_BED_TEMP_COMPENSATION
-					Com::printFLN( PSTR( "setTargetTemperature().1: " ), targetTemperature );
-#endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
-
-					return;
-				}
-				oldtemp = newtemp;
-				oldraw = newraw;
-			}
-
-			// Overflow: Set to last value in the table
-			targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-newraw;
+            while(i<num)
+            {
+                newraw = pgm_read_word(&temptable[i++]);
+                newtemp = pgm_read_word(&temptable[i++]);
+                if (newtemp < temp)
+                {
+                    targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printFLN( PSTR( "setTargetTemperature().2: " ), targetTemperature );
+                    Com::printFLN( PSTR( "setTargetTemperature().1: " ), targetTemperature );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
-		case 13: // PT100 E3D
-		case 50: // user defined PTC thermistor
-		case 51:
-		case 52:
-		{
-			type-=46;
-			uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
-			uint8_t i=2;
-			const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
-			short oldraw = pgm_read_word(&temptable[0]);
-			short oldtemp = pgm_read_word(&temptable[1]);
-			short newraw,newtemp;
 
-			while(i<num)
-			{
-				newraw = pgm_read_word(&temptable[i++]);
-				newtemp = pgm_read_word(&temptable[i++]);
-				if (newtemp > temp)
-				{
-					targetTemperature = oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
+                    return;
+                }
+                oldtemp = newtemp;
+                oldraw = newraw;
+            }
+
+            // Overflow: Set to last value in the table
+            targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-newraw;
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-					Com::printFLN( PSTR( "setTargetTemperature().3: " ), targetTemperature );
+            Com::printFLN( PSTR( "setTargetTemperature().2: " ), targetTemperature );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
-					return;
-				}
-				oldtemp = newtemp;
-				oldraw = newraw;
-			}
+            break;
+        }
+        case 13: // PT100 E3D
+        case 50: // user defined PTC thermistor
+        case 51:
+        case 52:
+        {
+            type-=46;
+            uint8_t num = pgm_read_byte(&temptables_num[type])<<1;
+            uint8_t i=2;
+            const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
+            short oldraw = pgm_read_word(&temptable[0]);
+            short oldtemp = pgm_read_word(&temptable[1]);
+            short newraw,newtemp;
 
-			// Overflow: Set to last value in the table
-			targetTemperature = newraw;
-
-#if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printFLN( PSTR( "setTargetTemperature().4: " ), targetTemperature );
-#endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
-		case 60: // HEATER_USES_AD8495 (Delivers 5mV/degC)
-		{
-			targetTemperature = (int)((int32_t)temp * (1024<<(2-ANALOG_REDUCE_BITS))/ 1000);
-
-#if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printFLN( PSTR( "setTargetTemperature().5: " ), targetTemperature );
-#endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
-		case 100: // HEATER_USES_AD595
-		{
-			targetTemperature = (int)((int32_t)temp * (1024<<(2-ANALOG_REDUCE_BITS))/ 500);
+            while(i<num)
+            {
+                newraw = pgm_read_word(&temptable[i++]);
+                newtemp = pgm_read_word(&temptable[i++]);
+                if (newtemp > temp)
+                {
+                    targetTemperature = oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
 
 #if DEBUG_HEAT_BED_TEMP_COMPENSATION
-			Com::printFLN( PSTR( "setTargetTemperature().6: " ), targetTemperature );
+                    Com::printFLN( PSTR( "setTargetTemperature().3: " ), targetTemperature );
 #endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
+                    return;
+                }
+                oldtemp = newtemp;
+                oldraw = newraw;
+            }
+
+            // Overflow: Set to last value in the table
+            targetTemperature = newraw;
+
+#if DEBUG_HEAT_BED_TEMP_COMPENSATION
+            Com::printFLN( PSTR( "setTargetTemperature().4: " ), targetTemperature );
+#endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
+            break;
+        }
+        case 60: // HEATER_USES_AD8495 (Delivers 5mV/degC)
+        {
+            targetTemperature = (int)((int32_t)temp * (1024<<(2-ANALOG_REDUCE_BITS))/ 1000);
+
+#if DEBUG_HEAT_BED_TEMP_COMPENSATION
+            Com::printFLN( PSTR( "setTargetTemperature().5: " ), targetTemperature );
+#endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
+            break;
+        }
+        case 100: // HEATER_USES_AD595
+        {
+            targetTemperature = (int)((int32_t)temp * (1024<<(2-ANALOG_REDUCE_BITS))/ 500);
+
+#if DEBUG_HEAT_BED_TEMP_COMPENSATION
+            Com::printFLN( PSTR( "setTargetTemperature().6: " ), targetTemperature );
+#endif // DEBUG_HEAT_BED_TEMP_COMPENSATION
+            break;
+        }
 #if defined(USE_GENERIC_THERMISTORTABLE_1) || defined(USE_GENERIC_THERMISTORTABLE_2) || defined(USE_GENERIC_THERMISTORTABLE_3)
-		case 97:
-		case 98:
-		case 99:
-		{
-			uint8_t i=2;
-			const short *temptable;
+        case 97:
+        case 98:
+        case 99:
+        {
+            uint8_t i=2;
+            const short *temptable;
 
 #ifdef USE_GENERIC_THERMISTORTABLE_1
-			if(type == 97)
-				temptable = (const short *)temptable_generic1;
+            if(type == 97)
+                temptable = (const short *)temptable_generic1;
 #endif // USE_GENERIC_THERMISTORTABLE_1
 
 #ifdef USE_GENERIC_THERMISTORTABLE_2
-			if(type == 98)
-				temptable = (const short *)temptable_generic2;
+            if(type == 98)
+                temptable = (const short *)temptable_generic2;
 #endif // USE_GENERIC_THERMISTORTABLE_2
 
 #ifdef USE_GENERIC_THERMISTORTABLE_3
-			if(type == 99)
-				temptable = (const short *)temptable_generic3;
+            if(type == 99)
+                temptable = (const short *)temptable_generic3;
 #endif // USE_GENERIC_THERMISTORTABLE_3
 
-			short oldraw = temptable[0];
-			short oldtemp = temptable[1];
-			short newraw,newtemp;
-			while(i<GENERIC_THERM_NUM_ENTRIES*2)
-			{
-				newraw = temptable[i++];
-				newtemp = temptable[i++];
-				if (newtemp < temp)
-				{
-					targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
+            short oldraw = temptable[0];
+            short oldtemp = temptable[1];
+            short newraw,newtemp;
+            while(i<GENERIC_THERM_NUM_ENTRIES*2)
+            {
+                newraw = temptable[i++];
+                newtemp = temptable[i++];
+                if (newtemp < temp)
+                {
+                    targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-					currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
+                    currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-					return;
-				}
-				oldtemp = newtemp;
-				oldraw = newraw;
-			}
-			// Overflow: Set to last value in the table
-			targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-newraw;
+                    return;
+                }
+                oldtemp = newtemp;
+                oldraw = newraw;
+            }
+            // Overflow: Set to last value in the table
+            targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-newraw;
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
+            currentTemperatureC += getHeatBedTemperatureOffset( currentTemperatureC );
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-			break;
-		}
+            break;
+        }
 #endif
     }
-	(void)offset;
+    (void)offset;
 } // setTargetTemperature
 
 
@@ -1237,7 +1237,7 @@ void Extruder::disableAllHeater()
         c->targetTemperatureC = 0;
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-		c->offsetC = 0;
+        c->offsetC = 0;
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
         pwm_pos[c->pwmIndex] = 0;
@@ -1264,19 +1264,19 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
     int32_t d = pidMax>>1;
     float Ku, Tu;
     float Kp, Ki, Kd;
-	/*warning wegen uninitialised KP KI KD*/
-	//to remove the warning, I fill those with at least somehow plausible data (V2 Standard Values)
-	Kp = HT2_PID_P;
-	Ki = HT2_PID_I;
-	Kd = HT2_PID_D;
+    /*warning wegen uninitialised KP KI KD*/
+    //to remove the warning, I fill those with at least somehow plausible data (V2 Standard Values)
+    Kp = HT2_PID_P;
+    Ki = HT2_PID_I;
+    Kd = HT2_PID_D;
 
-	
+    
     float maxTemp=20, minTemp=20;
 
-	if( Printer::debugInfo() )
-	{
-	    Com::printInfoFLN(Com::tPIDAutotuneStart);
-	}
+    if( Printer::debugInfo() )
+    {
+        Com::printInfoFLN(Com::tPIDAutotuneStart);
+    }
 
     Extruder::disableAllHeater(); // switch off all heaters.
     autotuneIndex = controllerId;
@@ -1293,7 +1293,7 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         HAL::pingWatchdog();
 #endif // FEATURE_WATCHDOG
 
-		GCode::keepAlive( WaitHeater );
+        GCode::keepAlive( WaitHeater );
         updateCurrentTemperature();
         currentTemp = currentTemperatureC;
 
@@ -1325,13 +1325,13 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
                     if(bias > pidMax/2) d = pidMax - 1 - bias;
                     else d = bias;
 
-					if( Printer::debugInfo() )
-					{
-						Com::printF(Com::tAPIDBias,bias);
-						Com::printF(Com::tAPIDD,d);
-						Com::printF(Com::tAPIDMin,minTemp);
-						Com::printFLN(Com::tAPIDMax,maxTemp);
-					}
+                    if( Printer::debugInfo() )
+                    {
+                        Com::printF(Com::tAPIDBias,bias);
+                        Com::printF(Com::tAPIDD,d);
+                        Com::printF(Com::tAPIDMin,minTemp);
+                        Com::printFLN(Com::tAPIDMax,maxTemp);
+                    }
 
                     if(cycles > 2)
                     {
@@ -1339,23 +1339,23 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
                         Ku = (4.0*d)/(3.14159*(maxTemp-minTemp));
                         Tu = ((float)(t_low + t_high)/1000.0);
 
-						if( Printer::debugInfo() )
-						{
-							Com::printF(Com::tAPIDKu,Ku);
-							Com::printFLN(Com::tAPIDTu,Tu);
-						}
+                        if( Printer::debugInfo() )
+                        {
+                            Com::printF(Com::tAPIDKu,Ku);
+                            Com::printFLN(Com::tAPIDTu,Tu);
+                        }
 
                         Kp = 0.6*Ku;
                         Ki = 2*Kp/Tu;
                         Kd = Kp*Tu*0.125;
 
-						if( Printer::debugInfo() )
-						{
-							Com::printFLN(Com::tAPIDClassic);
-							Com::printFLN(Com::tAPIDKp,Kp);
-							Com::printFLN(Com::tAPIDKi,Ki);
-							Com::printFLN(Com::tAPIDKd,Kd);
-						}
+                        if( Printer::debugInfo() )
+                        {
+                            Com::printFLN(Com::tAPIDClassic);
+                            Com::printFLN(Com::tAPIDKp,Kp);
+                            Com::printFLN(Com::tAPIDKi,Ki);
+                            Com::printFLN(Com::tAPIDKd,Kd);
+                        }
                     }
                 }
                 pwm_pos[pwmIndex] = (bias + d);
@@ -1365,12 +1365,12 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         }
         if(currentTemp > (temp + 20))
         {
-			if( Printer::debugErrors() )
-			{
-	            Com::printErrorFLN(Com::tAPIDFailedHigh);
-			}
+            if( Printer::debugErrors() )
+            {
+                Com::printErrorFLN(Com::tAPIDFailedHigh);
+            }
 
-			showError( (void*)ui_text_autodetect_pid, (void*)ui_text_temperature_wrong );
+            showError( (void*)ui_text_autodetect_pid, (void*)ui_text_temperature_wrong );
             Extruder::disableAllHeater();
             return;
         }
@@ -1381,23 +1381,23 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         }
         if(((time - t1) + (time - t2)) > (10L*60L*1000L*2L))   // 20 Minutes
         {
-			if( Printer::debugErrors() )
-			{
-	            Com::printErrorFLN(Com::tAPIDFailedTimeout);
-			}
+            if( Printer::debugErrors() )
+            {
+                Com::printErrorFLN(Com::tAPIDFailedTimeout);
+            }
             Extruder::disableAllHeater();
 
-			showError( (void*)ui_text_autodetect_pid, (void*)ui_text_timeout );
+            showError( (void*)ui_text_autodetect_pid, (void*)ui_text_timeout );
             return;
         }
         if(cycles > 5)
         {
-			if( Printer::debugInfo() )
-			{
-	            Com::printInfoFLN(Com::tAPIDFinished);
-			}
+            if( Printer::debugInfo() )
+            {
+                Com::printInfoFLN(Com::tAPIDFinished);
+            }
 
-			UI_STATUS_UPD( UI_TEXT_AUTODETECT_PID_DONE );
+            UI_STATUS_UPD( UI_TEXT_AUTODETECT_PID_DONE );
 
             Extruder::disableAllHeater();
             if(storeValues)
@@ -1424,14 +1424,14 @@ disabled, the function is not called.
 */
 void writeMonitor()
 {
-	if( Printer::debugInfo() )
-	{
-		TemperatureController *act = tempController[manageMonitor];
-		Com::printF(Com::tMTEMPColon,(long)HAL::timeInMilliseconds());
-		Com::printF(Com::tSpace,act->currentTemperatureC);
-		Com::printF(Com::tSpace,act->targetTemperatureC,0);
-		Com::printFLN(Com::tSpace,pwm_pos[act->pwmIndex]);
-	}
+    if( Printer::debugInfo() )
+    {
+        TemperatureController *act = tempController[manageMonitor];
+        Com::printF(Com::tMTEMPColon,(long)HAL::timeInMilliseconds());
+        Com::printF(Com::tSpace,act->currentTemperatureC);
+        Com::printF(Com::tSpace,act->targetTemperatureC,0);
+        Com::printFLN(Com::tSpace,pwm_pos[act->pwmIndex]);
+    }
 
 } // writeMonitor
 
@@ -1444,38 +1444,38 @@ bool reportTempsensorError()
     {
         int temp = tempController[i]->currentTemperatureC;
 
-		if( Printer::debugInfo() )
-		{
-	        if(i==NUM_EXTRUDER) Com::printF(Com::tHeatedBed);
-		    else Com::printF(Com::tExtruderSpace,i);
-		}
+        if( Printer::debugInfo() )
+        {
+            if(i==NUM_EXTRUDER) Com::printF(Com::tHeatedBed);
+            else Com::printF(Com::tExtruderSpace,i);
+        }
 
         if(temp<MIN_DEFECT_TEMPERATURE || temp>MAX_DEFECT_TEMPERATURE)
         {
-			if( Printer::debugErrors() )
-			{
-	            Com::printFLN(Com::tTempSensorDefect);
-			}
+            if( Printer::debugErrors() )
+            {
+                Com::printFLN(Com::tTempSensorDefect);
+            }
         }
         else if( Printer::debugInfo() )
-		{
-			Com::printFLN(Com::tTempSensorWorking);
-		}
+        {
+            Com::printFLN(Com::tTempSensorWorking);
+        }
     }
 
 #if FEATURE_MILLING_MODE
-	if( Printer::operatingMode == OPERATING_MODE_PRINT )
-	{
-		if( Printer::debugErrors() )
-		{
-			Com::printErrorFLN(Com::tDryModeUntilRestart);
-		}
-	}
+    if( Printer::operatingMode == OPERATING_MODE_PRINT )
+    {
+        if( Printer::debugErrors() )
+        {
+            Com::printErrorFLN(Com::tDryModeUntilRestart);
+        }
+    }
 #else
-	if( Printer::debugErrors() )
-	{
-		Com::printErrorFLN(Com::tDryModeUntilRestart);
-	}
+    if( Printer::debugErrors() )
+    {
+        Com::printErrorFLN(Com::tDryModeUntilRestart);
+    }
 #endif // FEATURE_MILLING_MODE
 
     return true;
@@ -1535,19 +1535,19 @@ Extruder extruder[NUM_EXTRUDER] =
             0,EXT0_TEMPSENSOR_TYPE,EXT0_SENSOR_INDEX,0,0,0,0,
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			0,
+            0,
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-			0,EXT0_HEAT_MANAGER
+            0,EXT0_HEAT_MANAGER
 
 #ifdef TEMP_PID
             ,0,EXT0_PID_INTEGRAL_DRIVE_MAX,EXT0_PID_INTEGRAL_DRIVE_MIN,EXT0_PID_P,EXT0_PID_I,EXT0_PID_D,EXT0_PID_MAX,0,0,0,{0,0,0,0}
 #endif // TEMP_PID
         ,0}
         ,ext0_select_cmd,ext0_deselect_cmd,EXT0_EXTRUDER_COOLER_SPEED,0
-		#if STEPPER_ON_DELAY
-		, '\x0'
-		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
+        #if STEPPER_ON_DELAY
+        , '\x0'
+        #endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>0
 
@@ -1568,19 +1568,19 @@ Extruder extruder[NUM_EXTRUDER] =
             1,EXT1_TEMPSENSOR_TYPE,EXT1_SENSOR_INDEX,0,0,0,0,
 
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-			0,
+            0,
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-			0,EXT1_HEAT_MANAGER
+            0,EXT1_HEAT_MANAGER
 
 #ifdef TEMP_PID
             ,0,EXT1_PID_INTEGRAL_DRIVE_MAX,EXT1_PID_INTEGRAL_DRIVE_MIN,EXT1_PID_P,EXT1_PID_I,EXT1_PID_D,EXT1_PID_MAX,0,0,0,{0,0,0,0}
 #endif // TEMP_PID
         ,0}
         ,ext1_select_cmd,ext1_deselect_cmd,EXT1_EXTRUDER_COOLER_SPEED,0
-		#if STEPPER_ON_DELAY
-		, '\x0'
-		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
+        #if STEPPER_ON_DELAY
+        , '\x0'
+        #endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>1
 
@@ -1605,10 +1605,10 @@ Extruder extruder[NUM_EXTRUDER] =
 #endif // TEMP_PID
 
         ,0}
-        ,ext2_select_cmd,ext2_deselect_cmd,EXT2_EXTRUDER_COOLER_SPEED,0		
-		#if STEPPER_ON_DELAY
-		, '\x0'
-		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
+        ,ext2_select_cmd,ext2_deselect_cmd,EXT2_EXTRUDER_COOLER_SPEED,0     
+        #if STEPPER_ON_DELAY
+        , '\x0'
+        #endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>2
 
@@ -1634,10 +1634,10 @@ Extruder extruder[NUM_EXTRUDER] =
 
         ,0}
         ,ext3_select_cmd,ext3_deselect_cmd,EXT3_EXTRUDER_COOLER_SPEED,0
-		
-		#if STEPPER_ON_DELAY
-		, '\x0'
-		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
+        
+        #if STEPPER_ON_DELAY
+        , '\x0'
+        #endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>3
 
@@ -1663,10 +1663,10 @@ Extruder extruder[NUM_EXTRUDER] =
 
         ,0}
         ,ext4_select_cmd,ext4_deselect_cmd,EXT4_EXTRUDER_COOLER_SPEED,0
-		
-		#if STEPPER_ON_DELAY
-		, '\x0'
-		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
+        
+        #if STEPPER_ON_DELAY
+        , '\x0'
+        #endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>4
 
@@ -1692,10 +1692,10 @@ Extruder extruder[NUM_EXTRUDER] =
 
         ,0}
         ,ext5_select_cmd,ext5_deselect_cmd,EXT5_EXTRUDER_COOLER_SPEED,0
-		
-		#if STEPPER_ON_DELAY
-		, '\x0'
-		#endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
+        
+        #if STEPPER_ON_DELAY
+        , '\x0'
+        #endif // STEPPER_ON_DELAY by Nibbels gegen xtruder.cpp:1620:1: warning: missing initializer for member 'Extruder::enabled'
     }
 #endif // NUM_EXTRUDER>5
 };
@@ -1703,12 +1703,12 @@ Extruder extruder[NUM_EXTRUDER] =
 #if HAVE_HEATED_BED
 #define NUM_TEMPERATURE_LOOPS NUM_EXTRUDER+1
 TemperatureController heatedBedController = {NUM_EXTRUDER,HEATED_BED_SENSOR_TYPE,BED_SENSOR_INDEX,0,0,0,0,
-	
+    
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-		0,
+        0,
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
 
-		0,HEATED_BED_HEAT_MANAGER
+        0,HEATED_BED_HEAT_MANAGER
 
 #ifdef TEMP_PID
         ,0,HEATED_BED_PID_INTEGRAL_DRIVE_MAX,HEATED_BED_PID_INTEGRAL_DRIVE_MIN,HEATED_BED_PID_PGAIN,HEATED_BED_PID_IGAIN,HEATED_BED_PID_DGAIN,HEATED_BED_PID_MAX,0,0,0,{0,0,0,0}
@@ -1726,16 +1726,16 @@ There is no Controller involved! It is not hooked into tempController
 Do not try to do anything other than updateCurrentTemperature and reading the Temps.
 TODO: Making a totally clean class, without the logic to controll something.
 */
-TemperatureController optTempController = {0,RESERVE_ANALOG_SENSOR_TYPE,RESERVE_SENSOR_INDEX,0,0,0,0,	
+TemperatureController optTempController = {0,RESERVE_ANALOG_SENSOR_TYPE,RESERVE_SENSOR_INDEX,0,0,0,0,   
 #if FEATURE_HEAT_BED_TEMP_COMPENSATION
-		0,
+        0,
 #endif // FEATURE_HEAT_BED_TEMP_COMPENSATION
-		0, 0
+        0, 0
 #ifdef TEMP_PID
         ,0,0,0,0,0,0,0,0,0,0,{0,0,0,0}
 #endif // TEMP_PID
          ,0};
-		 
+         
 #endif // RESERVE_ANALOG_INPUTS
 
 

@@ -27,7 +27,7 @@ public:
     static void executeGCode(GCode *com);
     static void waitUntilEndOfAllMoves();
     static void waitUntilEndOfAllBuffers();
-	static void waitUntilEndOfZOS();
+    static void waitUntilEndOfZOS();
     static void printCurrentPosition();
     static void printTemperatures(bool showRaw = false);
     static void setFanSpeed(int speed,bool wait); /// Set fan speed 0..255

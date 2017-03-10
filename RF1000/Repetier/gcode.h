@@ -29,23 +29,23 @@ class SDCard;
 class GCode   // 52 uint8_ts per command needed
 {
 public:
-    unsigned int	params;
-    unsigned int	params2;
-    unsigned int	N; // Line number
-    unsigned int	M;
-    unsigned int	G;
-    float			X;
-    float			Y;
-    float			Z;
-    float			E;
-    float			F;
-    uint8_t			T;
-    long			S;
-    long			P;
-    float			I;
-    float			J;
-    float			R;
-    char*			text;
+    unsigned int    params;
+    unsigned int    params2;
+    unsigned int    N; // Line number
+    unsigned int    M;
+    unsigned int    G;
+    float           X;
+    float           Y;
+    float           Z;
+    float           E;
+    float           F;
+    uint8_t         T;
+    long            S;
+    long            P;
+    float           I;
+    float           J;
+    float           R;
+    char*           text;
 
 
     inline bool hasM()
@@ -63,33 +63,33 @@ public:
         return ((params & 4)!=0);
     } // hasG
 
-	inline void setX(char set)
-	{
-		if( set )	params |= 8;
-		else		params &= ~8;
-	} // setX
+    inline void setX(char set)
+    {
+        if( set )   params |= 8;
+        else        params &= ~8;
+    } // setX
 
     inline bool hasX()
     {
         return ((params & 8)!=0);
     } // hasX
 
-	inline void setY(char set)
-	{
-		if( set )	params |= 16;
-		else		params &= ~16;
-	} // setY
+    inline void setY(char set)
+    {
+        if( set )   params |= 16;
+        else        params &= ~16;
+    } // setY
 
     inline bool hasY()
     {
         return ((params & 16)!=0);
     } // hasY
 
-	inline void setZ(char set)
-	{
-		if( set )	params |= 32;
-		else		params &= ~32;
-	} // setZ
+    inline void setZ(char set)
+    {
+        if( set )   params |= 32;
+        else        params &= ~32;
+    } // setZ
 
     inline bool hasZ()
     {
@@ -162,12 +162,12 @@ public:
     } // getP
 
     inline void setFormatError()
-	{
+    {
         params2 |= 32768;
     } // setFormatError
 
     inline bool hasFormatError()
-	{
+    {
         return ((params2 & 32768)!=0);
     } // hasFormatError
 
@@ -183,9 +183,9 @@ public:
     static void executeFString(FSTRINGPARAM(cmd));
     static void executeString(char *cmd);
     static uint8_t computeBinarySize(char *ptr);
-	static void resetBuffer();
-	static void keepAlive(enum FirmwareState state);
-	static uint32_t keepAliveInterval;
+    static void resetBuffer();
+    static void keepAlive(enum FirmwareState state);
+    static uint32_t keepAliveInterval;
 
     friend class SDCard;
     friend class UIDisplay;
@@ -211,25 +211,25 @@ private:
         return l;
     } // parseLongValue
 
-    static GCode commandsBuffered[GCODE_BUFFER_SIZE];	///< Buffer for received commands.
-    static uint8_t bufferReadIndex;						///< Read position in gcode_buffer.
-    static uint8_t bufferWriteIndex;					///< Write position in gcode_buffer.
-    static uint8_t commandReceiving[MAX_CMD_SIZE];		///< Current received command.
-    static uint8_t commandsReceivingWritePosition;		///< Writing position in gcode_transbuffer.
-    static uint8_t sendAsBinary;						///< Flags the command as binary input.
-    static uint8_t wasLastCommandReceivedAsBinary;		///< Was the last successful command in binary mode?
-    static uint8_t commentDetected;						///< Flags true if we are reading the comment part of a command.
-    static uint8_t binaryCommandSize;					///< Expected size of the incoming binary command.
-    static bool waitUntilAllCommandsAreParsed;			///< Don't read until all commands are parsed. Needed if gcode_buffer is misused as storage for strings.
-    static uint32_t lastLineNumber;						///< Last line number received.
-    static uint32_t actLineNumber;						///< Line number of current command.
-    static volatile uint8_t bufferLength;				///< Number of commands stored in gcode_buffer
-    static millis_t timeOfLastDataPacket;				///< Time, when we got the last data packet. Used to detect missing uint8_ts.
-    static uint8_t formatErrors;						///< Number of sequential format errors
-	static millis_t lastBusySignal;						///< When was the last busy signal
+    static GCode commandsBuffered[GCODE_BUFFER_SIZE];   ///< Buffer for received commands.
+    static uint8_t bufferReadIndex;                     ///< Read position in gcode_buffer.
+    static uint8_t bufferWriteIndex;                    ///< Write position in gcode_buffer.
+    static uint8_t commandReceiving[MAX_CMD_SIZE];      ///< Current received command.
+    static uint8_t commandsReceivingWritePosition;      ///< Writing position in gcode_transbuffer.
+    static uint8_t sendAsBinary;                        ///< Flags the command as binary input.
+    static uint8_t wasLastCommandReceivedAsBinary;      ///< Was the last successful command in binary mode?
+    static uint8_t commentDetected;                     ///< Flags true if we are reading the comment part of a command.
+    static uint8_t binaryCommandSize;                   ///< Expected size of the incoming binary command.
+    static bool waitUntilAllCommandsAreParsed;          ///< Don't read until all commands are parsed. Needed if gcode_buffer is misused as storage for strings.
+    static uint32_t lastLineNumber;                     ///< Last line number received.
+    static uint32_t actLineNumber;                      ///< Line number of current command.
+    static volatile uint8_t bufferLength;               ///< Number of commands stored in gcode_buffer
+    static millis_t timeOfLastDataPacket;               ///< Time, when we got the last data packet. Used to detect missing uint8_ts.
+    static uint8_t formatErrors;                        ///< Number of sequential format errors
+    static millis_t lastBusySignal;                     ///< When was the last busy signal
 
 public:
-	static int8_t waitingForResend;						///< Waiting for line to be resend. -1 = no wait.
+    static int8_t waitingForResend;                     ///< Waiting for line to be resend. -1 = no wait.
 
 }; // GCode
 
