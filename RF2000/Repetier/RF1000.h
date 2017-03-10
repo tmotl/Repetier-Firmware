@@ -35,7 +35,7 @@
 // ##########################################################################################
 
 /** \brief Allows to use the device for milling */
-#define	FEATURE_MILLING_MODE				0													// 1 = on, 0 = off
+#define	FEATURE_MILLING_MODE				1													// 1 = on, 0 = off
 
 
 #if FEATURE_MILLING_MODE
@@ -107,7 +107,7 @@ WARNING: Do not enable the case fan feature in case you have a second extruder a
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 /** \brief Define Default z-endstop type */
-#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_CIRCUIT
+#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_SINGLE
 
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 

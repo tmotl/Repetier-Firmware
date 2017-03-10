@@ -107,7 +107,7 @@ WARNING: Do not enable the case fan feature in case you have a second extruder a
 #if FEATURE_CONFIGURABLE_Z_ENDSTOPS
 
 /** \brief Define Default z-endstop type */
-#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_CIRCUIT
+#define	DEFAULT_Z_ENDSTOP_TYPE				ENDSTOP_TYPE_SINGLE
 
 #endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
 

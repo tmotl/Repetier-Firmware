@@ -1909,8 +1909,8 @@ void searchZOScan( void )
 			case 6:
 			{	
 			    // move to the first scan position of the heat bed scan matrix
-				long xScanPosition = (long)(g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS]) + g_nScanXStartSteps;
-				long yScanPosition = (long)(g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS]) + g_nScanYStartSteps;
+				long xScanPosition = (long)(g_ZCompensationMatrix[g_ZOSTestPoint[X_AXIS]][0]* Printer::axisStepsPerMM[X_AXIS]); // + g_nScanXStartSteps; <-- NEIN! Man muss nur die jeweils erste und letzte Matrix-Zeile meiden, ausser HEAT_BED_SCAN_X_START_MM ist 0 oder HEAT_BED_SCAN_Y_START_MM ist 0
+				long yScanPosition = (long)(g_ZCompensationMatrix[0][g_ZOSTestPoint[Y_AXIS]]* Printer::axisStepsPerMM[Y_AXIS]); // + g_nScanYStartSteps; <-- NEIN!
 				#if DEBUG_HEAT_BED_SCAN == 2
 					Com::printF( PSTR( "ZOS(): STEP 4 : Scan Position" ) );
 					Com::printF( PSTR( "= (" ), xScanPosition );
@@ -3694,7 +3694,7 @@ void scanWorkPart( void )
 #if DEBUG_WORK_PART_SCAN == 2
 					if( Printer::debugInfo() )
 					{
-						Com::printFLN( PSTR( "scanWorkPart(): 40 -> 49" ) );
+						Com::printFLN( PSTR( "scanWorkPart(): 40 -> 49 : X=" ), g_ZCompensationMatrix[nIndexX][0] );
 					}
 #endif // DEBUG_WORK_PART_SCAN
 					break;
@@ -6287,7 +6287,7 @@ void loopRF( void )
 								/*
 								Z-OFFSETs :: Mir sind aktuell folgende Offsets in Z bekannt:
 									long Printer::ZOffset;  														== OFFSET IN MENÜ / M3006 in [um]	
-									g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;	== OFFSET-STEPS errechnet aus Printer::ZOffset
+									g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;	== OFFSET-STEPS errechnet aus Printer::ZOffset -> Und NEU zusätzlich aus SenseOffset
 									g_offsetZCompensationSteps														== OFFSET AUS zMATRIX (Minimaler Bett-Hotend-Abstand)
 									nNeededZCompensation															== In der Z-Compensations-Funktion: Das ist der Matrixanteil an exaktem Punkt x/y
 									
@@ -10730,137 +10730,185 @@ void processCommand( GCode* pCommand )
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 		
 #if	FEATURE_HEAT_BED_Z_COMPENSATION
-			case 3900: // M3900 search for the heat bed and set the Z offset appropriately
-			{
-				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
-				{
-					
-					Com::printF( PSTR( "M3900: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
-					Com::printF( PSTR( " Testposition [Y]: " ), g_ZOSTestPoint[Y_AXIS] );
-					Com::printFLN( PSTR( " [Matrix-index]" ) );
-					Com::printFLN( PSTR( "M3900: [S] ZOS learning rate is : "), g_ZOSlearningRate);
-					Com::printFLN( PSTR( "M3900: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
-					startZOScan();
-					Commands::waitUntilEndOfZOS();
-				}
-				break;
-			}
 			
 			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
+			case 3900: // 3900 direct preconfig, no break; -> next is M3900.
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
 				{
-				 if( pCommand->hasX() || pCommand->hasY() )
-				 {
-				    if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
+					bool err3900r = false;
+					if( g_ZCompensationMatrix[0][0] != EEPROM_FORMAT )
 				    {
-					// we load the z compensation matrix before its first usage because this can take some time
-					Com::printFLN( PSTR( "M3901: INFO Die Z-Matrix wurde aus dem EEPROM gelesen." ) );
-					prepareZCompensation();
+						// we load the z compensation matrix before its first usage because this can take some time
+						Com::printFLN( PSTR( "M3900/M3901: INFO Die Z-Matrix wurde aus dem EEPROM gelesen." ) );
+						prepareZCompensation();
 				    }
+					
 				    if( g_ZCompensationMatrix[0][0] == EEPROM_FORMAT )
-				    {					
-					if( pCommand->hasX() )
-					{
-						// test and take over the specified value
-						nTemp = (long)pCommand->X;
-						if( nTemp < 1 )	nTemp = 1;
-						if( nTemp > g_uZMatrixMax[X_AXIS] ) nTemp = g_uZMatrixMax[X_AXIS]; //1..n
-
-						g_ZOSTestPoint[X_AXIS] = nTemp;
-						if( Printer::debugInfo() )
+				    {
+						if( pCommand->hasX() )
 						{
-							Com::printF( PSTR( "M3901: CHANGED X ZOS Testposition: " ), nTemp );
-							Com::printF( PSTR( " [Z-Matrix index] X={1.." ), g_uZMatrixMax[X_AXIS]);
-							Com::printFLN( PSTR( "}" ) );
-						}
-					}
-					if( pCommand->hasY() )
-					{
-						// test and take over the specified value
-						nTemp = (long)pCommand->Y;
-						if( nTemp < 1 )	nTemp = 1;
-						if( nTemp > g_uZMatrixMax[Y_AXIS] ) nTemp = g_uZMatrixMax[Y_AXIS]; //1..n
+							// test and take over the specified value
+							nTemp = (long)pCommand->X;
+							
+							//Wessix idee: zufalls-Scanpunkt wegen DDP-Platten-Schonung.
+							if( nTemp == 0 ) nTemp = random( (HEAT_BED_SCAN_X_START_MM == 0) ? 1 : 2 , g_uZMatrixMax[X_AXIS] ); // ergibt min bis max-1
+							
+							//wenn die Startposition nicht 0 ist, wird eine Dummy-Matrix-Linie ergänzt. Mit der sollten wir nicht arbeiten.
+							if( nTemp < 1 + ((HEAT_BED_SCAN_X_START_MM == 0) ? 0 : 1) )	nTemp = 1 + ((HEAT_BED_SCAN_X_START_MM == 0) ? 0 : 1);
+							if( nTemp > g_uZMatrixMax[X_AXIS] - 1 ) nTemp = g_uZMatrixMax[X_AXIS] - 1; //2..n-1
 
-						g_ZOSTestPoint[Y_AXIS] = nTemp;
-						if( Printer::debugInfo() )
-						{
-							Com::printF( PSTR( "M3901: CHANGED Y ZOS Testposition: " ), nTemp );
-							Com::printF( PSTR( " [Z-Matrix index] Y={1.." ), g_uZMatrixMax[Y_AXIS]);
-							Com::printFLN( PSTR( "}" ) );
+							g_ZOSTestPoint[X_AXIS] = nTemp;
+							if( Printer::debugInfo() )
+							{
+								Com::printF( PSTR( "M3900/M3901: CHANGED X ZOS Testposition: " ), nTemp );
+								if(HEAT_BED_SCAN_X_START_MM == 0){
+									Com::printF( PSTR( " [Z-Matrix index] X={1.." ), g_uZMatrixMax[X_AXIS]-1 );
+								}
+								else
+								{
+									Com::printF( PSTR( " [Z-Matrix index] X={2.." ), g_uZMatrixMax[X_AXIS]-1 );
+								}
+								Com::printFLN( PSTR( "}" ) );
+							}
 						}
-					}
-				    }else{
-						Com::printFLN( PSTR( "M3901: ERROR Matrix Initialisation Error!" ) );
-						Com::printFLN( PSTR( "M3901: INFO Die Z-Matrix konnte nicht aus dem EEPROM gelesen werden." ) );
-						Com::printFLN( PSTR( "M3901: INFO Sieht man diesen Fehler, hat der Drucker vermutlich noch nie einen Heat-Bed-Scan gemacht." ) );
-						Com::printFLN( PSTR( "M3901: INFO Man sieht diesen Fehler nach dem Löschen des EEPROMS mit Code M3091 -> neuer HBS erforderlich!" ) );
-				    }    
-				 }
-				 // M390 S set learning rate to limit changes caused of z-Offset Scan. This might proof handy for multiple positions scans.
+						
+						if( pCommand->hasY() )
+						{
+							// test and take over the specified value
+							nTemp = (long)pCommand->Y;
+							
+							//Wessix idee: zufalls-Scanpunkt wegen DDP-Platten-Schonung.
+							if( nTemp == 0 ) nTemp = random( (HEAT_BED_SCAN_Y_START_MM == 0) ? 1 : 2 , g_uZMatrixMax[Y_AXIS] ); // ergibt min bis max-1
+															
+							if( nTemp < 1 + ((HEAT_BED_SCAN_Y_START_MM == 0) ? 0 : 1) )	nTemp = 1 + ((HEAT_BED_SCAN_Y_START_MM == 0) ? 0 : 1);
+							if( nTemp > g_uZMatrixMax[Y_AXIS] - 1 ) nTemp = g_uZMatrixMax[Y_AXIS] - 1; //2..n-1
+
+							g_ZOSTestPoint[Y_AXIS] = nTemp;
+							if( Printer::debugInfo() )
+							{
+								Com::printF( PSTR( "M3900/M3901: CHANGED Y ZOS Testposition: " ), nTemp );
+								if(HEAT_BED_SCAN_Y_START_MM == 0){
+									Com::printF( PSTR( " [Z-Matrix index] Y={1.." ), g_uZMatrixMax[Y_AXIS]-1 );
+								}
+								else
+								{
+									Com::printF( PSTR( " [Z-Matrix index] Y={2.." ), g_uZMatrixMax[Y_AXIS]-1 );
+								}
+								Com::printFLN( PSTR( "}" ) );
+							}
+						}					
+
+						if( pCommand->hasS() )
+						{
+							// M3900 S set learning rate to limit changes caused of z-Offset Scan. This might proof handy for multiple positions scans.
+							if ( pCommand->S >= 0 && pCommand->S <= 100 )
+							{
+								g_ZOSlearningRate = (float)pCommand->S *0.01f;
+								Com::printFLN( PSTR( "M3900/M3901: CHANGED [S] ZOS learning rate : "), g_ZOSlearningRate);				
+							}
+							else
+							{
+								Com::printFLN( PSTR( "M3900/M3901: ERROR [S] ZOS learning rate ignored, out of range {0...100}") );
+								err3900r = true;
+							}
+						}
+						
+						if( pCommand->hasP() )
+						{	
+							// M3900 P set distance weight: This can be used as	something like the auto-bed-leveling (if used in all corners) but technically affects the Z_Matrix
+							if ( pCommand->P >= 0 && pCommand->P <= 100 )
+							{
+								g_ZOSlearningGradient = (float)pCommand->P *0.01f;
+								Com::printFLN( PSTR( "M3900/M3901: CHANGED [P] ZOS learning linear distance weight : "), g_ZOSlearningGradient);
+							}
+							else
+							{
+								Com::printFLN( PSTR( "M3900/M3901: ERROR [P] ZOS learning DistanceWeight, out of range {0...100}") );
+								err3900r = true;
+							}
+						}
 				
-				 if( pCommand->hasS() )
-					{
-						if ( pCommand->S >= 0 && pCommand->S <= 100 )
+						//Anzeige der aktuellen Settings
+						Com::printFLN( PSTR( "M3900/M3901: ### AKTIVE ZOS SETTINGS ###" ) );
+						Com::printF( PSTR( "M3900/M3901: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
+						Com::printF( PSTR( " Testposition [Y]: " ), g_ZOSTestPoint[Y_AXIS] );
+						Com::printFLN( PSTR( " [Z-Matrix index]" ) );
+						Com::printFLN( PSTR( "M3900/M3901: [S] ZOS learning rate is : "), g_ZOSlearningRate);
+						if ( g_ZOSlearningRate == 1.0f )
 						{
-						 g_ZOSlearningRate = (float)pCommand->S *0.01f;
-						 Com::printFLN( PSTR( "M3901: CHANGED [S] ZOS learning rate : "), g_ZOSlearningRate);				
+							Com::printFLN( PSTR( "M3900/M3901: INFO [S] ZOS::overwrite mode (1.00)") );	
 						}
 						else
 						{
-						 Com::printFLN( PSTR( "M3901: ERROR [S] ZOS learning rate ignored, out of range {0...100}") );
+							Com::printFLN( PSTR( "M3900/M3901: INFO [S] ZOS::additiv / learning mode (0.00 - 0.99)") );
 						}
-				  }
-				  if( pCommand->hasP() )
-					{
-						if ( pCommand->P >= 0 && pCommand->P <= 100 )
+						Com::printFLN( PSTR( "M3900/M3901: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
+						if ( g_ZOSlearningGradient == 0.0f )
 						{
-						 g_ZOSlearningGradient = (float)pCommand->P *0.01f;
-						 Com::printFLN( PSTR( "M3901: CHANGED [P] ZOS learning linear distance weight : "), g_ZOSlearningGradient);
-						 }
+							Com::printFLN( PSTR( "M3900/M3901: INFO [P] ZOS::reiner Offset-Scan") );	
+						}
+						else if ( g_ZOSlearningGradient == 1.0f )
+						{
+							Com::printFLN( PSTR( "M3900/M3901: INFO [P] ZOS::rein linear abstandsgewichteter Scan") );	
+						}
 						else
 						{
-						 Com::printFLN( PSTR( "M3901: ERROR [P] ZOS learning DistanceWeight, out of range {0...100}") );
+							Com::printFLN( PSTR( "M3900/M3901: INFO [P] ZOS::Das Ergebnis-Offset setzt sich zusammen aus Abstandsgewichtung und Offset") );					
 						}
-				 }
+						
+						if ( g_ZOSlearningGradient > 0.0f )
+						{
+							Com::printFLN( PSTR( "M3900/M3901: INFO [P] Set 0 => 0.0 for Offset only, set 100 => 1.0 for distance weight only") );
+							Com::printFLN( PSTR( "M3900/M3901: INFO [P] Combine linear distance weight with low learning rate and multiple checks at corners (for example) against bed warping!") );						
+						}
+						if ( g_ZOSlearningRate == 1.0f )
+						{
+							Com::printFLN( PSTR( "M3900/M3901: FORMEL Z-Matrix = EEPROM-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset)" ) );
+						}
+						else
+						{
+							Com::printFLN( PSTR( "M3900/M3901: FORMEL Z-Matrix = Z-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset)" ) );
+						}		
+						 
+						if(pCommand->M == 3901)
+						{					
+							//M3901
+							//M3900 wird nicht gestartet - nur preconfig, kein mhier-Scan!
+						}
+						else
+						{
+							if(err3900r){
+								Com::printFLN( PSTR( "M3900/M3901: ERROR in Config ### ZOS SKIPPED ###" ) );
+							}
+							else{
+								//M3900:
+								startZOScan();
+								Commands::waitUntilEndOfZOS();
+							}
+						}
+					}
+					else
+					{
+						Com::printFLN( PSTR( "M3900/M3901: ERROR Matrix Initialisation Error!" ) );
+						Com::printFLN( PSTR( "M3900/M3901: INFO Die Z-Matrix konnte nicht aus dem EEPROM gelesen werden." ) );
+						Com::printFLN( PSTR( "M3900/M3901: INFO Sieht man diesen Fehler, hat der Drucker vermutlich noch nie einen Heat-Bed-Scan gemacht." ) );
+						Com::printFLN( PSTR( "M3900/M3901: INFO Man sieht diesen Fehler nach dem Löschen des EEPROMS mit Code M3091 -> neuer HBS erforderlich!" ) );
+				    }   
 				}
-				Com::printFLN( PSTR( "M3901: ### AKTIVE ZOS SETTINGS ###" ) );
-				Com::printF( PSTR( "M3901: Testposition [X]: " ), g_ZOSTestPoint[X_AXIS] );					
-				Com::printF( PSTR( " Testposition [Y]: " ), g_ZOSTestPoint[Y_AXIS] );
-				Com::printFLN( PSTR( " [Z-Matrix index]" ) );
-				Com::printFLN( PSTR( "M3901: [S] ZOS learning rate is : "), g_ZOSlearningRate);
-				if ( g_ZOSlearningRate == 1.0f )
-				 {
-				 	Com::printFLN( PSTR( "M3901: INFO [S] ZOS::overwrite mode (1.00)") );	
-				 }else{
-				 	Com::printFLN( PSTR( "M3901: INFO [S] ZOS::additiv / learning mode (0.00 - 0.99)") );
-				 }
-				Com::printFLN( PSTR( "M3901: [P] ZOS learning linear distance weight is : "), g_ZOSlearningGradient);
-				if ( g_ZOSlearningGradient == 0.0f )
-				 {
-				 	Com::printFLN( PSTR( "M3901: INFO [P] ZOS::reiner Offset-Scan") );	
-				 }
-				else if ( g_ZOSlearningGradient == 1.0f )
-				 {
-				 	Com::printFLN( PSTR( "M3901: INFO [P] ZOS::rein linear abstandsgewichteter Scan") );	
-				 }else{
-				 	Com::printFLN( PSTR( "M3901: INFO [P] ZOS::Das Ergebnis-Offset setzt sich zusammen aus Abstandsgewichtung und Offset") );					
-				 }
-				if ( g_ZOSlearningGradient > 0.0f )
-				 {
-				 	Com::printFLN( PSTR( "M3901: INFO [P] Set 0 => 0.0 for Offset only, set 100 => 1.0 for distance weight only") );
-					Com::printFLN( PSTR( "M3901: INFO [P] Combine linear distance weight with low learning rate and multiple checks at corners (for example) against bed warping!") );						
-				 }
-				if ( g_ZOSlearningRate == 1.0f )
-				 {
-				 	Com::printFLN( PSTR( "M3901: FORMEL Z-Matrix = EEPROM-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset)" ) );
-				 }else{
-				 	Com::printFLN( PSTR( "M3901: FORMEL Z-Matrix = Z-Matrix + g_ZOSlearningRate*(g_ZOSlearningGradient*weight(x,y)*Offset + (1.0-g_ZOSlearningGradient)*Offset)" ) );
-				 }
-				
 				break;
 			}
+#else
+			case 3900: // M3900 search for the heat bed and set the Z offset appropriately
+			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
+			{
+				Com::printFLN( PSTR( "M3900/M3901 are disabled : inactive Feature FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+			}
+			break;
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION	
 				
+			
+#if	FEATURE_HEAT_BED_Z_COMPENSATION
 			case 3902: // M3902 Nibbels Matrix Manipulations "NMM"
 			{
 				if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
@@ -10894,9 +10942,10 @@ void processCommand( GCode* pCommand )
 							}else if(hochrunter > 0.0f){
 								Com::printFLN( PSTR( "M3902: Duese-Bett-Abstand wird groesser gemacht. "), hochrunter );
 							}else{
-								Com::printFLN( PSTR( "M3902: Duese-Bett-Abstand bleibt gleich. "), hochrunter );
+								Com::printFLN( PSTR( "M3902: Duese-Bett-Abstand bleibt gleich. Das Offset wird in die Matrix verrechnet und genullt."), hochrunter );
 							}
-							Com::printFLN( PSTR( "M3902: +Z heisst Bett hoch/weniger Abstand, -Z heisst Bett runter/mehr Abstand. ") );
+							Com::printFLN( PSTR( "M3902: -Z heisst Bett hoch/weniger Abstand, +Z heisst Bett runter/mehr Abstand. ") );
+							Com::printFLN( PSTR( "M3902: Bei Z=0 ändert sich nichts, doch es wird das aktuelle Offset in die Matrix verrechnet. ") );
 							Com::printFLN( PSTR( "#############################################################################") );
 							
 							// determine the minimal distance between extruder and heat bed
@@ -10904,15 +10953,24 @@ void processCommand( GCode* pCommand )
 							Com::printFLN( PSTR( "M3902: Alt::Min. Bett-Hotend Abstand [Steps] = " ), -1*(int)g_offsetZCompensationSteps );
 							
 							long hochrunterSteps = long(hochrunter * Printer::axisStepsPerMM[Z_AXIS]); //axissteps ist auch float
+														
 							Com::printFLN( PSTR( "M3902: Veraenderung Z [mm] = "), hochrunter );
 							Com::printFLN( PSTR( "M3902: Veraenderung Z [Steps] = " ), hochrunterSteps );
+							
+							if(hochrunter == 0.00f){
+								//wenn Z=0.0 soll alles so bleibenk aber das Offset ins Matrix-Offset reingerechnet und genullt werden.
+								//das Offset muss negativ eingehen, denn wenn die Matrix "weniger tief" ist, bleibt die Düse weiter weg vom Bett.
+								hochrunterSteps = long((Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000); //offset-stepps neu berechnen!							
+								Com::printFLN( PSTR( "M3902: Veraenderung = zOffset --> zMatrix; Offset = 0;" ) );
+							}	
+							
 							//das ist ein negativer wert! Je mehr Abstand, desto negativer. Positiv verboten.
-							if(g_offsetZCompensationSteps - hochrunterSteps > 0){
-								Com::printF( PSTR( "M3902: Fehler::Z-Matrix wuerde positiv werden. Das waere eine Kollision um " ), -1*(int)(g_offsetZCompensationSteps - hochrunterSteps) );
-								Com::printFLN( PSTR( " [Steps] bzw. " ), -1*Printer::invAxisStepsPerMM[Z_AXIS]*(float)(g_offsetZCompensationSteps - hochrunterSteps),2 );
+							if(g_offsetZCompensationSteps + hochrunterSteps > 0){
+								Com::printF( PSTR( "M3902: Fehler::Z-Matrix wuerde positiv werden. Das waere eine Kollision um " ), (int)(g_offsetZCompensationSteps + hochrunterSteps) );
+								Com::printFLN( PSTR( " [Steps] bzw. " ), Printer::invAxisStepsPerMM[Z_AXIS]*(float)(g_offsetZCompensationSteps + hochrunterSteps),2 );
 								Com::printFLN( PSTR( " [mm]" ) );
 							}else{
-								Com::printFLN( PSTR( "M3902: Ok::Min. Bett-Extruder Restabstand = " ), -1*(int)(g_offsetZCompensationSteps) );
+								Com::printFLN( PSTR( "M3902: Neu::Min. Bett-Extruder Restabstand = " ), -1*(int)(g_offsetZCompensationSteps) );
 								
 								short	x;
 								short	y;
@@ -10923,13 +10981,18 @@ void processCommand( GCode* pCommand )
 								{
 									for( y=1; y<=g_uZMatrixMax[Y_AXIS]; y++ )
 									{
-										g_ZCompensationMatrix[x][y] -= deltaZ;	
+										g_ZCompensationMatrix[x][y] += deltaZ;	
 										if(g_ZCompensationMatrix[x][y] > 0) overflow = true; //overflow oder kollision, kann einfach nicht sein und abfrage ist kurz.
 									}
 								}
 								if(overflow){
 									Com::printFLN( PSTR( "M3901: ERROR::Some type of Overflow or positiv Matrix::ReLoading zMatrix from EEPROM to RAM" ) );
 									loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+								}else{
+									if(hochrunter == 0.00f){
+										Printer::ZOffset = 0; //offset um nullen
+										g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000; //offset-stepps neu berechnen
+									}	
 								}
 							}
 							
@@ -10970,10 +11033,10 @@ void processCommand( GCode* pCommand )
 				break;
 			}
 #else
-			case 3900: // M3900 search for the heat bed and set the Z offset appropriately
-			case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
 			case 3902: // M3902 Nibbels Matrix Manipulations "NMM"
-				Com::printFLN( PSTR( "M3900/M3901/M3902 are disabled : inactive Feature FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+			{
+				Com::printFLN( PSTR( "M3902 is disabled : inactive Feature FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+			}
 			break;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION		
 			
@@ -11845,10 +11908,18 @@ void nextPreviousZAction( int8_t increment )
 		// show that we are active
 		previousMillisCmd = HAL::timeInMilliseconds();
 	
-		long nTemp = Printer::ZOffset; //um --> mm*1000
-		if(increment>0) nTemp += Z_OFFSET_BUTTON_STEPS; //0.01mm schritte * 1000
-		else if(increment<0) nTemp -= Z_OFFSET_BUTTON_STEPS;	
-		
+		long nTemp = Printer::ZOffset; //um --> mm*1000				
+		if(increment>0){
+			nTemp += Z_OFFSET_BUTTON_STEPS;
+			//beim Überschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
+			if(nTemp < Z_OFFSET_BUTTON_STEPS && nTemp > 0) nTemp = 0;
+		}
+		else if(increment<0){
+			nTemp -= Z_OFFSET_BUTTON_STEPS;
+			//beim Unterschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
+			if(nTemp < 0 && nTemp > -Z_OFFSET_BUTTON_STEPS) nTemp = 0;
+		}	
+				
 	HAL::forbidInterrupts();
 #if FEATURE_SENSIBLE_PRESSURE
 		/* IDEE: Wenn automatisches Offset und wir korrigieren dagegen, soll erst dieses abgebaut werden */
