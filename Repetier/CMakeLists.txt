@@ -22,6 +22,18 @@ print_programmer_list()
 
 set(${PROJECT_NAME}_BOARD mega)
 
+# choose compiling for RF1000 or RF2000
+option(RF1000 "Build for the RF1000 printer" OFF)
+option(RF2000 "Build for the RF2000 printer" OFF)
+if( (RF1000 AND RF2000) OR (NOT RF1000 AND NOT RF2000) )
+  message(FATAL_ERROR "Please select to build either for RF1000 or RF2000 by setting either '-DRF1000=ON' or '-DRF2000=ON'.")
+endif()
+if(RF1000)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMOTHERBOARD=DEVICE_TYPE_RF1000")
+elseif(RF2000)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMOTHERBOARD=DEVICE_TYPE_RF2000")
+endif()
+
 # Define the source code
 setup_arduino_sketch(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/Repetier.ino SKETCHSRC)
 aux_source_directory(${CMAKE_SOURCE_DIR} repetier_sources)
