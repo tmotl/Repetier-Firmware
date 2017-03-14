@@ -14,6 +14,21 @@ USE AT YOUR OWN RISK.
 For the official version, have a look at the upstream repository:
 https://github.com/RF1000/Repetier-Firmware (see branch development)
 
+## HowTo Install
+
+- Download the Firmware `Branch: community_development` and unzip all the files.  
+- Install Arduino.cc 1.6.5 or 1.8.1 and later if it is not installed on your computer already.  
+- Edit and save Configuration.h @Line46 and 47 according to your printers model. You have to remove the two **//** in front of the printers name you wish to activate:  
+`#define MOTHERBOARD                         DEVICE_TYPE_RF1000` or  
+`#define MOTHERBOARD                         DEVICE_TYPE_RF2000`
+- Optional: Edit and save the Configuration.h and RF1000.h or RF2000.h to your needs in case you use special specialized hardware.
+- Connect your Printer with a USB-cable and switch it on.
+- Go to and doubleclick /Repetier/Repetier.ino
+- Within the cyan colored Arduino-IDE you have to choose some preconfiguration settings for your RFx000 Board at the menu **Tools->**:  
+Board: `Arduino Mega 2560 or Mega ADK`,  
+Processor: `ATMega 2560 (Mega 2560)`,  
+Port: Your printers Port like `COM3`, if successfully connected.
+- **Check** and **Upload** the Firmware to your Printer.
 
 ## Version RF.01.37mod 
 
