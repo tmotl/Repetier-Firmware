@@ -4,7 +4,7 @@
 
 # Inoffizielle Modifikation der RF Firmware für RF1000 und RF2000 Geräte
 
-Basierend auf der Repetier-Betriebssoftware - die schnelle und benutzerfreundliche Firmware  
+Basierend auf der Repetier-Firmware - die schnelle und benutzerfreundliche Firmware  
 
 ## Warnhinweis
 Diese Firmware-Modifikation stellt eine Weiterentwicklung/Ergänzung von mhier's inoffizieller Firmware-Modifikation der original Conrad-Firmware dar. Sie wird weder vom Hersteller der RF1000 und RF2000 Geräte, noch vom Entwickler des ursprünglichen "Z-Offset-Scan" supported.  
@@ -14,6 +14,21 @@ BENUTZUNG AUF EIGENE GEFAHR.
 Link zur offiziellen Version der Firmware:
 https://github.com/RF1000/Repetier-Firmware (siehe Branch developement)  
 
+## Installationsanleitung
+
+- Das Firmwarepaket `Branch: community_development` herunterladen und entpacken.  
+- Installiere Arduino.cc 1.6.5 or 1.8.1 oder später, wenn Arduino nicht bereits installiert ist.  
+- Man bearbeitet und speichert die Configuration.h bei Zeile 46 und 47, je nachdem welchen Drucker man besitzt mit einem Texteditor. Man muss die zwei **//** vor dem Druckermodell entfernen, welches man aktivieren will:  
+`#define MOTHERBOARD                         DEVICE_TYPE_RF1000` or  
+`#define MOTHERBOARD                         DEVICE_TYPE_RF2000`
+- Optional: Man bearbeitet und speichert Configuration.h und RF1000.h oder RF2000.h, wie man es für seinen speziellen Drucker braucht.
+- Der Drucker wird mit dem USB-Kabel angeschlossen und angeschaltet.
+- Die Datei /Repetier/Repetier.ino doppelklicken. 
+- Innerhalb der türkisfarbenen Arduino-IDE muss man im Menü **Werkzeuge->** die Voreinstellungen für die RFx000-Boards prüfen oder einstellen:  
+Board: `Arduino Mega 2560 or Mega ADK`,  
+Prozessor: `ATMega 2560 (Mega 2560)`,  
+Port: Der Port des Druckers, wie `COM3`, wenn er korrekt verbunden ist.
+- **Prüfen** and **Hochladen** der Firmware zum Drucker.
 
 ## Version RF 1.37mod - wichtige Threads im Forum
 
