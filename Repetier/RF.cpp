@@ -51,6 +51,7 @@ FSTRINGVALUE( ui_text_emergency_pause, UI_TEXT_EMERGENCY_PAUSE );
 FSTRINGVALUE( ui_text_emergency_stop, UI_TEXT_EMERGENCY_STOP );
 FSTRINGVALUE( ui_text_invalid_matrix, UI_TEXT_INVALID_MATRIX );
 FSTRINGVALUE( ui_text_min_reached, UI_TEXT_MIN_REACHED );
+FSTRINGVALUE( ui_text_min_reached_unhomed, UI_TEXT_MIN_REACHED_UNHOMED );
 FSTRINGVALUE( ui_text_max_reached, UI_TEXT_MAX_REACHED );
 FSTRINGVALUE( ui_text_temperature_wrong, UI_TEXT_TEMPERATURE_WRONG );
 FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT );
@@ -11352,12 +11353,102 @@ extern void processButton( int nAction )
 #if FEATURE_EXTENDED_BUTTONS
         case UI_ACTION_RF_HEAT_BED_UP:
         {
-            nextPreviousZAction( -1 );
+			//DO NOT MOVE Z: ALTER Z-OFFSET
+			if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+				beep(1,4);
+				// show that we are active
+				previousMillisCmd = HAL::timeInMilliseconds();
+			
+				long nTemp = Printer::ZOffset; //um --> mm*1000 
+				nTemp += Z_OFFSET_BUTTON_STEPS;
+				//beim Überschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
+				if(nTemp < Z_OFFSET_BUTTON_STEPS && nTemp > 0) nTemp = 0;				
+				HAL::forbidInterrupts();							
+				if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
+				if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);				
+				Printer::ZOffset = nTemp;
+		#if FEATURE_SENSIBLE_PRESSURE
+				g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+		#else
+				g_staticZSteps = long(( Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+		#endif //FEATURE_SENSIBLE_PRESSURE
+				HAL::allowInterrupts();
+				if( Printer::debugInfo() )
+				{
+					Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
+					Com::printF( PSTR( " [um]" ) );
+					Com::printF( PSTR( " / " ), g_staticZSteps );
+					Com::printFLN( PSTR( " [steps]" ) );
+				}
+			#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+				if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
+				{
+					HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
+					EEPROM::updateChecksum();
+				}
+			#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+			} //ELSE DO MOVE Z: 
+			else
+			{
+				nextPreviousZAction( -1 );
+			}
             break;
         }
         case UI_ACTION_RF_HEAT_BED_DOWN:
-        {
-            nextPreviousZAction( 1 );
+        {            
+			//DO NOT MOVE Z: ALTER Z-OFFSET
+			if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
+				beep(1,4);
+				// show that we are active
+				previousMillisCmd = HAL::timeInMilliseconds();			
+				long nTemp = Printer::ZOffset; //um --> mm*1000 
+				nTemp -= Z_OFFSET_BUTTON_STEPS;
+				//beim Unterschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
+				if(nTemp < 0 && nTemp > -Z_OFFSET_BUTTON_STEPS) nTemp = 0;
+				HAL::forbidInterrupts();
+		#if FEATURE_SENSIBLE_PRESSURE
+				/* IDEE: Wenn automatisches Offset und wir korrigieren dagegen, soll erst dieses abgebaut werden */
+				if(g_nSensiblePressureOffset > 0){ //aus: dann 0, an: dann > 0
+					//automatik hat das bett runtergefahren, wir fahren es mit negativem offset hoch.
+					//blöd: damit ist die automatik evtl. weiter am limit und kann nachfolgend nichts mehr tun.
+					//also erst ausgleichen! dann verändern.
+					if(g_nSensiblePressureOffset > Z_OFFSET_BUTTON_STEPS){
+						nTemp += Z_OFFSET_BUTTON_STEPS;
+						g_nSensiblePressureOffset -= Z_OFFSET_BUTTON_STEPS;
+					}else{
+						nTemp += g_nSensiblePressureOffset;
+						g_nSensiblePressureOffset = 0;
+					}     
+				}
+		#endif //FEATURE_SENSIBLE_PRESSURE							
+				if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
+				if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);				
+				Printer::ZOffset = nTemp;
+		#if FEATURE_SENSIBLE_PRESSURE
+				g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+		#else
+				g_staticZSteps = long(( Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
+		#endif //FEATURE_SENSIBLE_PRESSURE
+				HAL::allowInterrupts();
+				if( Printer::debugInfo() )
+				{
+					Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
+					Com::printF( PSTR( " [um]" ) );
+					Com::printF( PSTR( " / " ), g_staticZSteps );
+					Com::printFLN( PSTR( " [steps]" ) );
+				}
+			#if FEATURE_AUTOMATIC_EEPROM_UPDATE
+				if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
+				{
+					HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
+					EEPROM::updateChecksum();
+				}
+			#endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
+			} //ELSE DO MOVE Z: 
+			else
+			{
+				nextPreviousZAction( 1 );
+			}
             break;
         }
         case UI_ACTION_RF_EXTRUDER_OUTPUT:
@@ -11587,7 +11678,6 @@ void nextPreviousXAction( int8_t increment )
 {
     long    steps;
 
-
     if( PrintLine::direct.stepsRemaining )
     {
         // we are moving already, there is nothing more to do
@@ -11742,7 +11832,6 @@ void nextPreviousXAction( int8_t increment )
 void nextPreviousYAction( int8_t increment )
 {
     long    steps;
-
 
     if( PrintLine::direct.stepsRemaining )
     {
@@ -11902,76 +11991,6 @@ void nextPreviousZAction( int8_t increment )
     long    steps;
     char    moveMode;
     
-    //DO NOT MOVE Z: ALTER Z-OFFSET
-    if( uid.menuLevel == 0 && uid.menuPos[0] == 1 ){ //wenn im Mod-Menü für Z-Offset/Matrix Sense-Offset/Limiter, dann anders!
-        beep(1,4);
-        // show that we are active
-        previousMillisCmd = HAL::timeInMilliseconds();
-    
-        long nTemp = Printer::ZOffset; //um --> mm*1000             
-        if(increment>0){
-            nTemp += Z_OFFSET_BUTTON_STEPS;
-            //beim Überschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
-            if(nTemp < Z_OFFSET_BUTTON_STEPS && nTemp > 0) nTemp = 0;
-        }
-        else if(increment<0){
-            nTemp -= Z_OFFSET_BUTTON_STEPS;
-            //beim Unterschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
-            if(nTemp < 0 && nTemp > -Z_OFFSET_BUTTON_STEPS) nTemp = 0;
-        }   
-                
-    HAL::forbidInterrupts();
-#if FEATURE_SENSIBLE_PRESSURE
-        /* IDEE: Wenn automatisches Offset und wir korrigieren dagegen, soll erst dieses abgebaut werden */
-        if(g_nSensiblePressureOffset > 0){ //aus: dann 0, an: dann > 0
-            if(increment<0){
-                //automatik hat das bett runtergefahren, wir fahren es mit negativem offset hoch.
-                //blöd: damit ist die automatik evtl. weiter am limit und kann nachfolgend nichts mehr tun.
-                //also erst ausgleichen! dann verändern.
-                if(g_nSensiblePressureOffset > Z_OFFSET_BUTTON_STEPS){
-                    nTemp += Z_OFFSET_BUTTON_STEPS;
-                    g_nSensiblePressureOffset -= Z_OFFSET_BUTTON_STEPS;
-                }else{
-                    nTemp += g_nSensiblePressureOffset;
-                    g_nSensiblePressureOffset = 0;
-                }
-                
-            }           
-        }
-        /* /IDEE: */
-#endif //FEATURE_SENSIBLE_PRESSURE
-                    
-        if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
-        if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
-        
-        Printer::ZOffset = nTemp;
-#if FEATURE_SENSIBLE_PRESSURE
-        g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
-#else
-        g_staticZSteps = long(( Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
-#endif //FEATURE_SENSIBLE_PRESSURE
-    HAL::allowInterrupts();
-
-        if( Printer::debugInfo() )
-        {
-            Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
-            Com::printF( PSTR( " [um]" ) );
-            Com::printF( PSTR( " / " ), g_staticZSteps );
-            Com::printFLN( PSTR( " [steps]" ) );
-        }
-
-    #if FEATURE_AUTOMATIC_EEPROM_UPDATE
-        if( HAL::eprGetInt32( EPR_RF_Z_OFFSET ) != Printer::ZOffset )
-        {
-            HAL::eprSetInt32( EPR_RF_Z_OFFSET, Printer::ZOffset );
-            EEPROM::updateChecksum();
-        }
-    #endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
-        
-        return;
-    }
-    
-    //ELSE DO MOVE Z: 
     if( PrintLine::direct.stepsRemaining )
     {
         // we are moving already, there is nothing more to do
@@ -12042,14 +12061,40 @@ void nextPreviousZAction( int8_t increment )
         // in case we are printing/milling at the moment, only the single step movements are allowed
         moveMode = MOVE_MODE_SINGLE_STEPS;
     }
+	
+	/*if(!Printer::isHomed() && moveMode > MOVE_MODE_SINGLE_MOVE)
+    {
+		moveMode = MOVE_MODE_SINGLE_MOVE;
+	}*/
+	if(uid.lastButtonAction == UI_ACTION_RF_HEAT_BED_DOWN || uid.lastButtonAction == UI_ACTION_RF_HEAT_BED_UP){ 
+		//es wäre evtl. cooler die variable durchzuschleifen, aber so gehts auch!
+		//VORSICHT: ES könnte evtl. sein dass sich lastbuttonaction während der ausführung ändert. (??)
+	
+		//sollte diese Aktion durch die Knöpfe ausgeführt worden sein, dann in der Sprungweite limitieren:
+		if( PrintLine::linesCount )
+        {
+			// there is some printing in progress at the moment - do not allow single move in this case
+			moveMode = MOVE_MODE_SINGLE_STEPS;	
+		}else{
+			moveMode = MOVE_MODE_SINGLE_MOVE;
+		}
+	}
+	//Limits für die Bewegung in Z by Nibbels
+	if(increment>0 && Printer::isZMaxEndstopHit())
+    {
+		//fall down to Single Steps @Endstop
+		moveMode = MOVE_MODE_SINGLE_STEPS;
+	}
+	if(increment<0 && Printer::isZMinEndstopHit()){
+		//fall down to Single Steps @Endstop
+		moveMode = MOVE_MODE_SINGLE_STEPS;		
+	}
 
     switch( moveMode )
     {
         case MOVE_MODE_SINGLE_STEPS:
         {
-            long    Temp;
-
-
+            long    Temp; //bringt nur was wenn homed
             steps = g_nManualSteps[Z_AXIS] * increment;
 
 #if FEATURE_ENABLE_Z_SAFETY
@@ -12062,24 +12107,10 @@ void nextPreviousZAction( int8_t increment )
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
             HAL::allowInterrupts();
-            if( increment < 0 && Temp < -Z_OVERRIDE_MAX )
+            if( increment < 0 && Temp < -Z_OVERRIDE_MAX && Printer::isZMinEndstopHit() )
             {
                 // do not allow to drive the bed into the extruder
-                if( Printer::debugErrors() )
-                {
-                    Com::printF( PSTR( "nextPreviousZAction(): heat bed up: moving aborted (safety stop)" ) );
-                    Com::printF( PSTR( " - directPositionTargetSteps[Z_AXIS] = " ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( ", g_nManualSteps[Z_AXIS] = " ), g_nManualSteps[Z_AXIS] );
-                    Com::printF( PSTR( ", queuePositionCurrentSteps[Z_AXIS] = " ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-                    Com::printF( PSTR( ", compensatedPositionCurrentStepsZ = " ), Printer::compensatedPositionCurrentStepsZ );
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-
-                    Com::printFLN( PSTR( "" ) );
-                }
-
-                showError( (void*)ui_text_z_axis, (void*)ui_text_operation_denied );
+                showError( (void*)ui_text_z_axis, (Printer::isHomed()) ? (void*)ui_text_min_reached : (void*)ui_text_min_reached_unhomed );
                 break;
             }
             else
@@ -12091,7 +12122,11 @@ void nextPreviousZAction( int8_t increment )
 
                 HAL::forbidInterrupts();
                 Printer::directPositionTargetSteps[Z_AXIS] += steps;
-                if( increment < 0 && Printer::directPositionTargetSteps[Z_AXIS] < EXTENDED_BUTTONS_Z_MIN )
+				
+				//Nibbels: Diese Eingrenzung scheint mir völlig sinnlos und fehl am Platz:
+				//Wir sind hier bei Single-Steps und mit Homing gibts Z_OVERRIDE_MAX
+				//Ohne Homing gibts den Z-Endstop Min. Diese Zahl Z=.... stimmt ohne Homing nicht!
+                /*if( increment < 0 && Printer::directPositionTargetSteps[Z_AXIS] < EXTENDED_BUTTONS_Z_MIN )
                 {
                     Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 
@@ -12110,7 +12145,7 @@ void nextPreviousZAction( int8_t increment )
                         Com::printFLN( PSTR( "nextPreviousZAction(): moving z aborted (max reached)" ) );
                     }
                     showError( (void*)ui_text_z_axis, (void*)ui_text_max_reached );
-                }
+                }*/
                 HAL::allowInterrupts();
 
                 if( Printer::debugInfo() )
@@ -12140,7 +12175,7 @@ void nextPreviousZAction( int8_t increment )
                     Com::printFLN( PSTR( "nextPreviousZAction(): moving z aborted (min reached)" ) );
                 }
 
-                showError( (void*)ui_text_z_axis, (void*)ui_text_min_reached );
+                showError( (void*)ui_text_z_axis, (Printer::isHomed()) ? (void*)ui_text_min_reached : (void*)ui_text_min_reached_unhomed );
                 return;
             }
 
@@ -12167,11 +12202,20 @@ void nextPreviousZAction( int8_t increment )
                     Com::printFLN( PSTR( "nextPreviousZAction(): moving z aborted (min reached)" ) );
                 }
 
-                showError( (void*)ui_text_z_axis, (void*)ui_text_min_reached );
+                showError( (void*)ui_text_z_axis, (Printer::isHomed()) ? (void*)ui_text_min_reached : (void*)ui_text_min_reached_unhomed );
                 return;
-            }
-
-            Printer::setDestinationStepsFromMenu( 0, 0, 1 * increment );
+            }		
+			float currentZmm = Printer::currentZPosition();
+            Com::printFLN( PSTR( "1mm: " ) , currentZmm , 3 );
+            Com::printFLN( PSTR( "increment: " ) , (1.0f-currentZmm) * increment , 3 );
+			
+			if(Printer::isHomed() && increment < 0 && currentZmm < 1.0f){
+				if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
+				else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+			}else{
+				Printer::setDestinationStepsFromMenu( 0, 0, 1 * increment );				
+			}
+			
             break;
         }
         case MOVE_MODE_10_MM:
@@ -12184,11 +12228,16 @@ void nextPreviousZAction( int8_t increment )
                     Com::printFLN( PSTR( "nextPreviousZAction(): moving z aborted (min reached)" ) );
                 }
 
-                showError( (void*)ui_text_z_axis, (void*)ui_text_min_reached );
+                showError( (void*)ui_text_z_axis, (Printer::isHomed()) ? (void*)ui_text_min_reached : (void*)ui_text_min_reached_unhomed );
                 return;
             }
-
-            Printer::setDestinationStepsFromMenu( 0, 0, 10 * increment );
+			float currentZmm = Printer::currentZPosition();
+			if(Printer::isHomed() && increment < 0 && currentZmm < 10.0f){
+				if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
+				else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+			}else{
+				Printer::setDestinationStepsFromMenu( 0, 0, 10 * increment );				
+			}
             break;
         }
         case MOVE_MODE_50_MM:
@@ -12201,11 +12250,16 @@ void nextPreviousZAction( int8_t increment )
                     Com::printFLN( PSTR( "nextPreviousZAction(): moving z aborted (min reached)" ) );
                 }
 
-                showError( (void*)ui_text_z_axis, (void*)ui_text_min_reached );
+                showError( (void*)ui_text_z_axis, (Printer::isHomed()) ? (void*)ui_text_min_reached : (void*)ui_text_min_reached_unhomed );
                 return;
             }
-
-            Printer::setDestinationStepsFromMenu( 0, 0, 50 * increment );
+			float currentZmm = Printer::currentZPosition();
+			if(Printer::isHomed() && increment < 0 && currentZmm < 50.0f){
+				if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
+				else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+			}else{
+				Printer::setDestinationStepsFromMenu( 0, 0, 50 * increment );				
+			}
             break;
         }
     }

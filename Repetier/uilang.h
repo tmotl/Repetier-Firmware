@@ -345,6 +345,7 @@
 
 
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min reached unhomed"
     #define UI_TEXT_RGB_LIGHT_MODE          "RGB Light: %li"
     #define UI_TEXT_230V_OUTPUT             "230V Output: %ou"
     #define UI_TEXT_FET1_OUTPUT             "X42 Mosfet1: %ol"
@@ -378,6 +379,7 @@
     #define UI_TEXT_OPERATION_DENIED        "Operation denied"
     #define UI_TEXT_TEMPERATURE_WRONG       "Temperature wrong"
 #else   
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min reached uho."
     #define UI_TEXT_RGB_LIGHT_MODE          "RGB Light: %li"
     #define UI_TEXT_BAUDRATE                "Baudrate:%oc"
     #define UI_TEXT_ACTION_FANSPEED         "Fan Speed:%Fs%%%"
@@ -639,6 +641,7 @@
 
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
 
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min Kontakt unhomed"
     #define UI_TEXT_EXTRUDER_OFFSET_X       "Extruder Abstand X"
     #define UI_TEXT_EXTRUDER_OFFSET_Y       "Extruder Abstand Y"
     #define UI_TEXT_SET_Z_ORIGIN            "Setze Z Ursprung"
@@ -707,6 +710,7 @@
     
 #else
     
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min Kontakt uho."
     #define UI_TEXT_EXTRUDER_OFFSET_X       "Extr. Abstand X"
     #define UI_TEXT_EXTRUDER_OFFSET_Y       "Extr. Abstand Y"   
     #define UI_TEXT_SET_Z_ORIGIN            "Setze Z Urspr."

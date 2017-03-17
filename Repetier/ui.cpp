@@ -4673,7 +4673,7 @@ void UIDisplay::slowAction()
         HAL::allowInterrupts();
 
         int nextAction = 0;
-        ui_check_slow_keys(nextAction);
+        ui_check_slow_keys(nextAction);  //Nibbels: Das macht garnix.
         if(lastButtonAction!=nextAction)
         {
             lastButtonStart = time;
@@ -4697,7 +4697,7 @@ void UIDisplay::slowAction()
         HAL::allowInterrupts();
         if(epos)
         {
-            nextPreviousAction(epos);
+            nextPreviousAction(epos); //Nibbels: Funktion, die rechts links auswertet oder Errors wegklicken lässt. abhängig von this->encoderPos .. sonst verwendet mit -1 oder 1
             BEEP_SHORT
             refresh=1;
         }

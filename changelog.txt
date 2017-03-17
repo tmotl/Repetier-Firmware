@@ -1,3 +1,11 @@
+V RF.01.37g.mod (2017-03-17)
+- Z-Up and Z-Down-Buttons are now completely independend with the Position->Z-Position-Menu. 
+- The Z-buttons functionality is now reduced to two states: Single_Step while Printing and Single_Move while idle.
+- The Z- 1mm, 10mm, 50mm movement is only available within the Z-Position Menu.
+- Whenever driving Single_Move, 1mm, 10mm, 50mm and reaching the Z-min switch it will be stopped.
+- Whenever driving into -Z only Single_Step is allowed.
+- driving into -Z is allowed only if your printer is homed. However you can still override this Logic by homing X only. Then Z is unlocked. This might be a future fix.
+
 V RF.01.37f.mod (2017-03-06)
 - we added a german description/readme.md
 - the Z-Endstop default switch is now "SINGLE" not "CIRCUIT" anymore. This was the cause of some problems on two printers with only one endstop installed. Now this default setting again sticks to the developement/master of the original RF1000 Firmware.

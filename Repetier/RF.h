@@ -57,7 +57,7 @@
 #define UI_ACTION_RF_MAX_SINGLE             1600
 
 //Nibbels 
-#define UI_ACTION_RF_DO_MHIER_BED_SCAN      1550 
+#define UI_ACTION_RF_DO_MHIER_BED_SCAN      1601 
 
 /*
 // ##########################################################################################

@@ -224,10 +224,15 @@ public:
                     return;
                 }
 
+				//Nibbels
+				if( Printer::currentZSteps <= -Z_OVERRIDE_MAX )
+                {
+                    // --> setZMoveFinished(); //-> some lines down!
+                }
+				
                 // during normal operation, we never should end up here ... typically, the Z-min hardware switch must be reconfigured when you end up here
-                doEmergencyStop( STOP_BECAUSE_OF_Z_MIN );
+                // doEmergencyStop( STOP_BECAUSE_OF_Z_MIN );
             }
-
 #endif // FEATURE_Z_MIN_OVERRIDE_VIA_GCODE && FEATURE_ENABLE_Z_SAFETY
 
             setZMoveFinished();

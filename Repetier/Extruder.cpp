@@ -1087,12 +1087,12 @@ void TemperatureController::setTargetTemperature(float target, float offset)
             const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
             short oldraw = pgm_read_word(&temptable[0]);
             short oldtemp = pgm_read_word(&temptable[1]);
-            short newraw,newtemp;
+            short newraw = 0;
 
             while(i<num)
             {
                 newraw = pgm_read_word(&temptable[i++]);
-                newtemp = pgm_read_word(&temptable[i++]);
+                short newtemp = pgm_read_word(&temptable[i++]);
                 if (newtemp < temp)
                 {
                     targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
@@ -1126,12 +1126,12 @@ void TemperatureController::setTargetTemperature(float target, float offset)
             const short *temptable = (const short *)pgm_read_word(&temptables[type]); //pgm_read_word(&temptables[type]);
             short oldraw = pgm_read_word(&temptable[0]);
             short oldtemp = pgm_read_word(&temptable[1]);
-            short newraw,newtemp;
+            short newraw = 0;
 
             while(i<num)
             {
                 newraw = pgm_read_word(&temptable[i++]);
-                newtemp = pgm_read_word(&temptable[i++]);
+                short newtemp = pgm_read_word(&temptable[i++]);
                 if (newtemp > temp)
                 {
                     targetTemperature = oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
@@ -1196,11 +1196,11 @@ void TemperatureController::setTargetTemperature(float target, float offset)
 
             short oldraw = temptable[0];
             short oldtemp = temptable[1];
-            short newraw,newtemp;
+            short newraw = 0;
             while(i<GENERIC_THERM_NUM_ENTRIES*2)
             {
                 newraw = temptable[i++];
-                newtemp = temptable[i++];
+                short newtemp = temptable[i++];
                 if (newtemp < temp)
                 {
                     targetTemperature = (1023<<(2-ANALOG_REDUCE_BITS))- oldraw + (int32_t)(oldtemp-temp)*(int32_t)(oldraw-newraw)/(oldtemp-newtemp);
