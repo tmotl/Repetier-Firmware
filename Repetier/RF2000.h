@@ -689,8 +689,8 @@ can set it on for safety. */
 // ##########################################################################################
 
 /** \brief Motor Current setting */
-#define MOTOR_CURRENT                       {145,140,100,50,90}                             // Values 0-255 (126 = ~2A), order: driver 1 (x), driver 2 (y), driver 3 (z), driver 4 (extruder 1), driver 5 (extruder 2)  
-#define MOTOR_CURRENT_SILENT                {110,110,90,50,90}      
+#define MOTOR_CURRENT                       {145,140,100,90,90}                             // Values 0-255 (126 = ~2A), order: driver 1 (x), driver 2 (y), driver 3 (z), driver 4 (extruder 1), driver 5 (extruder 2)  
+#define MOTOR_CURRENT_SILENT                {110,110,90,90,90}      
 
 
 /** \brief number of analog input signals. Normally 1 for each temperature sensor */
