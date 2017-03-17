@@ -315,8 +315,6 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #define EXTENDED_BUTTONS_COUNTER_NORMAL     4                                                   // 39 ~ run 100 times per second, 4 ~ run 1000 times per second
 #define EXTENDED_BUTTONS_COUNTER_FAST       4                                                   // 39 ~ run 100 times per second, 4 ~ run 1000 times per second
 #define EXTENDED_BUTTONS_STEPPER_DELAY      1                                                   // [us]
-#define EXTENDED_BUTTONS_Z_MIN              -(ZAXIS_STEPS_PER_MM *2)                            // [steps]
-#define EXTENDED_BUTTONS_Z_MAX              long(ZAXIS_STEPS_PER_MM * (Z_MAX_LENGTH -2))        // [steps]
 
 #endif // FEATURE_EXTENDED_BUTTONS
 
