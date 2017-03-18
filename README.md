@@ -1,4 +1,4 @@
-#We currently trace sum bug. Please use https://github.com/Nibbels/Repetier-Firmware/tree/heat_bed_z_offset_scan-%26-heat_bed_decrease while this warning is still here.
+# We currently trace sum bug. Please use https://github.com/Nibbels/Repetier-Firmware/tree/heat_bed_z_offset_scan-%26-heat_bed_decrease while this warning is still here.
 
 [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Flag_of_the_United_Kingdom.svg/100px-Flag_of_the_United_Kingdom.svg.png" height="30">](README.md)
 [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/100px-Flag_of_the_United_States.svg.png" height="30">](README.md)
