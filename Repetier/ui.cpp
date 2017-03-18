@@ -39,7 +39,7 @@ millis_t g_nAutoReturnTime       = 0;
 #endif // UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
 
 char    g_nYesNo                 = 0;       // 0 = no, 1 = yes
-char    g_nContinueButtonPressed = 0;
+volatile char    g_nContinueButtonPressed = 0;
 char    g_nServiceRequest        = 0;
 char    g_nPrinterReady          = 0;
 
@@ -755,31 +755,31 @@ void UIDisplay::addStringP(FSTRINGPARAM(text))
 } // addStringP
 
 
-UI_STRING(ui_text_on,UI_TEXT_ON);
-UI_STRING(ui_text_off,UI_TEXT_OFF);
-UI_STRING(ui_text_0,UI_TEXT_0);
-UI_STRING(ui_text_1,UI_TEXT_1);
-UI_STRING(ui_text_white,UI_TEXT_WHITE);
-UI_STRING(ui_text_color,UI_TEXT_COLOR);
-UI_STRING(ui_text_manual,UI_TEXT_MANUAL);
-UI_STRING(ui_text_unknown,UI_TEXT_UNKNOWN);
-UI_STRING(ui_text_na,UI_TEXT_NA);
-UI_STRING(ui_yes,UI_TEXT_YES);
-UI_STRING(ui_no,UI_TEXT_NO);
-UI_STRING(ui_selected,UI_TEXT_SEL);
-UI_STRING(ui_unselected,UI_TEXT_NOSEL);
-UI_STRING(ui_text_print_mode,UI_TEXT_PRINT_MODE);
-UI_STRING(ui_text_mill_mode,UI_TEXT_MILL_MODE);
-UI_STRING(ui_text_z_single,UI_TEXT_Z_SINGLE);
-UI_STRING(ui_text_z_circuit,UI_TEXT_Z_CIRCUIT);
-UI_STRING(ui_text_z_mode_min,UI_TEXT_Z_MODE_MIN);
-UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE);
-UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN);
-UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1);
-UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2);
-UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK);
-UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS);
-UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE);
+UI_STRING(ui_text_on,UI_TEXT_ON)
+UI_STRING(ui_text_off,UI_TEXT_OFF)
+UI_STRING(ui_text_0,UI_TEXT_0)
+UI_STRING(ui_text_1,UI_TEXT_1)
+UI_STRING(ui_text_white,UI_TEXT_WHITE)
+UI_STRING(ui_text_color,UI_TEXT_COLOR)
+UI_STRING(ui_text_manual,UI_TEXT_MANUAL)
+UI_STRING(ui_text_unknown,UI_TEXT_UNKNOWN)
+UI_STRING(ui_text_na,UI_TEXT_NA)
+UI_STRING(ui_yes,UI_TEXT_YES)
+UI_STRING(ui_no,UI_TEXT_NO)
+UI_STRING(ui_selected,UI_TEXT_SEL)
+UI_STRING(ui_unselected,UI_TEXT_NOSEL)
+UI_STRING(ui_text_print_mode,UI_TEXT_PRINT_MODE)
+UI_STRING(ui_text_mill_mode,UI_TEXT_MILL_MODE)
+UI_STRING(ui_text_z_single,UI_TEXT_Z_SINGLE)
+UI_STRING(ui_text_z_circuit,UI_TEXT_Z_CIRCUIT)
+UI_STRING(ui_text_z_mode_min,UI_TEXT_Z_MODE_MIN)
+UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE)
+UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN)
+UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1)
+UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
+UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
+UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
+UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
 
 
 void UIDisplay::parse(char *txt,bool ram)
@@ -2045,7 +2045,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
             if(r+offset == uid.menuPos[uid.menuLevel])
             {
                 // the menu cursor is placed at this file name at the moment
-                printCols[curShift] = CHAR_SELECTOR;
+                printCols[curShift] = (char)CHAR_SELECTOR;
             }
             else
             {
@@ -2164,7 +2164,7 @@ void UIDisplay::refreshPage()
                 if(r+offset==menuPos[menuLevel] && activeAction!=entAction)
                 {
                     // the menu cursor is placed at this item at the moment
-                    printCols[curShift] = CHAR_SELECTOR;
+                    printCols[curShift] = (char)CHAR_SELECTOR;
                 }
                 else if(activeAction==entAction)
                 {
@@ -2179,7 +2179,7 @@ void UIDisplay::refreshPage()
 
                 if(entType==2)
                 {
-                    printCols[UI_COLS-1 + curShift] = CHAR_RIGHT;   // arrow right
+                    printCols[UI_COLS-1 + curShift] = (char)CHAR_RIGHT;   // arrow right
                     printCols[UI_COLS + curShift] = 0;              // arrow right
                 }
             }

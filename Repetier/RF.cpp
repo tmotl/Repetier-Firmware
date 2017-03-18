@@ -21,42 +21,42 @@
 #include <Wire.h>
 
 
-FSTRINGVALUE( ui_text_error, UI_TEXT_ERROR );
-FSTRINGVALUE( ui_text_warning, UI_TEXT_WARNING );
-FSTRINGVALUE( ui_text_information, UI_TEXT_INFORMATION );
-FSTRINGVALUE( ui_text_set_origin, UI_TEXT_SET_ORIGIN );
-FSTRINGVALUE( ui_text_heat_bed_scan, UI_TEXT_HEAT_BED_SCAN );
-FSTRINGVALUE( ui_text_work_part_scan, UI_TEXT_WORK_PART_SCAN );
-FSTRINGVALUE( ui_text_find_z_origin, UI_TEXT_FIND_Z_ORIGIN );
-FSTRINGVALUE( ui_text_output_object, UI_TEXT_OUTPUT_OBJECT );
-FSTRINGVALUE( ui_text_park_heat_bed, UI_TEXT_PARK_HEAT_BED );
-FSTRINGVALUE( ui_text_pause, UI_TEXT_PAUSE );
-FSTRINGVALUE( ui_text_home, UI_TEXT_HOME );
-FSTRINGVALUE( ui_text_delete_file, UI_TEXT_DELETE_FILE );
-FSTRINGVALUE( ui_text_z_compensation, UI_TEXT_Z_COMPENSATION );
-FSTRINGVALUE( ui_text_change_mode, UI_TEXT_CHANGE_MODE );
-FSTRINGVALUE( ui_text_change_z_type, UI_TEXT_CHANGE_Z_TYPE );
-FSTRINGVALUE( ui_text_change_hotend_type, UI_TEXT_CHANGE_HOTEND_TYPE );
-FSTRINGVALUE( ui_text_change_miller_type, UI_TEXT_CHANGE_MILLER_TYPE );
-FSTRINGVALUE( ui_text_x_axis, UI_TEXT_X_AXIS );
-FSTRINGVALUE( ui_text_y_axis, UI_TEXT_Y_AXIS );
-FSTRINGVALUE( ui_text_z_axis, UI_TEXT_Z_AXIS );
-FSTRINGVALUE( ui_text_extruder, UI_TEXT_EXTRUDER );
-FSTRINGVALUE( ui_text_autodetect_pid, UI_TEXT_AUTODETECT_PID );
-FSTRINGVALUE( ui_text_temperature_manager, UI_TEXT_TEMPERATURE_MANAGER );
-FSTRINGVALUE( ui_text_home_unknown, UI_TEXT_HOME_UNKNOWN );
-FSTRINGVALUE( ui_text_saving_failed, UI_TEXT_SAVING_FAILED );
-FSTRINGVALUE( ui_text_operation_denied, UI_TEXT_OPERATION_DENIED );
-FSTRINGVALUE( ui_text_emergency_pause, UI_TEXT_EMERGENCY_PAUSE );
-FSTRINGVALUE( ui_text_emergency_stop, UI_TEXT_EMERGENCY_STOP );
-FSTRINGVALUE( ui_text_invalid_matrix, UI_TEXT_INVALID_MATRIX );
-FSTRINGVALUE( ui_text_min_reached, UI_TEXT_MIN_REACHED );
-FSTRINGVALUE( ui_text_min_reached_unhomed, UI_TEXT_MIN_REACHED_UNHOMED );
-FSTRINGVALUE( ui_text_max_reached, UI_TEXT_MAX_REACHED );
-FSTRINGVALUE( ui_text_temperature_wrong, UI_TEXT_TEMPERATURE_WRONG );
-FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT );
-FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR );
-FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED );
+FSTRINGVALUE( ui_text_error, UI_TEXT_ERROR )
+FSTRINGVALUE( ui_text_warning, UI_TEXT_WARNING )
+FSTRINGVALUE( ui_text_information, UI_TEXT_INFORMATION )
+FSTRINGVALUE( ui_text_set_origin, UI_TEXT_SET_ORIGIN )
+FSTRINGVALUE( ui_text_heat_bed_scan, UI_TEXT_HEAT_BED_SCAN )
+FSTRINGVALUE( ui_text_work_part_scan, UI_TEXT_WORK_PART_SCAN )
+FSTRINGVALUE( ui_text_find_z_origin, UI_TEXT_FIND_Z_ORIGIN )
+FSTRINGVALUE( ui_text_output_object, UI_TEXT_OUTPUT_OBJECT )
+FSTRINGVALUE( ui_text_park_heat_bed, UI_TEXT_PARK_HEAT_BED )
+FSTRINGVALUE( ui_text_pause, UI_TEXT_PAUSE )
+FSTRINGVALUE( ui_text_home, UI_TEXT_HOME )
+FSTRINGVALUE( ui_text_delete_file, UI_TEXT_DELETE_FILE )
+FSTRINGVALUE( ui_text_z_compensation, UI_TEXT_Z_COMPENSATION )
+FSTRINGVALUE( ui_text_change_mode, UI_TEXT_CHANGE_MODE )
+FSTRINGVALUE( ui_text_change_z_type, UI_TEXT_CHANGE_Z_TYPE )
+FSTRINGVALUE( ui_text_change_hotend_type, UI_TEXT_CHANGE_HOTEND_TYPE )
+FSTRINGVALUE( ui_text_change_miller_type, UI_TEXT_CHANGE_MILLER_TYPE )
+FSTRINGVALUE( ui_text_x_axis, UI_TEXT_X_AXIS )
+FSTRINGVALUE( ui_text_y_axis, UI_TEXT_Y_AXIS )
+FSTRINGVALUE( ui_text_z_axis, UI_TEXT_Z_AXIS )
+FSTRINGVALUE( ui_text_extruder, UI_TEXT_EXTRUDER )
+FSTRINGVALUE( ui_text_autodetect_pid, UI_TEXT_AUTODETECT_PID )
+FSTRINGVALUE( ui_text_temperature_manager, UI_TEXT_TEMPERATURE_MANAGER )
+FSTRINGVALUE( ui_text_home_unknown, UI_TEXT_HOME_UNKNOWN )
+FSTRINGVALUE( ui_text_saving_failed, UI_TEXT_SAVING_FAILED )
+FSTRINGVALUE( ui_text_operation_denied, UI_TEXT_OPERATION_DENIED )
+FSTRINGVALUE( ui_text_emergency_pause, UI_TEXT_EMERGENCY_PAUSE )
+FSTRINGVALUE( ui_text_emergency_stop, UI_TEXT_EMERGENCY_STOP )
+FSTRINGVALUE( ui_text_invalid_matrix, UI_TEXT_INVALID_MATRIX )
+FSTRINGVALUE( ui_text_min_reached, UI_TEXT_MIN_REACHED )
+FSTRINGVALUE( ui_text_min_reached_unhomed, UI_TEXT_MIN_REACHED_UNHOMED )
+FSTRINGVALUE( ui_text_max_reached, UI_TEXT_MAX_REACHED )
+FSTRINGVALUE( ui_text_temperature_wrong, UI_TEXT_TEMPERATURE_WRONG )
+FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT )
+FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR )
+FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED )
 
 unsigned long   g_lastTime                 = 0;
 unsigned long   g_uLastCommandLoop         = 0;
@@ -91,7 +91,7 @@ unsigned long   g_lastScanTime        = 0;
 unsigned long   g_scanStartTime       = 0;
 char            g_scanRetries         = 0;
 char            g_retryZScan          = 0;
-char            g_retryStatus         = 0;
+unsigned char   g_retryStatus         = 0;
 
 #if FEATURE_PRECISE_HEAT_BED_SCAN
 char            g_nHeatBedScanMode    = 0;

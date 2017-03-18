@@ -67,9 +67,12 @@
 #endif
 
 #if UI_DISPLAY_CHARSET==3 // U8glib
-#define CHAR_RIGHT      187 //>>
-#define CHAR_SELECTOR   255 //'>'
-#define CHAR_SELECTED   254 //'*'
+//>>
+#define CHAR_RIGHT      187
+//'>'
+#define CHAR_SELECTOR   255
+//'*'
+#define CHAR_SELECTED   254
 #define STR_auml        "\344"
 #define STR_Auml        "\304"
 #define STR_uuml        "\374"

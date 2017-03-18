@@ -1,4 +1,7 @@
 V RF.01.37g.mod (2017-03-17)
+- Bugtrace: Some little changes, percaucious volatiles, removed some "-Wpedantic"-Warnings.
+
+V RF.01.37g.mod (2017-03-17)
 - Z-Up and Z-Down-Buttons are now completely independend with the Position->Z-Position-Menu. 
 - The Z-buttons functionality is now reduced to two states: Single_Step while Printing and Single_Move while idle.
 - The Z- 1mm, 10mm, 50mm movement is only available within the Z-Position Menu.
