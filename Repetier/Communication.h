@@ -77,9 +77,9 @@ public:
     FSTRINGVAR(tSpaceAt)
     FSTRINGVAR(tSpaceBAtColon)
     FSTRINGVAR(tColon)
-    FSTRINGVAR(tSpeedMultiply);
-    FSTRINGVAR(tFlowMultiply);
-    FSTRINGVAR(tFanspeed);
+    FSTRINGVAR(tSpeedMultiply)
+    FSTRINGVAR(tFlowMultiply)
+    FSTRINGVAR(tFanspeed)
     FSTRINGVAR(tPrintedFilament)
     FSTRINGVAR(tPrintingTime)
     FSTRINGVAR(tMillingTime)

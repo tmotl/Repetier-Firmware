@@ -113,7 +113,11 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
-#define Z_OFFSET_BUTTON_STEPS       5
+#define Z_OFFSET_BUTTON_STEPS       		5
+
+/** Z_BUTTON_DIRECTION = -1 : You imagine to drive the HeatBed
+	Z_BUTTON_DIRECTION = 1 : You imagine to drive the Nozzle / Fräser  */
+#define Z_BUTTON_DIRECTION		    		-1
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE    0                                                   // 1 = on, 0 = off
@@ -315,8 +319,6 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #define EXTENDED_BUTTONS_COUNTER_NORMAL     4                                                   // 39 ~ run 100 times per second, 4 ~ run 1000 times per second
 #define EXTENDED_BUTTONS_COUNTER_FAST       4                                                   // 39 ~ run 100 times per second, 4 ~ run 1000 times per second
 #define EXTENDED_BUTTONS_STEPPER_DELAY      1                                                   // [us]
-#define EXTENDED_BUTTONS_Z_MIN              -(ZAXIS_STEPS_PER_MM *2)                            // [steps]
-#define EXTENDED_BUTTONS_Z_MAX              long(ZAXIS_STEPS_PER_MM * (Z_MAX_LENGTH -2))        // [steps]
 
 #endif // FEATURE_EXTENDED_BUTTONS
 
@@ -328,7 +330,7 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_OUTPUT_FINISHED_OBJECT
 
 /** \brief The following script allows to configure the exact behavior of the automatic object output */
-#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-10\nG1 Z210 F5000\nG1 Y250 F7500"
+#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-5\nG1 Z210 F5000\nG1 Y250 F7500"
 #define OUTPUT_OBJECT_SCRIPT_MILL           "G28 Z0\nG21\nG91\nG1 Y250 F7500"
 
 #endif // FEATURE_OUTPUT_FINISHED_OBJECT
@@ -628,6 +630,11 @@ instead of driving both with a single stepper. The same works for the other axis
 #define DEFAULT_MANUAL_STEPS_E              (EXT0_STEPS_PER_MM /5)
 #define MAXIMAL_MANUAL_STEPS_E              (EXT0_STEPS_PER_MM *10)
 
+//Das hier drunter sind einigermaßen sinnvolle Stepsizes, wenn man Microsteps = 32 hat!!!
+//Siehe: https://github.com/RF1000community/Repetier-Firmware/issues/4
+//Dieser statische Ansatz wird evtl. mal umgebaut. Man könnte auch eine Funktion schreiben, die sinnvolle Einstellwerte automatisch anhand Microsteps und Mikrometertabelle sucht.
+#define NUM_ACCEPTABLE_STEP_SIZE_TABLE	7
+#define ACCEPTABLE_STEP_SIZE_TABLE { 5,13,26,51,64,128,256 }
 #endif // FEATURE_EXTENDED_BUTTONS
 
 

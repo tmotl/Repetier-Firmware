@@ -39,7 +39,7 @@ millis_t g_nAutoReturnTime       = 0;
 #endif // UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
 
 char    g_nYesNo                 = 0;       // 0 = no, 1 = yes
-char    g_nContinueButtonPressed = 0;
+volatile char    g_nContinueButtonPressed = 0;
 char    g_nServiceRequest        = 0;
 char    g_nPrinterReady          = 0;
 
@@ -755,31 +755,31 @@ void UIDisplay::addStringP(FSTRINGPARAM(text))
 } // addStringP
 
 
-UI_STRING(ui_text_on,UI_TEXT_ON);
-UI_STRING(ui_text_off,UI_TEXT_OFF);
-UI_STRING(ui_text_0,UI_TEXT_0);
-UI_STRING(ui_text_1,UI_TEXT_1);
-UI_STRING(ui_text_white,UI_TEXT_WHITE);
-UI_STRING(ui_text_color,UI_TEXT_COLOR);
-UI_STRING(ui_text_manual,UI_TEXT_MANUAL);
-UI_STRING(ui_text_unknown,UI_TEXT_UNKNOWN);
-UI_STRING(ui_text_na,UI_TEXT_NA);
-UI_STRING(ui_yes,UI_TEXT_YES);
-UI_STRING(ui_no,UI_TEXT_NO);
-UI_STRING(ui_selected,UI_TEXT_SEL);
-UI_STRING(ui_unselected,UI_TEXT_NOSEL);
-UI_STRING(ui_text_print_mode,UI_TEXT_PRINT_MODE);
-UI_STRING(ui_text_mill_mode,UI_TEXT_MILL_MODE);
-UI_STRING(ui_text_z_single,UI_TEXT_Z_SINGLE);
-UI_STRING(ui_text_z_circuit,UI_TEXT_Z_CIRCUIT);
-UI_STRING(ui_text_z_mode_min,UI_TEXT_Z_MODE_MIN);
-UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE);
-UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN);
-UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1);
-UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2);
-UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK);
-UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS);
-UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE);
+UI_STRING(ui_text_on,UI_TEXT_ON)
+UI_STRING(ui_text_off,UI_TEXT_OFF)
+UI_STRING(ui_text_0,UI_TEXT_0)
+UI_STRING(ui_text_1,UI_TEXT_1)
+UI_STRING(ui_text_white,UI_TEXT_WHITE)
+UI_STRING(ui_text_color,UI_TEXT_COLOR)
+UI_STRING(ui_text_manual,UI_TEXT_MANUAL)
+UI_STRING(ui_text_unknown,UI_TEXT_UNKNOWN)
+UI_STRING(ui_text_na,UI_TEXT_NA)
+UI_STRING(ui_yes,UI_TEXT_YES)
+UI_STRING(ui_no,UI_TEXT_NO)
+UI_STRING(ui_selected,UI_TEXT_SEL)
+UI_STRING(ui_unselected,UI_TEXT_NOSEL)
+UI_STRING(ui_text_print_mode,UI_TEXT_PRINT_MODE)
+UI_STRING(ui_text_mill_mode,UI_TEXT_MILL_MODE)
+UI_STRING(ui_text_z_single,UI_TEXT_Z_SINGLE)
+UI_STRING(ui_text_z_circuit,UI_TEXT_Z_CIRCUIT)
+UI_STRING(ui_text_z_mode_min,UI_TEXT_Z_MODE_MIN)
+UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE)
+UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN)
+UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1)
+UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
+UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
+UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
+UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
 
 
 void UIDisplay::parse(char *txt,bool ram)
@@ -841,7 +841,7 @@ void UIDisplay::parse(char *txt,bool ram)
             case 'H':
             {
                 if(c2=='B')         addLong(g_nActiveHeatBed,1);                                        // %HB : active heat bed z matrix
-                else if(c2=='O')    addFloat((float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,3,0); // %HO : active heat bed min z offset in um
+                else if(c2=='O')    addFloat((float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000.0f,3,0); // %HO : active heat bed min z offset in um
                 break;
             }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
@@ -1521,7 +1521,8 @@ void UIDisplay::parse(char *txt,bool ram)
             case 'S':
             {
                 if(c2=='e') addFloat(Extruder::current->stepsPerMM,3,1);                                // %Se : Steps per mm current extruder
-                break;
+				if(c2=='z') addFloat(g_nManualSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,4,0); // %Sz : Mikrometer per Z-Single_Step (Z_Axis)
+                break;				
             }
             case 'p':
             {
@@ -2045,7 +2046,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
             if(r+offset == uid.menuPos[uid.menuLevel])
             {
                 // the menu cursor is placed at this file name at the moment
-                printCols[curShift] = CHAR_SELECTOR;
+                printCols[curShift] = (char)CHAR_SELECTOR;
             }
             else
             {
@@ -2164,7 +2165,7 @@ void UIDisplay::refreshPage()
                 if(r+offset==menuPos[menuLevel] && activeAction!=entAction)
                 {
                     // the menu cursor is placed at this item at the moment
-                    printCols[curShift] = CHAR_SELECTOR;
+                    printCols[curShift] = (char)CHAR_SELECTOR;
                 }
                 else if(activeAction==entAction)
                 {
@@ -2179,7 +2180,7 @@ void UIDisplay::refreshPage()
 
                 if(entType==2)
                 {
-                    printCols[UI_COLS-1 + curShift] = CHAR_RIGHT;   // arrow right
+                    printCols[UI_COLS-1 + curShift] = (char)CHAR_RIGHT;   // arrow right
                     printCols[UI_COLS + curShift] = 0;              // arrow right
                 }
             }
@@ -2830,9 +2831,14 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_ZPOSITION:
         {
-            nextPreviousZAction( increment );
+			/*
+			Z_BUTTON_DIRECTION = -1 : You imagine to drive the HeatBed
+			Z_BUTTON_DIRECTION = 1 : You imagine to drive the Nozzle / Fräser
+			see configuration.h
+			*/
+            nextPreviousZAction( Z_BUTTON_DIRECTION*increment );
             break;
-        }
+        }			
         case UI_ACTION_ZOFFSET:
         {           
             //INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
@@ -3864,6 +3870,14 @@ void UIDisplay::executeAction(int action)
             }
 #endif // FEATURE_24V_FET_OUTPUTS
 
+
+#if FEATURE_EXTENDED_BUTTONS
+			case UI_ACTION_CONFIG_SINGLE_STEPS:
+			{   
+				configureMANUAL_STEPS_Z( 1 );
+			}
+#endif // FEATURE_EXTENDED_BUTTONS
+
 #if FEATURE_MILLING_MODE
             case UI_ACTION_OPERATING_MODE:
             {
@@ -4619,6 +4633,35 @@ void UIDisplay::executeAction(int action)
                 break;
             }
 #endif // DEBUG_PRINT
+
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+			case UI_ACTION_RF_DO_MHIER_BED_SCAN:
+			{           
+				//macht an, wenn an, macht aus:         
+				startZOScan();
+				//gehe zurück und zeige dem User was passiert.
+				uid.menuLevel = 0; 
+				uid.menuPos[0] = 0;
+				//wartet nur wenn an:
+				//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
+				break;
+			}
+			case UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX:
+			{
+				// save the determined values to the EEPROM		
+				if(g_ZMatrixChangedInRam){
+					uid.executeAction(UI_ACTION_TOP_MENU);
+					saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );     
+					if( Printer::debugInfo() )
+					{
+						Com::printFLN( PSTR( "Manual Input: the heat bed compensation matrix has been saved" ) );
+					}                     
+                    showInformation( (void*)ui_text_manual, (void*)ui_text_saving_success );
+				}else{
+                    showInformation( (void*)ui_text_manual, (void*)ui_text_saving_needless );
+				}
+			}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
         }
     }
 
@@ -4673,7 +4716,7 @@ void UIDisplay::slowAction()
         HAL::allowInterrupts();
 
         int nextAction = 0;
-        ui_check_slow_keys(nextAction);
+        ui_check_slow_keys(nextAction);  //Nibbels: Das macht garnix.
         if(lastButtonAction!=nextAction)
         {
             lastButtonStart = time;
@@ -4697,7 +4740,7 @@ void UIDisplay::slowAction()
         HAL::allowInterrupts();
         if(epos)
         {
-            nextPreviousAction(epos);
+            nextPreviousAction(epos); //Nibbels: Funktion, die rechts links auswertet oder Errors wegklicken lässt. abhängig von this->encoderPos .. sonst verwendet mit -1 oder 1
             BEEP_SHORT
             refresh=1;
         }

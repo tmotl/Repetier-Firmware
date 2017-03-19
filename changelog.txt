@@ -1,3 +1,33 @@
+V RF.01.37h.mod (2017-03-18 nachts)
+- The hliebscher/Wessix-Bug has not been a Software-Bug, it was a missconfiguration.
+#define HEAT_BED_Z_COMPENSATION_MIN_MM          float(0.33)  
+is now standard. 
+You should choose your startline at Z=0.35 or higher. Or place the M3909 behind the startline!
+Alternative change the SenseOffsetlimit by rising or decreasing it with M3007.
+- The Z-Offset-Scan will now show hints within the Repetier-Server/Repetier-Host Log how you should tweak your Z-Screw.
+- #define Z_BUTTON_DIRECTION -1 will now set the orientation of the Z-Button-behaviour. See: https://github.com/RF1000community/Repetier-Firmware/issues/20
+
+V RF.01.37g.mod (2017-03-18 nachts)
+- You can now save your offset corrected Matrix through the Menu Configuration->Z-Configuration->Save Matrix to the EEPROM.
+Doing this you are able to correct and save your Z-Matrix without doing a HBS. And you wont have to do M3900/Z-Offset-Scan everytime you start your printer.
+If you want to work with M-Codes use M3902 Sx for this matter. x is the Matrix-Save-Position and might be {1..9}. The menu only saves to the current matrix position, the Mcode can save your matrix to every position you want it saved to.
+
+V RF.01.37g.mod (2017-03-17 nachts)
+- Added a new function: Ability to change the single step height within Position-Menu.
+This Z-Step-Height is not saved in EEPROM! This could be a future feature on a users request.
+- The Z-Movement is now according to the position of the button. This means: Button-Up means Bed UP. Button Down means Bed down. That behaviour should be way more intuitive. Only the professionals used to the old behaviour should be carefull.
+
+V RF.01.37g.mod (2017-03-17)
+- Bugtrace: Some little changes, percaucious volatiles, removed some "-Wpedantic"-Warnings.
+ 
+V RF.01.37g.mod (2017-03-17)
+- Z-Up and Z-Down-Buttons are now completely independend with the Position->Z-Position-Menu. 
+- The Z-buttons functionality is now reduced to two states: Single_Step while Printing and Single_Move while idle.
+- The Z- 1mm, 10mm, 50mm movement is only available within the Z-Position Menu.
+- Whenever driving Single_Move, 1mm, 10mm, 50mm and reaching the Z-min switch it will be stopped.
+- Whenever driving into -Z only Single_Step is allowed.
+- driving into -Z is allowed only if your printer is homed. However you can still override this Logic by homing X only. Then Z is unlocked. This might be a future fix.
+
 V RF.01.37f.mod (2017-03-06)
 - we added a german description/readme.md
 - the Z-Endstop default switch is now "SINGLE" not "CIRCUIT" anymore. This was the cause of some problems on two printers with only one endstop installed. Now this default setting again sticks to the developement/master of the original RF1000 Firmware.

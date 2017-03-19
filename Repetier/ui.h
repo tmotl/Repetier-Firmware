@@ -146,7 +146,11 @@
 #define UI_ACTION_RIGHT                     1129
 #define UI_ACTION_ZMODE                     1130
 
-//Nibbels
+//Nibbels : nicht in processbutton sondern in executeaction!
+#define UI_ACTION_RF_DO_MHIER_BED_SCAN      1666 
+#define UI_ACTION_CONFIG_SINGLE_STEPS		1667 
+#define UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX 1668
+
 #define UI_ACTION_FET1_OUTPUT               2001
 #define UI_ACTION_FET2_OUTPUT               2002
 
@@ -209,7 +213,7 @@ typedef struct
 extern const int8_t encoder_table[16] PROGMEM;
 
 extern  char    g_nYesNo;
-extern  char    g_nContinueButtonPressed;
+extern volatile char    g_nContinueButtonPressed;
 extern  char    g_nServiceRequest;
 extern  char    g_nPrinterReady;
 
@@ -269,7 +273,7 @@ extern  char    g_nPrinterReady;
 
 #define UI_STRING(name,text) const char PROGMEM name[] = text;
 
-#define UI_PAGE6(name,row1,row2,row3,row4,row5,row6)    UI_STRING(name ## _1txt,row1);UI_STRING(name ## _2txt,row2);UI_STRING(name ## _3txt,row3);UI_STRING(name ## _4txt,row4);UI_STRING(name ## _5txt,row5);UI_STRING(name ## _6txt,row6);\
+#define UI_PAGE6(name,row1,row2,row3,row4,row5,row6)    UI_STRING(name ## _1txt,row1) UI_STRING(name ## _2txt,row2) UI_STRING(name ## _3txt,row3) UI_STRING(name ## _4txt,row4) UI_STRING(name ## _5txt,row5) UI_STRING(name ## _6txt,row6) \
    UIMenuEntry name ## _1 PROGMEM ={name ## _1txt,0,0,0,0};\
    UIMenuEntry name ## _2 PROGMEM ={name ## _2txt,0,0,0,0};\
    UIMenuEntry name ## _3 PROGMEM ={name ## _3txt,0,0,0,0};\
@@ -279,7 +283,7 @@ extern  char    g_nPrinterReady;
    const UIMenuEntry * const name ## _entries [] PROGMEM = {&name ## _1,&name ## _2,&name ## _3,&name ## _4,&name ## _5,&name ## _6};\
    const UIMenu name PROGMEM = {0,0,6,name ## _entries};
 
-#define UI_PAGE4(name,row1,row2,row3,row4)              UI_STRING(name ## _1txt,row1);UI_STRING(name ## _2txt,row2);UI_STRING(name ## _3txt,row3);UI_STRING(name ## _4txt,row4);\
+#define UI_PAGE4(name,row1,row2,row3,row4)              UI_STRING(name ## _1txt,row1) UI_STRING(name ## _2txt,row2) UI_STRING(name ## _3txt,row3) UI_STRING(name ## _4txt,row4) \
   UIMenuEntry name ## _1 PROGMEM ={name ## _1txt,0,0,0,0};\
   UIMenuEntry name ## _2 PROGMEM ={name ## _2txt,0,0,0,0};\
   UIMenuEntry name ## _3 PROGMEM ={name ## _3txt,0,0,0,0};\
@@ -287,7 +291,7 @@ extern  char    g_nPrinterReady;
   const UIMenuEntry * const name ## _entries [] PROGMEM = {&name ## _1,&name ## _2,&name ## _3,&name ## _4};\
   const UIMenu name PROGMEM = {0,0,4,name ## _entries};
 
-#define UI_PAGE2(name,row1,row2)                        UI_STRING(name ## _1txt,row1);UI_STRING(name ## _2txt,row2);\
+#define UI_PAGE2(name,row1,row2)                        UI_STRING(name ## _1txt,row1) UI_STRING(name ## _2txt,row2) \
   UIMenuEntry name ## _1 PROGMEM ={name ## _1txt,0,0,0,0};\
   UIMenuEntry name ## _2 PROGMEM ={name ## _2txt,0,0,0,0};\
   const UIMenuEntry * const name ## _entries[] PROGMEM = {&name ## _1,&name ## _2};\
@@ -296,7 +300,7 @@ extern  char    g_nPrinterReady;
 #define UI_MENU_ACTION4C(name,action,rows)              UI_MENU_ACTION4(name,action,rows)
 #define UI_MENU_ACTION2C(name,action,rows)              UI_MENU_ACTION2(name,action,rows)
 
-#define UI_MENU_ACTION4(name,action,row1,row2,row3,row4)    UI_STRING(name ## _1txt,row1);UI_STRING(name ## _2txt,row2);UI_STRING(name ## _3txt,row3);UI_STRING(name ## _4txt,row4);\
+#define UI_MENU_ACTION4(name,action,row1,row2,row3,row4)    UI_STRING(name ## _1txt,row1) UI_STRING(name ## _2txt,row2) UI_STRING(name ## _3txt,row3) UI_STRING(name ## _4txt,row4) \
   UIMenuEntry name ## _1 PROGMEM ={name ## _1txt,0,0,0,0};\
   UIMenuEntry name ## _2 PROGMEM ={name ## _2txt,0,0,0,0};\
   UIMenuEntry name ## _3 PROGMEM ={name ## _3txt,0,0,0,0};\
@@ -304,23 +308,23 @@ extern  char    g_nPrinterReady;
   const UIMenuEntry * const name ## _entries[] PROGMEM = {&name ## _1,&name ## _2,&name ## _3,&name ## _4};\
   const UIMenu name PROGMEM = {3,action,4,name ## _entries};
 
-#define UI_MENU_ACTION2(name,action,row1,row2)              UI_STRING(name ## _1txt,row1);UI_STRING(name ## _2txt,row2);\
+#define UI_MENU_ACTION2(name,action,row1,row2)              UI_STRING(name ## _1txt,row1) UI_STRING(name ## _2txt,row2) \
   UIMenuEntry name ## _1 PROGMEM ={name ## _1txt,0,0,0,0};\
   UIMenuEntry name ## _2 PROGMEM ={name ## _2txt,0,0,0,0};\
   const UIMenuEntry * const name ## _entries[] PROGMEM = {&name ## _1,&name ## _2};\
   const UIMenu name PROGMEM = {3,action,2,name ## _entries};
 
-#define UI_MENU_HEADLINE(name,text)                     UI_STRING(name ## _txt,text);UIMenuEntry name PROGMEM = {name ## _txt,1,0,0,0};
-#define UI_MENU_CHANGEACTION(name,row,action)           UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,4,action,0,0};
-#define UI_MENU_ACTIONCOMMAND(name,row,action)          UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,3,action,0,0};
-#define UI_MENU_ACTIONSELECTOR(name,row,entries)        UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,0,0};
-#define UI_MENU_SUBMENU(name,row,entries)               UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,0,0};
-#define UI_MENU_CHANGEACTION_FILTER(name,row,action,filter,nofilter)    UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,4,action,filter,nofilter};
-#define UI_MENU_ACTIONCOMMAND_FILTER(name,row,action,filter,nofilter)   UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,3,action,filter,nofilter};
-#define UI_MENU_ACTIONSELECTOR_FILTER(name,row,entries,filter,nofilter) UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,filter,nofilter};
-#define UI_MENU_SUBMENU_FILTER(name,row,entries,filter,nofilter)        UI_STRING(name ## _txt,row);UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,filter,nofilter};
-#define UI_MENU(name,items,itemsCnt)                                    const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {2,0,itemsCnt,name ## _entries}
-#define UI_MENU_FILESELECT(name,items,itemsCnt)                         const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {1,0,itemsCnt,name ## _entries}
+#define UI_MENU_HEADLINE(name,text)                     UI_STRING(name ## _txt,text) UIMenuEntry name PROGMEM = {name ## _txt,1,0,0,0};
+#define UI_MENU_CHANGEACTION(name,row,action)           UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,4,action,0,0};
+#define UI_MENU_ACTIONCOMMAND(name,row,action)          UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,3,action,0,0};
+#define UI_MENU_ACTIONSELECTOR(name,row,entries)        UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,0,0};
+#define UI_MENU_SUBMENU(name,row,entries)               UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,0,0};
+#define UI_MENU_CHANGEACTION_FILTER(name,row,action,filter,nofilter)    UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,4,action,filter,nofilter};
+#define UI_MENU_ACTIONCOMMAND_FILTER(name,row,action,filter,nofilter)   UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,3,action,filter,nofilter};
+#define UI_MENU_ACTIONSELECTOR_FILTER(name,row,entries,filter,nofilter) UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,filter,nofilter};
+#define UI_MENU_SUBMENU_FILTER(name,row,entries,filter,nofilter)        UI_STRING(name ## _txt,row) UIMenuEntry name PROGMEM = {name ## _txt,2,(unsigned int)&entries,filter,nofilter};
+#define UI_MENU(name,items,itemsCnt)                                    const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {2,0,itemsCnt,name ## _entries};
+#define UI_MENU_FILESELECT(name,items,itemsCnt)                         const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {1,0,itemsCnt,name ## _entries};
 
 // Maximum size of a row - if row is larger, text gets scrolled
 #define MAX_COLS                        28
@@ -352,8 +356,8 @@ public:
     int         lastAction;
     millis_t            lastSwitch;                 // Last time display switched pages
     millis_t            lastRefresh;
-    int         lastButtonAction;
-    millis_t            lastButtonStart;
+    volatile int        lastButtonAction;
+    volatile millis_t   lastButtonStart;
     millis_t            nextRepeat;                 // Time of next autorepeat
     millis_t            lastNextPrev;               // for increasing speed settings
     float               lastNextAccumul;            // Accumulated value

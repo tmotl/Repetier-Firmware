@@ -67,9 +67,12 @@
 #endif
 
 #if UI_DISPLAY_CHARSET==3 // U8glib
-#define CHAR_RIGHT      187 //>>
-#define CHAR_SELECTOR   255 //'>'
-#define CHAR_SELECTED   254 //'*'
+//>>
+#define CHAR_RIGHT      187
+//'>'
+#define CHAR_SELECTOR   255
+//'*'
+#define CHAR_SELECTED   254
 #define STR_auml        "\344"
 #define STR_Auml        "\304"
 #define STR_uuml        "\374"
@@ -250,7 +253,8 @@
 #define UI_TEXT_PRINTER_READY           "Printer ready."
 #define UI_TEXT_MILLER_READY            "Miller ready."
 #define UI_TEXT_DO_HEAT_BED_SCAN        "Matrix Scan"
-#define UI_TEXT_DO_MHIER_BED_SCAN       "Offset Z-Scan"
+#define UI_TEXT_DO_MHIER_BED_SCAN       "Z-Offset-Scan"
+#define UI_TEXT_DO_SAVE_ACTIVE_ZMATRIX  "Save Matrix"
 #define UI_TEXT_HEAT_BED_SCAN_PLA       "Matrix Scan PLA"
 #define UI_TEXT_HEAT_BED_SCAN_ABS       "Matrix Scan ABS"
 #define UI_TEXT_DO_WORK_PART_SCAN       "Scan"
@@ -316,7 +320,8 @@
 #define UI_TEXT_SET_ORIGIN              "Set Origin"
 #define UI_TEXT_AUTODETECT_PID          "Determine PID"
 #define UI_TEXT_HOME_UNKNOWN            "Home unknown"
-#define UI_TEXT_SAVING_FAILED           "Saving failed"
+#define UI_TEXT_SAVING_NEEDLESS         "Saving needless"
+#define UI_TEXT_SAVING_SUCCESS          "Saved to EEPROM"
 #define UI_TEXT_EMERGENCY_PAUSE         "Emergency Pause"
 #define UI_TEXT_EMERGENCY_STOP          "Emergency Block"
 #define UI_TEXT_INVALID_MATRIX          "Invalid Matrix"
@@ -345,6 +350,7 @@
 
 
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min reached unhomed"
     #define UI_TEXT_RGB_LIGHT_MODE          "RGB Light: %li"
     #define UI_TEXT_230V_OUTPUT             "230V Output: %ou"
     #define UI_TEXT_FET1_OUTPUT             "X42 Mosfet1: %ol"
@@ -363,6 +369,7 @@
     #define UI_TEXT_EXTRUDER_OFFSET_Y       "Extruder Offset Y"
     #define UI_TEXT_E_POSITION              "Position Extruder"
     #define UI_TEXT_ACTIVE_EXTRUDER         "Active Extruder:%Oa"
+	#define UI_TEXT_CONFIG_SINGLE_STEPS		"Z-Step: %Sz um"
     #define UI_TEXT_EXTR_ACCEL              "Acceleration:%XA"                              
     #define UI_TEXT_EXTR_WATCH              "Stabilization Time:%Xw"
     #define UI_TEXT_SPEED_MULTIPLY          "Speed Multiply:%om%%%"
@@ -378,6 +385,7 @@
     #define UI_TEXT_OPERATION_DENIED        "Operation denied"
     #define UI_TEXT_TEMPERATURE_WRONG       "Temperature wrong"
 #else   
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min reached uho."
     #define UI_TEXT_RGB_LIGHT_MODE          "RGB Light: %li"
     #define UI_TEXT_BAUDRATE                "Baudrate:%oc"
     #define UI_TEXT_ACTION_FANSPEED         "Fan Speed:%Fs%%%"
@@ -393,6 +401,7 @@
     #define UI_TEXT_EXTRUDER_OFFSET_Y       "Extr. Offset Y"    
     #define UI_TEXT_E_POSITION              "Position Extr."
     #define UI_TEXT_ACTIVE_EXTRUDER         "Active Extr.  %Oa"
+	#define UI_TEXT_CONFIG_SINGLE_STEPS		"Z-Step: %Sz um"
     #define UI_TEXT_EXTR_ACCEL              "Accel:%XA"                             
     #define UI_TEXT_EXTR_WATCH              "Stab. Time:%Xw"
     #define UI_TEXT_SPEED_MULTIPLY          "Speed Mul.:%om%%%"
@@ -551,7 +560,8 @@
 #define UI_TEXT_PRINTER_READY           "Drucker bereit."
 #define UI_TEXT_MILLER_READY            "Fr" STR_auml "ser bereit."
 #define UI_TEXT_DO_HEAT_BED_SCAN        "Matrix Scan"
-#define UI_TEXT_DO_MHIER_BED_SCAN       "Offset Z-Scan"
+#define UI_TEXT_DO_SAVE_ACTIVE_ZMATRIX  "Matrix speichern"
+#define UI_TEXT_DO_MHIER_BED_SCAN       "Z-Offset-Scan"
 #define UI_TEXT_HEAT_BED_SCAN_PLA       "Matrix Scan PLA"
 #define UI_TEXT_HEAT_BED_SCAN_ABS       "Matrix Scan ABS"
 #define UI_TEXT_DO_WORK_PART_SCAN       "Abtasten"
@@ -583,7 +593,7 @@
 #define UI_TEXT_HOTEND_V2               "V2"
 #define UI_TEXT_Z_COMPENSATION_ACTIVE   "Kmp"
 #define UI_TEXT_FIND_Z_ORIGIN_DONE      "Suche beendet"
-#define UI_TEXT_TEST_STRAIN_GAUGE_DONE      "Test beendet"
+#define UI_TEXT_TEST_STRAIN_GAUGE_DONE  "Test beendet"
 #define UI_TEXT_WORK_PART_SCAN          "Werkst" STR_uuml "ck Scan"
 #define UI_TEXT_WORK_PART_SCAN_ABORTED  "Scan abgebrochen"
 #define UI_TEXT_WORK_PART_SCAN_DONE     "Scan beendet"
@@ -613,7 +623,8 @@
 #define UI_TEXT_AUTODETECT_PID          "PID ermitteln" 
 // Temp. = Temperatur
 #define UI_TEXT_HOME_UNKNOWN            "Home unbekannt"
-#define UI_TEXT_SAVING_FAILED           "Speichern n.m."        
+#define UI_TEXT_SAVING_NEEDLESS         "Sichern sinnlos"  
+#define UI_TEXT_SAVING_SUCCESS          "Matrix gesichert"      
 // n.m. = nicht moeglich
 #define UI_TEXT_OPERATION_DENIED        "Operation verw."       
 // verw. = verweigert
@@ -639,6 +650,7 @@
 
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
 
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min Kontakt unhomed"
     #define UI_TEXT_EXTRUDER_OFFSET_X       "Extruder Abstand X"
     #define UI_TEXT_EXTRUDER_OFFSET_Y       "Extruder Abstand Y"
     #define UI_TEXT_SET_Z_ORIGIN            "Setze Z Ursprung"
@@ -673,6 +685,7 @@
     #define UI_TEXT_UNMOUNT_FILAMENT        "Filament entladen"
     #define UI_TEXT_E_POSITION              "Position Extruder"
     #define UI_TEXT_ACTIVE_EXTRUDER         "Aktiver Extruder:%Oa"
+	#define UI_TEXT_CONFIG_SINGLE_STEPS		"Z-Sprung: %Sz um"
     #define UI_TEXT_SET_E_ORIGIN            "Setze E Ursprung"
     #define UI_TEXT_CONTINUE_PRINT          "Druck fortsetzen"
     #define UI_TEXT_PAUSE_MILL              "Fr" STR_auml "sen pausieren"
@@ -707,6 +720,7 @@
     
 #else
     
+	#define UI_TEXT_MIN_REACHED_UNHOMED     "Min Kontakt uho."
     #define UI_TEXT_EXTRUDER_OFFSET_X       "Extr. Abstand X"
     #define UI_TEXT_EXTRUDER_OFFSET_Y       "Extr. Abstand Y"   
     #define UI_TEXT_SET_Z_ORIGIN            "Setze Z Urspr."
@@ -738,6 +752,7 @@
     #define UI_TEXT_UNMOUNT_FILAMENT        "Filament entl."
     #define UI_TEXT_E_POSITION              "Position Extr."
     #define UI_TEXT_ACTIVE_EXTRUDER         "Aktiver Extr. %Oa"
+	#define UI_TEXT_CONFIG_SINGLE_STEPS		"Z-Sprung: %Sz um"
     #define UI_TEXT_SET_E_ORIGIN            "Setze E Urspr."
     #define UI_TEXT_CONTINUE_PRINT          "Druck forts."
     #define UI_TEXT_PAUSE_MILL              "Fr" STR_auml "sen paus."

@@ -24,6 +24,8 @@
 // ##   RF specific UI Actions
 // ##########################################################################################
 
+//Diese Events sind alle in ProcessButton() in den case`s verlinkt. Der rest nicht, siehe ui.h und executeAction()
+
 #define UI_ACTION_RF_MIN_REPEATABLE          500
 
 #define UI_ACTION_RF_HEAT_BED_UP             514
@@ -55,9 +57,6 @@
 #define UI_ACTION_RF_SET_SCAN_XY_END        1530
 
 #define UI_ACTION_RF_MAX_SINGLE             1600
-
-//Nibbels 
-#define UI_ACTION_RF_DO_MHIER_BED_SCAN      1550 
 
 /*
 // ##########################################################################################
@@ -536,7 +535,7 @@ extern const char   ui_text_extruder[]              PROGMEM;
 extern const char   ui_text_autodetect_pid[]        PROGMEM;
 extern const char   ui_text_temperature_manager[]   PROGMEM;
 extern const char   ui_text_home_unknown[]          PROGMEM;
-extern const char   ui_text_saving_failed[]         PROGMEM;
+extern const char   ui_text_saving_needless[]       PROGMEM;
 extern const char   ui_text_operation_denied[]      PROGMEM;
 extern const char   ui_text_emergency_pause[]       PROGMEM;
 extern const char   ui_text_emergency_stop[]        PROGMEM;
@@ -546,7 +545,7 @@ extern const char   ui_text_max_reached[]           PROGMEM;
 extern const char   ui_text_temperature_wrong[]     PROGMEM;
 extern const char   ui_text_timeout[]               PROGMEM;
 extern const char   ui_text_sensor_error[]          PROGMEM;
-
+extern const char   ui_text_saving_success[]        PROGMEM;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -586,6 +585,8 @@ extern  long            g_ZOSTestPoint[2];
 extern  float           g_ZOSlearningRate;
 extern  float           g_ZOSlearningGradient;
 extern  long            g_min_nZScanZPosition;
+//Matrix speichern über Menü: Sinnmarker
+extern  volatile unsigned char  g_ZMatrixChangedInRam;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_SILENT_MODE
@@ -730,6 +731,10 @@ extern void scanHeatBed( void );
 // searchZOScan()
 extern void startZOScan( void );
 extern void searchZOScan( void );
+extern void calculateZScrewTempLenght( void );
+
+//Menüumschalter für Z-Step-Höhe
+extern void configureMANUAL_STEPS_Z( int8_t increment );
 
 // abortSearchHeatBedZOffset()
 extern void abortSearchHeatBedZOffset( void );

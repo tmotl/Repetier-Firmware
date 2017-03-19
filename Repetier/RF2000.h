@@ -600,7 +600,8 @@ A good start is 30 lower then the optimal value. You need to leave room for cool
 
 /** \brief Analog pin of analog sensor to read temperature of heated bed.  */
 #define RESERVE_ANALOG_TEMP_PIN             TEMP_3_PIN
-#define RESERVE_ANALOG_SENSOR_TYPE          15 //Thermistor NTC 3950 100k Ohm
+//Thermistor NTC 3950 100k Ohm
+#define RESERVE_ANALOG_SENSOR_TYPE          15 
 
 #define RESERVE_ANALOG_INPUTS               1
 #define RESERVE_SENSOR_INDEX                EXT0_ANALOG_INPUTS+EXT1_ANALOG_INPUTS+BED_ANALOG_INPUTS
@@ -635,7 +636,8 @@ on this endstop. */
 #define MIN_HARDWARE_ENDSTOP_Z              true
 #define MAX_HARDWARE_ENDSTOP_X              false
 #define MAX_HARDWARE_ENDSTOP_Y              false
-#define MAX_HARDWARE_ENDSTOP_Z              true        // the RF2000 always has the z-min and z-max endstops
+// the RF2000 always has the z-min and z-max endstops
+#define MAX_HARDWARE_ENDSTOP_Z              true
 
 /** \brief Sets direction of endstops when homing; 1=MAX, -1=MIN */
 #define X_HOME_DIR                          -1
@@ -672,7 +674,8 @@ small amount back. This is also the case with H-belt systems. */
 #define ENDSTOP_Y_BACK_ON_HOME              0
 
 #if FEATURE_MILLING_MODE
-#define LEAVE_Z_MAX_ENDSTOP_AFTER_HOME      long(-ZAXIS_STEPS_PER_MM * 2)   // [steps]
+   // [steps]
+#define LEAVE_Z_MAX_ENDSTOP_AFTER_HOME      long(-ZAXIS_STEPS_PER_MM * 2)
 #else
 /** \brief Remark: in case this value is set to non-0, the z-compensation must be made fit for this first */
 #define ENDSTOP_Z_BACK_ON_HOME              0
@@ -942,7 +945,7 @@ This value should be roughly the double amount of mm which is detected as error 
 /** \brief Specifies from which height on the z compensation shall be performed
 Below this value the z compensation will only change the z axis so that a constant distance to the heat bed is hold (this is good for the first layer).
 Above this value the z compensation will distribute the roughness of the surface over the layers until HEAT_BED_Z_COMPENSATION_MAX_STEPS is reached. */
-#define HEAT_BED_Z_COMPENSATION_MIN_MM          float(0.2)                                                              // [mm]
+#define HEAT_BED_Z_COMPENSATION_MIN_MM          float(0.33)                                                             // [mm]
 #define HEAT_BED_Z_COMPENSATION_MIN_STEPS       long(HEAT_BED_Z_COMPENSATION_MIN_MM * ZAXIS_STEPS_PER_MM)               // [steps]
 
 /* Maximum number of steps to scan after the Z-min switch has been reached. If within these steps the surface has not

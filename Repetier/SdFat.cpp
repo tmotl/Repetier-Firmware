@@ -318,7 +318,8 @@ bool SdFat::truncate(const char* path, uint32_t length) {
 }
 
 // macro for debug
-#define DBG_FAIL_MACRO  //  Serial.println(__LINE__)
+#define DBG_FAIL_MACRO  
+//#define DBG_FAIL_MACRO  //  Serial.println(__LINE__)
 //------------------------------------------------------------------------------
 // pointer to cwd directory
 SdBaseFile* SdBaseFile::cwd_ = 0;
@@ -794,7 +795,7 @@ int8_t SdBaseFile::lsPrintNext(uint8_t flags, uint8_t indent) {
 }
 //------------------------------------------------------------------------------
 // format directory name field from a 8.3 name string
-FSTRINGVALUE(illegalFileChars,"|<>^+=?/[];,*\"\\");
+FSTRINGVALUE(illegalFileChars,"|<>^+=?/[];,*\"\\")
 bool SdBaseFile::make83Name(const char* str, uint8_t* name, const char** ptr) {
   uint8_t c;
   uint8_t n = 7;  // max index for part before dot
