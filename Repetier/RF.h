@@ -24,6 +24,8 @@
 // ##   RF specific UI Actions
 // ##########################################################################################
 
+//Diese Events sind alle in ProcessButton() in den case`s verlinkt. Der rest nicht, siehe ui.h und executeAction()
+
 #define UI_ACTION_RF_MIN_REPEATABLE          500
 
 #define UI_ACTION_RF_HEAT_BED_UP             514
@@ -55,9 +57,6 @@
 #define UI_ACTION_RF_SET_SCAN_XY_END        1530
 
 #define UI_ACTION_RF_MAX_SINGLE             1600
-
-//Nibbels 
-#define UI_ACTION_RF_DO_MHIER_BED_SCAN      1601 
 
 /*
 // ##########################################################################################
@@ -730,6 +729,9 @@ extern void scanHeatBed( void );
 // searchZOScan()
 extern void startZOScan( void );
 extern void searchZOScan( void );
+
+//Menüumschalter für Z-Step-Höhe
+extern void configureMANUAL_STEPS_Z( int8_t increment );
 
 // abortSearchHeatBedZOffset()
 extern void abortSearchHeatBedZOffset( void );

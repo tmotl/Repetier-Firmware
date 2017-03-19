@@ -146,7 +146,10 @@
 #define UI_ACTION_RIGHT                     1129
 #define UI_ACTION_ZMODE                     1130
 
-//Nibbels
+//Nibbels : nicht in processbutton sondern in executeaction!
+#define UI_ACTION_RF_DO_MHIER_BED_SCAN      1666 
+#define UI_ACTION_CONFIG_SINGLE_STEPS		1667 
+
 #define UI_ACTION_FET1_OUTPUT               2001
 #define UI_ACTION_FET2_OUTPUT               2002
 

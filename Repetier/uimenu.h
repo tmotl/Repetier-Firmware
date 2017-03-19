@@ -88,6 +88,7 @@ List of placeholder:
 %Fs : Fan speed
 %PN : Printer name
 %Se : Steps per mm current extruder
+%Sz : Mikrometer per Z-Single_Step (Z_Axis)
 %is : Stepper inactive time in seconds
 %ip : Max. inactive time in seconds
 %X0..9 : Extruder selected marker
@@ -324,6 +325,16 @@ UI_MENU_ACTIONSELECTOR(ui_menu_go_zpos,UI_TEXT_Z_POSITION,ui_menu_zpos)
 UI_MENU_ACTIONSELECTOR(ui_menu_go_zpos_notest,UI_TEXT_Z_POSITION,ui_menu_zpos_notest)
 UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_go_epos,UI_TEXT_E_POSITION,ui_menu_epos,MENU_MODE_PRINTER,0)
 
+//Nibbels: Das Einstellmenü für die Z-Step-Höhe:
+#if FEATURE_EXTENDED_BUTTONS
+UI_MENU_ACTIONCOMMAND(ui_menu_config_single_steps,UI_TEXT_CONFIG_SINGLE_STEPS,UI_ACTION_CONFIG_SINGLE_STEPS)
+#define UI_CONFIG_SINGLE_STEPS ,&ui_menu_config_single_steps
+#define UI_CONFIG_SINGLE_STEPS_CNT 1
+#else
+#define UI_CONFIG_SINGLE_STEPS
+#define UI_CONFIG_SINGLE_STEPS_CNT 0
+#endif // FEATURE_EXTENDED_BUTTONS
+
 #if !UI_SPEEDDEPENDENT_POSITIONING
 UI_MENU_ACTIONSELECTOR(ui_menu_go_xfast,UI_TEXT_X_POS_FAST,ui_menu_xpos_fast)
 UI_MENU_ACTIONSELECTOR(ui_menu_go_yfast,UI_TEXT_Y_POS_FAST,ui_menu_ypos_fast)
@@ -342,8 +353,8 @@ UI_MENU_ACTIONSELECTOR(ui_menu_go_zfast_notest,UI_TEXT_Z_POS_FAST,ui_menu_zpos_f
 #define UI_SPEED_Z_NOTEST ,&ui_menu_go_zpos_notest
 #endif // UI_SPEEDDEPENDENT_POSITIONING
 
-#define UI_MENU_POSITIONS {UI_MENU_ADDCONDBACK &ui_menu_home_all,&ui_menu_home_x,&ui_menu_home_y,&ui_menu_home_z UI_SPEED_X UI_SPEED_Y UI_SPEED_Z ,&ui_menu_go_epos}
-UI_MENU(ui_menu_positions,UI_MENU_POSITIONS,5 + 3 * UI_SPEED + UI_MENU_BACKCNT)
+#define UI_MENU_POSITIONS {UI_MENU_ADDCONDBACK &ui_menu_home_all,&ui_menu_home_x,&ui_menu_home_y,&ui_menu_home_z UI_SPEED_X UI_SPEED_Y UI_SPEED_Z UI_CONFIG_SINGLE_STEPS ,&ui_menu_go_epos}
+UI_MENU(ui_menu_positions,UI_MENU_POSITIONS,5 + 3 * UI_SPEED + UI_MENU_BACKCNT + UI_CONFIG_SINGLE_STEPS_CNT)
 
 
 UI_MENU_ACTIONCOMMAND(ui_menu_z_mode,UI_TEXT_Z_MODE,UI_ACTION_ZMODE)

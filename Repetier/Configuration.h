@@ -626,6 +626,11 @@ instead of driving both with a single stepper. The same works for the other axis
 #define DEFAULT_MANUAL_STEPS_E              (EXT0_STEPS_PER_MM /5)
 #define MAXIMAL_MANUAL_STEPS_E              (EXT0_STEPS_PER_MM *10)
 
+//Das hier drunter sind einigermaßen sinnvolle Stepsizes, wenn man Microsteps = 32 hat!!!
+//Siehe: https://github.com/RF1000community/Repetier-Firmware/issues/4
+//Dieser statische Ansatz wird evtl. mal umgebaut. Man könnte auch eine Funktion schreiben, die sinnvolle Einstellwerte automatisch anhand Microsteps und Mikrometertabelle sucht.
+#define NUM_ACCEPTABLE_STEP_SIZE_TABLE	11
+#define ACCEPTABLE_STEP_SIZE_TABLE { 5,13,26,51,64,128,256,512,768,1024,1280 }
 #endif // FEATURE_EXTENDED_BUTTONS
 
 

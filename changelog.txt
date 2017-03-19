@@ -1,5 +1,7 @@
-V RF.01.37g.mod (2017-03-17)
-- Bugtrace: Some little changes, percaucious volatiles, removed some "-Wpedantic"-Warnings.
+V RF.01.37g.mod (2017-03-17 nachts)
+- Added a new function: Ability to change the single step height within Position-Menu.
+This Z-Step-Height is not saved in EEPROM! This could be a future feature on a users request.
+- The Z-Movement is now according to the position of the button. This means: Button-Up means Bed UP. Button Down means Bed down. That behaviour should be way more intuitive. Only the professionals used to the old behaviour should be carefull.
 
 V RF.01.37g.mod (2017-03-17)
 - Z-Up and Z-Down-Buttons are now completely independend with the Position->Z-Position-Menu. 

@@ -158,8 +158,10 @@ unsigned long   g_uBlockSDCommands          = 0;
 //unsigned short    g_debugUInt16               = 0;
 //long          g_debugInt32                = 0;
 
+#if FEATURE_EXTENDED_BUTTONS
 // other configurable parameters
 unsigned long   g_nManualSteps[4]           = { (unsigned long)DEFAULT_MANUAL_STEPS_X, (unsigned long)DEFAULT_MANUAL_STEPS_Y, (unsigned long)DEFAULT_MANUAL_STEPS_Z, (unsigned long)DEFAULT_MANUAL_STEPS_E };
+#endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_PAUSE_PRINTING
 long            g_nPauseSteps[4]            = { (long)DEFAULT_PAUSE_STEPS_X, (long)DEFAULT_PAUSE_STEPS_Y, (long)DEFAULT_PAUSE_STEPS_Z, (long)DEFAULT_PAUSE_STEPS_EXTRUDER };
@@ -2667,6 +2669,42 @@ void startMadeMessureMethod( int maxdigits = 9000, float dz = -0.002f, float ext
     
     return;
 } // startMadeMessureMethod()
+
+
+
+
+/**************************************************************************************************************************************/
+/* Diese Funktion soll die Step_Size eines Z-Steps einstellbar machen. */
+/* Noch ist das statisch über eine Tabelle, aber man könnte das später auch berechnen */
+
+void configureMANUAL_STEPS_Z( int8_t increment )
+{   
+    Com::printFLN( PSTR( "configureMANUAL_STEPS_Z():" ) );           
+    //könnte evtl. auch unsigned short sein, aber das wird evtl. in g_nManualSteps geschrieben...
+	const unsigned long stepsize_table[NUM_ACCEPTABLE_STEP_SIZE_TABLE] PROGMEM = ACCEPTABLE_STEP_SIZE_TABLE;
+    	
+    int loop = 0;
+	//suche die aktuelle Einstellungsposition (oder aufgerundet) in der Tabelle:
+    for(loop = 0; loop < NUM_ACCEPTABLE_STEP_SIZE_TABLE; loop++) if(stepsize_table[loop] >= g_nManualSteps[Z_AXIS]) break;
+	
+	//ändere die Position in die Wunschposition:
+	if(increment >= 0) loop += 1;
+	else loop -= 1;
+	
+	//begrenze ringmenge
+	if(loop > NUM_ACCEPTABLE_STEP_SIZE_TABLE -1) loop = 0;
+	else if(loop < 0) loop = NUM_ACCEPTABLE_STEP_SIZE_TABLE -1;
+	
+	//nutze neuen Wert:
+	g_nManualSteps[Z_AXIS] = stepsize_table[loop];
+	
+    Com::printF( PSTR( "Z-Single-Step height has changed to " ), (float)((float)g_nManualSteps[Z_AXIS]* Printer::invAxisStepsPerMM[Z_AXIS] * 1000.0f ) , 0 );
+    Com::printF( PSTR( " [um] / " ), g_nManualSteps[Z_AXIS] );
+    Com::printFLN( PSTR( " [MicroSteps]." ));
+	    
+    return;
+} // configureMANUAL_STEPS_Z()
+
 
 /**************************************************************************************************************************************/
 
@@ -11145,6 +11183,20 @@ void processCommand( GCode* pCommand )
             break;
 #endif // FEATURE_SENSIBLE_PRESSURE
 
+			case 3910: // 3910 [S]Inc/Dec - Testfunction for decreasing or increasing the Step-Size-Micrometer for `single` Z-Steps
+			//See ACCEPTABLE_STEP_SIZE_TABLE and NUM_ACCEPTABLE_STEP_SIZE_TABLE for predefined "good and wanted" stepsizes.
+			{
+				if (pCommand->hasS() ){     
+					if(pCommand->S >= 0){
+						configureMANUAL_STEPS_Z( 1 );
+					}else{
+						configureMANUAL_STEPS_Z( -1 );
+					}
+				}else{
+					Com::printFLN( PSTR( "M3910 Help: Write M3910 S1 or M3910 S-1" ) );
+				}
+			}
+
 
 #if FEATURE_SILENT_MODE // Auswahl der Motor-Current-Settings
             case 3920: // 3920 Decide if MOTOR_CURRENT_SILENT or MOTOR_CURRENT
@@ -11611,20 +11663,8 @@ extern void processButton( int nAction )
             uid.menuLevel = 0; 
             uid.menuPos[0] = 0;
             break;
-        }
+        }		
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
-        case UI_ACTION_RF_DO_MHIER_BED_SCAN:
-        {           
-            //macht an, wenn an, macht aus:         
-            startZOScan();
-            //gehe zurück und zeige dem User was passiert.
-            uid.menuLevel = 0; 
-            uid.menuPos[0] = 0;
-            //wartet nur wenn an:
-            //Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
-            break;
-        }
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_WORK_PART_Z_COMPENSATION
         case UI_ACTION_RF_SCAN_WORK_PART:
@@ -11643,6 +11683,7 @@ extern void processButton( int nAction )
             break;
         }
 #endif // FEATURE_WORK_PART_Z_COMPENSATION
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_OUTPUT_FINISHED_OBJECT
         case UI_ACTION_RF_OUTPUT_OBJECT:

@@ -1521,7 +1521,8 @@ void UIDisplay::parse(char *txt,bool ram)
             case 'S':
             {
                 if(c2=='e') addFloat(Extruder::current->stepsPerMM,3,1);                                // %Se : Steps per mm current extruder
-                break;
+				if(c2=='z') addFloat(g_nManualSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,4,0); // %Sz : Mikrometer per Z-Single_Step (Z_Axis)
+                break;				
             }
             case 'p':
             {
@@ -2830,9 +2831,9 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_ZPOSITION:
         {
-            nextPreviousZAction( increment );
+            nextPreviousZAction( -1*increment );
             break;
-        }
+        }			
         case UI_ACTION_ZOFFSET:
         {           
             //INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
@@ -3864,6 +3865,14 @@ void UIDisplay::executeAction(int action)
             }
 #endif // FEATURE_24V_FET_OUTPUTS
 
+
+#if FEATURE_EXTENDED_BUTTONS
+			case UI_ACTION_CONFIG_SINGLE_STEPS:
+			{   
+				configureMANUAL_STEPS_Z( 1 );
+			}
+#endif // FEATURE_EXTENDED_BUTTONS
+
 #if FEATURE_MILLING_MODE
             case UI_ACTION_OPERATING_MODE:
             {
@@ -4619,6 +4628,20 @@ void UIDisplay::executeAction(int action)
                 break;
             }
 #endif // DEBUG_PRINT
+
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+			case UI_ACTION_RF_DO_MHIER_BED_SCAN:
+			{           
+				//macht an, wenn an, macht aus:         
+				startZOScan();
+				//gehe zurück und zeige dem User was passiert.
+				uid.menuLevel = 0; 
+				uid.menuPos[0] = 0;
+				//wartet nur wenn an:
+				//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
+				break;
+			}
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
         }
     }
 

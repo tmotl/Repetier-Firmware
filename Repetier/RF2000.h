@@ -600,7 +600,8 @@ A good start is 30 lower then the optimal value. You need to leave room for cool
 
 /** \brief Analog pin of analog sensor to read temperature of heated bed.  */
 #define RESERVE_ANALOG_TEMP_PIN             TEMP_3_PIN
-#define RESERVE_ANALOG_SENSOR_TYPE          15 //Thermistor NTC 3950 100k Ohm
+//Thermistor NTC 3950 100k Ohm
+#define RESERVE_ANALOG_SENSOR_TYPE          15 
 
 #define RESERVE_ANALOG_INPUTS               1
 #define RESERVE_SENSOR_INDEX                EXT0_ANALOG_INPUTS+EXT1_ANALOG_INPUTS+BED_ANALOG_INPUTS
@@ -635,7 +636,8 @@ on this endstop. */
 #define MIN_HARDWARE_ENDSTOP_Z              true
 #define MAX_HARDWARE_ENDSTOP_X              false
 #define MAX_HARDWARE_ENDSTOP_Y              false
-#define MAX_HARDWARE_ENDSTOP_Z              true        // the RF2000 always has the z-min and z-max endstops
+// the RF2000 always has the z-min and z-max endstops
+#define MAX_HARDWARE_ENDSTOP_Z              true
 
 /** \brief Sets direction of endstops when homing; 1=MAX, -1=MIN */
 #define X_HOME_DIR                          -1
@@ -672,7 +674,8 @@ small amount back. This is also the case with H-belt systems. */
 #define ENDSTOP_Y_BACK_ON_HOME              0
 
 #if FEATURE_MILLING_MODE
-#define LEAVE_Z_MAX_ENDSTOP_AFTER_HOME      long(-ZAXIS_STEPS_PER_MM * 2)   // [steps]
+   // [steps]
+#define LEAVE_Z_MAX_ENDSTOP_AFTER_HOME      long(-ZAXIS_STEPS_PER_MM * 2)
 #else
 /** \brief Remark: in case this value is set to non-0, the z-compensation must be made fit for this first */
 #define ENDSTOP_Z_BACK_ON_HOME              0
