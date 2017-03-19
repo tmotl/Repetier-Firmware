@@ -945,7 +945,7 @@ This value should be roughly the double amount of mm which is detected as error 
 /** \brief Specifies from which height on the z compensation shall be performed
 Below this value the z compensation will only change the z axis so that a constant distance to the heat bed is hold (this is good for the first layer).
 Above this value the z compensation will distribute the roughness of the surface over the layers until HEAT_BED_Z_COMPENSATION_MAX_STEPS is reached. */
-#define HEAT_BED_Z_COMPENSATION_MIN_MM          float(0.2)                                                              // [mm]
+#define HEAT_BED_Z_COMPENSATION_MIN_MM          float(0.33)                                                             // [mm]
 #define HEAT_BED_Z_COMPENSATION_MIN_STEPS       long(HEAT_BED_Z_COMPENSATION_MIN_MM * ZAXIS_STEPS_PER_MM)               // [steps]
 
 /* Maximum number of steps to scan after the Z-min switch has been reached. If within these steps the surface has not

@@ -841,7 +841,7 @@ void UIDisplay::parse(char *txt,bool ram)
             case 'H':
             {
                 if(c2=='B')         addLong(g_nActiveHeatBed,1);                                        // %HB : active heat bed z matrix
-                else if(c2=='O')    addFloat((float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,3,0); // %HO : active heat bed min z offset in um
+                else if(c2=='O')    addFloat((float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000.0f,3,0); // %HO : active heat bed min z offset in um
                 break;
             }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
@@ -2831,7 +2831,12 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_ZPOSITION:
         {
-            nextPreviousZAction( -1*increment );
+			/*
+			Z_BUTTON_DIRECTION = -1 : You imagine to drive the HeatBed
+			Z_BUTTON_DIRECTION = 1 : You imagine to drive the Nozzle / Fräser
+			see configuration.h
+			*/
+            nextPreviousZAction( Z_BUTTON_DIRECTION*increment );
             break;
         }			
         case UI_ACTION_ZOFFSET:

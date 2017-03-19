@@ -2108,14 +2108,16 @@ void searchZOScan( void )
                 HAL::delayMilliseconds( g_nScanSlowStepDelay );
                 Commands::printCurrentPosition();
                 UI_STATUS_UPD( UI_TEXT_FIND_Z_ORIGIN_DONE );
-		    
+
+				/*
             #if DEBUG_HEAT_BED_SCAN == 2
                 Com::printFLN( PSTR( "ZOS(): homing" ) );
             #endif // DEBUG_HEAT_BED_SCAN
 			
-		Printer::homeAxis( true, true, true );
+				Printer::homeAxis( true, true, true );
                 Commands::waitUntilEndOfAllMoves();
-
+				*/
+				
             #if DEBUG_HEAT_BED_SCAN == 2
                 Com::printFLN( PSTR( "ZOS(): finished" ) );
             #endif // DEBUG_HEAT_BED_SCAN
@@ -2124,6 +2126,13 @@ void searchZOScan( void )
                 g_ZOSScanStatus = 0;    
                 UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_OFFSET_MIN );
 				g_ZMatrixChangedInRam = 1;
+				
+			#if DEBUG_HEAT_BED_SCAN == 2
+				Com::printFLN( PSTR( "ZOS(): finished" ) );
+			#endif // DEBUG_HEAT_BED_SCAN
+			
+				calculateZScrewTempLenght();
+				
                 break;
             }
         }
@@ -2156,6 +2165,89 @@ void abortSearchHeatBedZOffset( void )
     return;
 
 } /* searchHeatBedZOffset */
+
+
+void calculateZScrewTempLenght( void )
+{
+	Com::printFLN( PSTR( "Z-Schrauben-Helper: " ) );
+	if(g_ZCompensationMatrix[0][0] == EEPROM_FORMAT){
+		/*IDEAL ist es, wenn mand den Drucker "kalt" und frisch aufgeheizt einstellt.*/
+	
+		//Gerade eben muss ein Z-Scan die Matrix korrigiert haben.
+		//Der Extruder darf sich seither nicht verändert (T0 -> T1) und nicht abgekühlt haben
+		//Dann wird pro °C des aktiven Extruders 0.001mm Längung angenommen.
+		//Dann wird pro °C des Heizbettes 0.0015mm Längung angenommen.
+		
+		//Wegen der unbekannten Nachlängung werden 0.18mm -> 0.15mm Puffer auf Z=0 angestrebt.
+		
+		//Die ideale Matrix-Verschiebung wird auf 260°C Hotend / 120°C Bett, was ein Extremwert darstellen soll auf -0.15mm angepeilt.
+		//Ohne Kenntnis der Nachlängung sollte demnach (bei 260°C Hotend / 120°C Bett) ~ -0.00 (kalt) bis -0.30mm real Spitzenwert erreicht werden, wenn man die Z-Schraube so einstellt, wie diese Funktion ausgibt.
+		
+		//Config
+		float maxExtruderTemperature = (float)EXTRUDER_MAX_TEMP;
+		float maxBedTemperature = 120.0f; //120°C ist ok... mit 180 zu rechnen wäre übertrieben.
+		float BedThermalExplansionInMikrons = 1.5f;
+		float ExtruderThermalExplansionInMikrons = 1.0f;
+		float maxNachdehnungInMikrons = 150.0f;
+		float RestAbstandInMikrons = 50.0f;
+		
+		//Ist-Abstand.
+		float MatrixMaximumInMikrons = (float)g_offsetZCompensationSteps * Printer::invAxisStepsPerMM[Z_AXIS] * 1000.0f;
+			
+		float ExtruderTemperature = Extruder::current->tempControl.currentTemperatureC;
+		if(ExtruderTemperature < 20.0f) ExtruderTemperature = 20.0f; //Wenn zu kalt oder undefiniert dann Standardbedingungen annehmen.
+		
+		float BedTemperature = Extruder::getHeatedBedTemperature();	
+		if(BedTemperature == -1) maxBedTemperature = BedTemperature = 20.0f; //Wenn kein Heated-Bed dann Standardbedingungen annehmen.
+			
+		//Umrechnung des aktuellen Zustandes auf die heißesten Werte:
+		float MinDistanceInMikrons = MatrixMaximumInMikrons 
+				+ (maxExtruderTemperature - ExtruderTemperature) * ExtruderThermalExplansionInMikrons 
+				+ (maxBedTemperature - BedTemperature) * BedThermalExplansionInMikrons;
+		
+		Com::printFLN( PSTR( "- Alle Werte in Mikrometern / Einheit [um] -" ) );
+		Com::printFLN( PSTR( "Matrix-Minimum: " ) , MatrixMaximumInMikrons );
+		Com::printFLN( PSTR( "Weitere Extruderausdehnung maximal: " ) , (maxExtruderTemperature - ExtruderTemperature) * ExtruderThermalExplansionInMikrons  );
+		Com::printFLN( PSTR( "Weitere Heizbettausdehnung maximal: " ) , (maxBedTemperature - BedTemperature) * BedThermalExplansionInMikrons );
+		Com::printFLN( PSTR( "Minimalabstand bei Maximaltemperaturen: " ) , MinDistanceInMikrons );
+		
+		Com::printFLN( PSTR( "Wenn das Druckergehaeuse gerade durchgewaermt waere: " ) , MinDistanceInMikrons ); //das sollte rechnerisch ungefähr -0.0 werden, wenn Durchgewärmt
+		Com::printFLN( PSTR( "Wenn das Druckergehaeuse gerade kalt waere: " ) , MinDistanceInMikrons - maxNachdehnungInMikrons ); //das ist, weil wir die Durchwärmung nicht wissen unser Einstellpunkt. -> 
+		
+		float Sollkorrektur = -1*maxNachdehnungInMikrons - MinDistanceInMikrons - RestAbstandInMikrons;
+		Com::printFLN( PSTR( "#############" ) );
+		Com::printF( PSTR( "Sollkorrektur: " ) , Sollkorrektur , 0 ); //das ist die Änderung in Mikrometer, die wir vornehmen sollten.
+		Com::printF( PSTR( " [um] = " ), Sollkorrektur*0.001f,3  ); //das ist die Änderung in Millimeter, die wir vornehmen sollten.
+		Com::printFLN( PSTR( " [mm]" ) );
+#if MOTHERBOARD == DEVICE_TYPE_RF2000
+		float ZSchraubenDrehungen = Sollkorrektur * 0.002f; //[Sollkorrektur in mm] geteilt durch [Gewinde: 0.5 mm/Umdrehung] -> Sollkorrektur / 1000 / 0.5
+		Com::printF( PSTR( "Sollumdrehungen: " ) , ZSchraubenDrehungen, 1 ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		if(ZSchraubenDrehungen < 0.25f && ZSchraubenDrehungen > -0.25f){
+			Com::printFLN( PSTR( " (RF2000: Die Z-Schraube ist ok!)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		}else{
+			if(ZSchraubenDrehungen < 0){
+				Com::printFLN( PSTR( " (weiter rausdrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+			}else{
+				Com::printFLN( PSTR( " (weiter reindrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+			}
+		}
+		Com::printFLN( PSTR( " (RF2000: Minimal eine halbe Schraubendrehung einstellbar.)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+#else //if MOTHERBOARD == DEVICE_TYPE_RF1000		
+		float ZSchraubenDrehungen = Sollkorrektur * 0.002f; //[Sollkorrektur in mm] geteilt durch [Gewinde: 0.5 mm/Umdrehung] -> Sollkorrektur / 1000 / 0.5
+		Com::printF( PSTR( "Sollumdrehungen: " ) , ZSchraubenDrehungen, 1 ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		if(ZSchraubenDrehungen < 0){
+			Com::printFLN( PSTR( " (weiter rausdrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		}else{
+			Com::printFLN( PSTR( " (weiter reindrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		}
+#endif
+		Com::printFLN( PSTR( "#############" ) );
+		
+	}else{
+		Com::printFLN( PSTR( "Error::Die Matrix wurde noch nicht in den Ram geladen. Vorsicht! Diese Funktion macht nur nach einem sauberen Z-Offset-Scan wirklich sinn." ) );
+	}
+	
+} // calculateZScrewTempLenght
 
 /**************************************************************************************************************************************/
 
@@ -6307,16 +6399,18 @@ void loopRF( void )
 
                 //check: "only at printing" -> here the condition is already valid
                 //check: "only when z-compensation is active" -> yes
-                //check: "only when close to surface" -> yes
-                
+                //check: "only when close to surface" -> yes                
+		
                 if(g_nSensiblePressureDigits && Printer::doHeatBedZCompensation){ //activate feature with G-Code.
+					
                     if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps )
-                    {
+                    {						
                         //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
                         g_nSensiblePressureSum += pressure;
                         g_nSensiblePressureChecks += 1;
                         //jede 1 sekunden, bzw 0.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
                         if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS ){ 
+						
                             nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
                             
                             //half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5                         
@@ -6382,10 +6476,6 @@ void loopRF( void )
                             }
                                                         
                             g_nSensibleLastPressure = nPressure; //save last pressure.
-                            
-                            //Com::printF( PSTR( "SensiblePressure(): average pressure = " ), nPressure );                              
-                            //Com::printF( PSTR( " [digits], senseoffset = " ), g_nSensiblePressureOffset );                            
-                            //Com::printFLN( PSTR( " [um]" ) );
                         }
                     }else{
                         // if sensible not active 
@@ -10948,8 +11038,8 @@ void processCommand( GCode* pCommand )
             case 3901: // 3901 [X] [Y] - configure the Matrix-Position to Scan, [S] confugure learningrate, [P] configure dist weight || by Nibbels
             {
                 Com::printFLN( PSTR( "M3900/M3901 are disabled : inactive Feature FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+				break;
             }
-            break;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION   
                 
             
@@ -11083,8 +11173,8 @@ void processCommand( GCode* pCommand )
             case 3902: // M3902 Nibbels Matrix Manipulations "NMM"
             {
                 Com::printFLN( PSTR( "M3902 is disabled : inactive Feature FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+				break;
             }
-            break;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION       
             
 #if FEATURE_BEDTEMP_DECREASE    
@@ -11161,8 +11251,8 @@ void processCommand( GCode* pCommand )
                             g_nSensiblePressureOffsetMax = (short)pCommand->S;
                             Com::printFLN( PSTR( "M3909: SensiblePressure [S]max. Offset changed to "),g_nSensiblePressureOffsetMax );
                         }else{
-                            Com::printFLN( PSTR( "M3909: ERROR::Dd never set automatic offset bigger than 0.2mm=S200. This function is ment only to compensate minimal amounts of too close distance.") );
-                            Com::printFLN( PSTR( "M3909: ERROR::Versuche nicht das automatische Offset größer als 0.2mm=S200 einzustellen. Diese Funktion soll nur minimal justieren.") );
+                            Com::printFLN( PSTR( "M3909: ERROR::Dd never set automatic offset bigger than 0.3mm=S300. This function is ment only to compensate minimal amounts of too close distance.") );
+                            Com::printFLN( PSTR( "M3909: ERROR::Versuche nicht das automatische Offset größer als 0.3mm=S300 einzustellen. Diese Funktion soll nur minimal justieren.") );
                             Com::printFLN( PSTR( "M3909: INFO::If you have to auto-compensate your offset to high, the extruder-distance cannot be your real problem. Clean your nozzle, rise your temp, lower your speed.") );
                             Com::printFLN( PSTR( "M3909: INFO::This function should lower the chance of an accidential emergency block on the first layer. It cannot help you to avoid calibration!") );
                         }                       
@@ -11172,14 +11262,14 @@ void processCommand( GCode* pCommand )
                     if(g_nSensiblePressureDigits){
                         Com::printF( PSTR( "M3909: INFO SensiblePressure threshold is active. [P]PressureDigit = +-"), g_nSensiblePressureDigits );
                         Com::printFLN( PSTR( " [digits] (Standard: use positive `Normal Digits`+20%)") );           
-                        Com::printF( PSTR( "M3909: INFO SensiblePressures [S]max. offset is "), (long)g_nSensiblePressureOffsetMax );   
-                        Com::printFLN( PSTR( " [um] (Standard: 100um, Min: 1um, Max: 200um)") );            
+                        Com::printF( PSTR( "M3909: INFO SensiblePressures [S]max. offset is "), g_nSensiblePressureOffsetMax );   
+                        Com::printFLN( PSTR( " [um] (Standard: 180um, Min: 1um, Max: 300um)") );            
                     }else{
                         Com::printFLN( PSTR( "M3909: INFO SensiblePressure is currently disabled. [P]PressureDigit = OFF (Standard: use positive `Normal Digits`+20%" ) );
-                        Com::printF( PSTR( "M3909: INFO SensiblePressures [S]max. offset is "), (long)g_nSensiblePressureOffsetMax );   
-                        Com::printFLN( PSTR( " [um] (Standard: 100um)") );      
+                        Com::printF( PSTR( "M3909: INFO SensiblePressures [S]max. offset is "), g_nSensiblePressureOffsetMax );   
+                        Com::printFLN( PSTR( " [um] (Standard: 180um)") );      
                     }
-                    if (!pCommand->hasS() && !pCommand->hasP()) Com::printFLN( PSTR( "M3909: INFO Example: M3909 P8000 S120 for activation at 8000digits and additional offset limited to 0,12mm.") );
+                    if (!pCommand->hasS() && !pCommand->hasP()) Com::printFLN( PSTR( "M3909: INFO Example: M3909 P8000 S180 for activation at 8000digits and additional offset limited to 0,18mm.") );
                 }
                 break;      
             }
@@ -11187,8 +11277,8 @@ void processCommand( GCode* pCommand )
             case 3909: // 3909 [P]PressureDigits - configure the sensible pressure value threshold || by Wessix and Nibbels
             {
                 Com::printFLN( PSTR( "M3909 is disabled : inactive Feature FEATURE_EMERGENCY_PAUSE || FEATURE_HEAT_BED_Z_COMPENSATION" ) );
+				break;
             }
-            break;
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 			case 3910: // 3910 [S]Inc/Dec - Testfunction for decreasing or increasing the Step-Size-Micrometer for `single` Z-Steps
@@ -11203,6 +11293,13 @@ void processCommand( GCode* pCommand )
 				}else{
 					Com::printFLN( PSTR( "M3910 Help: Write M3910 S1 or M3910 S-1" ) );
 				}
+				break;
+			}
+
+			case 3911: // 3911 - Testfunction for Hints to correctly adjust the printers Z-Screw (for ideal Z-min-switch hardware leveling)
+			{
+				calculateZScrewTempLenght();
+				break;
 			}
 
 
@@ -11306,9 +11403,9 @@ void processCommand( GCode* pCommand )
                 
                 startViscosityTest( maxD, maxE, Inc, StartTemp, EndTemp, maxRFill ); //E ist float, constraint in funktion!
                 
-                Com::printFLN( PSTR( "M3939 Ended!" ) );                
+                Com::printFLN( PSTR( "M3939 Ended!" ) );     
+				break;           
             }
-            break;
             
             case 3940: // 3940 startMadeMessureMethod - Testfunction to determine the raise of digits over closing in to the heatbed || by Nibbels
             {
@@ -11345,8 +11442,8 @@ void processCommand( GCode* pCommand )
                 startMadeMessureMethod( maxD, dz, extrusion, init_z, maxRFill ); //constraint in funktion!
                 
                 Com::printFLN( PSTR( "M3940 Ended!" ) );
-            }
-            break;          
+				break; 
+            }         
             
 #if RESERVE_ANALOG_INPUTS
             case 3941: // 3941 reading optional temperature port X35 - Testfunction || by Nibbels

@@ -1,3 +1,12 @@
+V RF.01.37h.mod (2017-03-18 nachts)
+- The hliebscher/Wessix-Bug has not been a Software-Bug, it was a missconfiguration.
+#define HEAT_BED_Z_COMPENSATION_MIN_MM          float(0.33)  
+is now standard. 
+You should choose your startline at Z=0.35 or higher. Or place the M3909 behind the startline!
+Alternative change the SenseOffsetlimit by rising or decreasing it with M3007.
+- The Z-Offset-Scan will now show hints within the Repetier-Server/Repetier-Host Log how you should tweak your Z-Screw.
+- #define Z_BUTTON_DIRECTION -1 will now set the orientation of the Z-Button-behaviour. See: https://github.com/RF1000community/Repetier-Firmware/issues/20
+
 V RF.01.37g.mod (2017-03-18 nachts)
 - You can now save your offset corrected Matrix through the Menu Configuration->Z-Configuration->Save Matrix to the EEPROM.
 Doing this you are able to correct and save your Z-Matrix without doing a HBS. And you wont have to do M3900/Z-Offset-Scan everytime you start your printer.

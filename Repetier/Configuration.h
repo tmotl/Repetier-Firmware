@@ -113,7 +113,11 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
-#define Z_OFFSET_BUTTON_STEPS       5
+#define Z_OFFSET_BUTTON_STEPS       		5
+
+/** Z_BUTTON_DIRECTION = -1 : You imagine to drive the HeatBed
+	Z_BUTTON_DIRECTION = 1 : You imagine to drive the Nozzle / Fräser  */
+#define Z_BUTTON_DIRECTION		    		-1
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE    0                                                   // 1 = on, 0 = off

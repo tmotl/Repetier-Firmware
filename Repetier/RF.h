@@ -731,6 +731,7 @@ extern void scanHeatBed( void );
 // searchZOScan()
 extern void startZOScan( void );
 extern void searchZOScan( void );
+extern void calculateZScrewTempLenght( void );
 
 //Menüumschalter für Z-Step-Höhe
 extern void configureMANUAL_STEPS_Z( int8_t increment );
