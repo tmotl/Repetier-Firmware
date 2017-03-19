@@ -2108,6 +2108,13 @@ void searchZOScan( void )
                 HAL::delayMilliseconds( g_nScanSlowStepDelay );
                 Commands::printCurrentPosition();
                 UI_STATUS_UPD( UI_TEXT_FIND_Z_ORIGIN_DONE );
+		    
+            #if DEBUG_HEAT_BED_SCAN == 2
+                Com::printFLN( PSTR( "ZOS(): homing" ) );
+            #endif // DEBUG_HEAT_BED_SCAN
+			
+		Printer::homeAxis( true, true, true );
+                Commands::waitUntilEndOfAllMoves();
 
             #if DEBUG_HEAT_BED_SCAN == 2
                 Com::printFLN( PSTR( "ZOS(): finished" ) );
