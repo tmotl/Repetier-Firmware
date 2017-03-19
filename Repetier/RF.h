@@ -535,7 +535,7 @@ extern const char   ui_text_extruder[]              PROGMEM;
 extern const char   ui_text_autodetect_pid[]        PROGMEM;
 extern const char   ui_text_temperature_manager[]   PROGMEM;
 extern const char   ui_text_home_unknown[]          PROGMEM;
-extern const char   ui_text_saving_failed[]         PROGMEM;
+extern const char   ui_text_saving_needless[]       PROGMEM;
 extern const char   ui_text_operation_denied[]      PROGMEM;
 extern const char   ui_text_emergency_pause[]       PROGMEM;
 extern const char   ui_text_emergency_stop[]        PROGMEM;
@@ -545,7 +545,7 @@ extern const char   ui_text_max_reached[]           PROGMEM;
 extern const char   ui_text_temperature_wrong[]     PROGMEM;
 extern const char   ui_text_timeout[]               PROGMEM;
 extern const char   ui_text_sensor_error[]          PROGMEM;
-
+extern const char   ui_text_saving_success[]        PROGMEM;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -585,6 +585,8 @@ extern  long            g_ZOSTestPoint[2];
 extern  float           g_ZOSlearningRate;
 extern  float           g_ZOSlearningGradient;
 extern  long            g_min_nZScanZPosition;
+//Matrix speichern über Menü: Sinnmarker
+extern  volatile unsigned char  g_ZMatrixChangedInRam;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 #if FEATURE_SILENT_MODE

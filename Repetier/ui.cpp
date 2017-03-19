@@ -4641,6 +4641,21 @@ void UIDisplay::executeAction(int action)
 				//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
 				break;
 			}
+			case UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX:
+			{
+				// save the determined values to the EEPROM		
+				if(g_ZMatrixChangedInRam){
+					uid.executeAction(UI_ACTION_TOP_MENU);
+					saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );     
+					if( Printer::debugInfo() )
+					{
+						Com::printFLN( PSTR( "Manual Input: the heat bed compensation matrix has been saved" ) );
+					}                     
+                    showInformation( (void*)ui_text_manual, (void*)ui_text_saving_success );
+				}else{
+                    showInformation( (void*)ui_text_manual, (void*)ui_text_saving_needless );
+				}
+			}
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
         }
     }

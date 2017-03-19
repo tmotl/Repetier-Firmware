@@ -1,3 +1,8 @@
+V RF.01.37g.mod (2017-03-18 nachts)
+- You can now save your offset corrected Matrix through the Menu Configuration->Z-Configuration->Save Matrix to the EEPROM.
+Doing this you are able to correct and save your Z-Matrix without doing a HBS. And you wont have to do M3900/Z-Offset-Scan everytime you start your printer.
+If you want to work with M-Codes use M3902 Sx for this matter. x is the Matrix-Save-Position and might be {1..9}. The menu only saves to the current matrix position, the Mcode can save your matrix to every position you want it saved to.
+
 V RF.01.37g.mod (2017-03-17 nachts)
 - Added a new function: Ability to change the single step height within Position-Menu.
 This Z-Step-Height is not saved in EEPROM! This could be a future feature on a users request.

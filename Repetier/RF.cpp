@@ -45,7 +45,7 @@ FSTRINGVALUE( ui_text_extruder, UI_TEXT_EXTRUDER )
 FSTRINGVALUE( ui_text_autodetect_pid, UI_TEXT_AUTODETECT_PID )
 FSTRINGVALUE( ui_text_temperature_manager, UI_TEXT_TEMPERATURE_MANAGER )
 FSTRINGVALUE( ui_text_home_unknown, UI_TEXT_HOME_UNKNOWN )
-FSTRINGVALUE( ui_text_saving_failed, UI_TEXT_SAVING_FAILED )
+FSTRINGVALUE( ui_text_saving_needless, UI_TEXT_SAVING_NEEDLESS )
 FSTRINGVALUE( ui_text_operation_denied, UI_TEXT_OPERATION_DENIED )
 FSTRINGVALUE( ui_text_emergency_pause, UI_TEXT_EMERGENCY_PAUSE )
 FSTRINGVALUE( ui_text_emergency_stop, UI_TEXT_EMERGENCY_STOP )
@@ -57,7 +57,9 @@ FSTRINGVALUE( ui_text_temperature_wrong, UI_TEXT_TEMPERATURE_WRONG )
 FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT )
 FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR )
 FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED )
+FSTRINGVALUE( ui_text_saving_success, UI_TEXT_SAVING_SUCCESS )
 
+ 
 unsigned long   g_lastTime                 = 0;
 unsigned long   g_uLastCommandLoop         = 0;
 unsigned long   g_uStartOfIdle             = 0;
@@ -72,6 +74,8 @@ char            g_nActiveHeatBed           = 1;
 
 //ZOS
 //Nibbels: Das ist wie die g_nHeatBedScanStatus, die Schwestervariable, für den ZOS-Scan -> Vorsicht, wenn man sowas einführt müssen die überall vermerkt werden, weil sonst z.B. der G-Code weiter vorgeführt wird.
+// g_ZMatrixChangedInRam soll 1 werden, wenn ZOS, Offsetänderung der Matrix etc. Sonst wäre Sichern der Matrix unnötig.
+volatile unsigned char  g_ZMatrixChangedInRam = 0;
 volatile unsigned char  g_ZOSScanStatus    = 0;     
 //Nibbels:
 long            g_ZOSTestPoint[2]     = { SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X, SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y };
@@ -1733,12 +1737,7 @@ void scanHeatBed( void )
                 // save the determined values to the EEPROM
                 if( saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) ) )
                 {
-                    if( Printer::debugErrors() )
-                    {
-                        Com::printFLN( PSTR( "scanHeatBed(): the heat bed compensation matrix could not be saved" ) );
-                    }
-
-                    showError( (void*)ui_text_heat_bed_scan, (void*)ui_text_saving_failed );
+					//Ähm.... diesen Fall gibts garnicht laut saveCompensationMatrix()
                 }
                 else
                 {
@@ -2117,6 +2116,7 @@ void searchZOScan( void )
                 g_nZScanZPosition = 0;
                 g_ZOSScanStatus = 0;    
                 UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_OFFSET_MIN );
+				g_ZMatrixChangedInRam = 1;
                 break;
             }
         }
@@ -2211,9 +2211,10 @@ void fixKeramikLochInMatrix( void )
         Com::printFLN( PSTR( "g_ZCompensationMatrix[peak_x,peak_y] =" ), g_ZCompensationMatrix[peak_x][peak_y] );
                 
         if(peak_hole > 100){
-        //loch groß genug
-        g_ZCompensationMatrix[peak_x][peak_y] += peak_hole;
+			//loch groß genug
+			g_ZCompensationMatrix[peak_x][peak_y] += peak_hole;
             Com::printF( PSTR( "fixKeramikLochInMatrix(): STEP 4 Update, fixed: g_ZCompensationMatrix[peak_x,peak_y]=" ), g_ZCompensationMatrix[peak_x][peak_y] );
+			g_ZMatrixChangedInRam = 1;
         }else{
             Com::printF( PSTR( "fixKeramikLochInMatrix(): STEP 4 Cancel, no need to fix. dh<100 dh=" ), peak_hole );            
         }
@@ -4113,13 +4114,8 @@ void scanWorkPart( void )
 
                 // save the determined values to the EEPROM
                 if( saveCompensationMatrix( (EEPROM_SECTOR_SIZE *9) + (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveWorkPart) ) )
-                {
-                    if( Printer::debugErrors() )
-                    {
-                        Com::printFLN( PSTR( "scanWorkPart(): the work part compensation matrix could not be saved" ) );
-                    }
-
-                    showError( (void*)ui_text_work_part_scan, (void*)ui_text_saving_failed );
+                {					
+					//Ähm.... diesen Fall gibts garnicht laut saveCompensationMatrix()
                 }
                 else
                 {
@@ -5710,6 +5706,7 @@ char saveCompensationMatrix( unsigned int uAddress )
 #if FEATURE_HEAT_BED_Z_COMPENSATION
     g_offsetZCompensationSteps = uMax;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
+	g_ZMatrixChangedInRam = 0;
 
     return 0;
 
@@ -5932,6 +5929,8 @@ char loadCompensationMatrix( unsigned int uAddress )
 #if FEATURE_HEAT_BED_Z_COMPENSATION
     g_offsetZCompensationSteps = uMax;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
+
+	g_ZMatrixChangedInRam = 0; //Nibbels: Marker, dass die Matrix gespeichert werden kann oder eben nicht, weils unverändert keinen Sinn macht.
 
     resetZCompensation();
     return 0;
@@ -11032,6 +11031,7 @@ void processCommand( GCode* pCommand )
                                         Printer::ZOffset = 0; //offset um nullen
                                         g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000; //offset-stepps neu berechnen
                                     }   
+									g_ZMatrixChangedInRam = 1;
                                 }
                             }
                             
@@ -11055,8 +11055,9 @@ void processCommand( GCode* pCommand )
                             unsigned int savepoint = (unsigned int)pCommand->S;
                             if( saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * savepoint) ) ) //g_nActiveHeatBed --> pCommand->S
                             {
+								//Ähm.... diesen Fall gibts garnicht laut saveCompensationMatrix()
                                 //retcode != 0
-                                Com::printFLN( PSTR( "M3902: Save the Matrix::ERROR::The heat bed compensation matrix could not be saved" ) );
+                                //Com::printFLN( PSTR( "M3902: Save the Matrix::ERROR::The heat bed compensation matrix could not be saved" ) );
                             }
                             else
                             {
