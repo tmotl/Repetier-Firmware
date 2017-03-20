@@ -331,6 +331,8 @@
 #define UI_TEXT_AUTODETECT_PID_DONE     "PID determined"
 #define UI_TEXT_SENSOR_ERROR            "Sensor Error"
 #define UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED "Scan aborted"
+#define UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z1  "Clean the Nozzle"
+#define UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2  "Fix the Z-Screw"
 
 // Printtime output gets aggregated like <Days_5gisgits>UI_TEXT_PRINTTIME_DAYS<Hours>UI_TEXT_PRINTTIME_HOURS<Minutes>UI_TEXT_PRINTTIME_MINUTES
 // ___88 days 12:45
@@ -638,6 +640,8 @@
 #define UI_TEXT_AUTODETECT_PID_DONE     "PID ermittelt"
 #define UI_TEXT_SENSOR_ERROR            "Sensorfehler"
 #define UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED "Scan abgebrochen"
+#define UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z1  "Reinige Duese"
+#define UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2  "Korr. Z-Schraube"
 
 // Printtime output gets aggregated like <Days_5gisgits>UI_TEXT_PRINTTIME_DAYS<Hours>UI_TEXT_PRINTTIME_HOURS<Minutes>UI_TEXT_PRINTTIME_MINUTES
 // ___88 days 12:45

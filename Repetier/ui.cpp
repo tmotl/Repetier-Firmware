@@ -2821,22 +2821,32 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_XPOSITION:
         {
-            nextPreviousXAction( increment );
+			/*
+			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+			see configuration.h
+			*/
+            nextPreviousXAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }
         case UI_ACTION_YPOSITION:
         {
-            nextPreviousYAction( increment );
+			/*
+			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+			see configuration.h
+			*/
+            nextPreviousYAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }
         case UI_ACTION_ZPOSITION:
         {
 			/*
-			Z_BUTTON_DIRECTION = -1 : You imagine to drive the HeatBed
-			Z_BUTTON_DIRECTION = 1 : You imagine to drive the Nozzle / Fräser
+			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
 			see configuration.h
 			*/
-            nextPreviousZAction( Z_BUTTON_DIRECTION*increment );
+            nextPreviousZAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }			
         case UI_ACTION_ZOFFSET:

@@ -57,6 +57,10 @@ FSTRINGVALUE( ui_text_temperature_wrong, UI_TEXT_TEMPERATURE_WRONG )
 FSTRINGVALUE( ui_text_timeout, UI_TEXT_TIMEOUT )
 FSTRINGVALUE( ui_text_sensor_error, UI_TEXT_SENSOR_ERROR )
 FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_SEARCH_ABORTED )
+FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z1, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z1 )
+FSTRINGVALUE( ui_text_question, UI_TEXT_UNKNOWN )
+FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z2, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2 )
+
 FSTRINGVALUE( ui_text_saving_success, UI_TEXT_SAVING_SUCCESS )
 
  
@@ -1782,7 +1786,7 @@ void startZOScan( void )
         {
             Com::printFLN( PSTR( "ZOS(): the scan has been cancelled" ) );
         }
-        abortSearchHeatBedZOffset();
+        abortSearchHeatBedZOffset(false);
     }
     else
     {
@@ -1860,14 +1864,14 @@ void searchZOScan( void )
                   Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix is >0!" ) );
                   Com::printFLN( PSTR( "ZOS(): FIX::Z-Schraube weiter rausdrehen, neuer HBS-Scan." ) );
                   Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );       
-                  abortSearchHeatBedZOffset();
+                  abortSearchHeatBedZOffset(false);
                   break;
                 }           
                 // safety check on the current matrix
                 if(g_ZCompensationMatrix[0][0] != EEPROM_FORMAT) {
                   Com::printFLN( PSTR( "ZOS(): ERROR::The previous compensation matrix EEPROM_FORMAT is invalid!" ) );
                   Com::printFLN( PSTR( "ZOS(): ERROR::Bitte neuen HBS machen! Please do a fresh HBS!" ) );
-                  abortSearchHeatBedZOffset();
+                  abortSearchHeatBedZOffset(false);
                   break;
                 }
                 g_ZOSScanStatus = 3;    
@@ -1939,7 +1943,7 @@ void searchZOScan( void )
                 int err = readIdlePressure( &g_nCurrentIdlePressure );
                 if( err != 0 ) {
                   Com::printFLN( PSTR( "ZOS(): ERROR::the idle pressure could not be determined" ) );
-                  abortSearchHeatBedZOffset();
+                  abortSearchHeatBedZOffset(false);
                   break;
                 }
 
@@ -1973,7 +1977,7 @@ void searchZOScan( void )
                 // check for error
                 if(g_abortZScan) {
                   Com::printFLN( PSTR( "ZOS(): ERROR::cannot find the surface in fast scan" ) );
-                  abortSearchHeatBedZOffset();
+                  abortSearchHeatBedZOffset(false);
                   break;
                 }
         
@@ -2003,7 +2007,7 @@ void searchZOScan( void )
                       // check for error
                       if(g_abortZScan) {
                         Com::printFLN( PSTR( "ZOS(): ERROR::cannot find the surface in slow scan" ) );
-                        abortSearchHeatBedZOffset();
+                        abortSearchHeatBedZOffset(false);
                         break;
                       }
                       
@@ -2072,8 +2076,7 @@ void searchZOScan( void )
                   // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is invalid
                   Com::printFLN( PSTR( "ZOS(): ERROR::The measured correction is too large to be stored in the matrix (integer overflow)!" ) );
                   Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
-                  loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
-                  abortSearchHeatBedZOffset();
+                  abortSearchHeatBedZOffset(true);
                     break;
                 }
                 // fail if z>0 occurred
@@ -2085,8 +2088,7 @@ void searchZOScan( void )
                   Com::printFLN( PSTR( "ZOS(): FIX::Clean Hotend-Nozzle" ) );
                   Com::printFLN( PSTR( "ZOS(): FIX::Scrape off Filament-Popel from Scan-Position :)" ) );
                   Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
-                  loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
-                  abortSearchHeatBedZOffset();
+                  abortSearchHeatBedZOffset(true);
                     break;
                 }
                 
@@ -2139,8 +2141,18 @@ void searchZOScan( void )
     return;
 } // searchZOScan
 
-void abortSearchHeatBedZOffset( void )
+void abortSearchHeatBedZOffset( bool reloadMatrix )
 {
+	determineCompensationOffsetZ(); //nur zum schraubenposition berechnen. Wird gleich wieder überschrieben - muss nicht.
+	if( !calculateZScrewTempLenght() ){
+		//der Rechner meint, das Bett ist zu weit oben:
+		showMyPage( (void*)ui_text_heat_bed_zoffset_search_aborted, (void*)ui_text_question, (void*)ui_text_heat_bed_zoffset_fix_z1, (void*)ui_text_heat_bed_zoffset_fix_z2 );
+	}else{
+		// show error message (stays until confirmed by user)
+		showError( (void*)ui_text_heat_bed_zoffset_search_aborted );
+	}
+	if(reloadMatrix) loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) ); 
+	
     g_ZOSScanStatus = 0;
     // the search has been aborted
     UI_STATUS_UPD( UI_TEXT_HEAT_BED_SCAN_ABORTED );
@@ -2150,9 +2162,6 @@ void abortSearchHeatBedZOffset( void )
     moveZ( 5*Printer::axisStepsPerMM[Z_AXIS] );
     Printer::homeAxis( true, true, true );
     moveZ( 5*Printer::axisStepsPerMM[Z_AXIS] );
-
-    // show error message (stays until confirmed by user)
-    showError( (void*)ui_text_heat_bed_zoffset_search_aborted );
 
     // turn off all steppers and extruders
     Printer::setAllSteppersDisabled();
@@ -2167,27 +2176,27 @@ void abortSearchHeatBedZOffset( void )
 } /* searchHeatBedZOffset */
 
 
-void calculateZScrewTempLenght( void )
+bool calculateZScrewTempLenght( void )
 {
+	bool returnwert = true;
+	Com::printFLN( PSTR( " " ) );
 	Com::printFLN( PSTR( "Z-Schrauben-Helper: " ) );
 	if(g_ZCompensationMatrix[0][0] == EEPROM_FORMAT){
 		/*IDEAL ist es, wenn mand den Drucker "kalt" und frisch aufgeheizt einstellt.*/
 	
 		//Gerade eben muss ein Z-Scan die Matrix korrigiert haben.
 		//Der Extruder darf sich seither nicht verändert (T0 -> T1) und nicht abgekühlt haben
-		//Dann wird pro °C des aktiven Extruders 0.001mm Längung angenommen.
-		//Dann wird pro °C des Heizbettes 0.0015mm Längung angenommen.
+		//Dann wird pro °C des aktiven Extruders ~0.001mm Längung angenommen.
+		//Dann wird pro °C des Heizbettes ~0.0015mm Längung angenommen.
 		
-		//Wegen der unbekannten Nachlängung werden 0.18mm -> 0.15mm Puffer auf Z=0 angestrebt.
-		
-		//Die ideale Matrix-Verschiebung wird auf 260°C Hotend / 120°C Bett, was ein Extremwert darstellen soll auf -0.15mm angepeilt.
-		//Ohne Kenntnis der Nachlängung sollte demnach (bei 260°C Hotend / 120°C Bett) ~ -0.00 (kalt) bis -0.30mm real Spitzenwert erreicht werden, wenn man die Z-Schraube so einstellt, wie diese Funktion ausgibt.
+		//Wegen der unbekannten Nachlängung werden 0.15mm Puffer auf Z=0 angestrebt.
+		//Einfach so: wird ein Puffer von 0.05 angestrebt. Die ideale Matrix-Verschiebung wird auf 260°C Hotend / 120°C Bett, was ein Extremwert darstellen soll auf -0.05mm angepeilt.
 		
 		//Config
 		float maxExtruderTemperature = (float)EXTRUDER_MAX_TEMP;
 		float maxBedTemperature = 120.0f; //120°C ist ok... mit 180 zu rechnen wäre übertrieben.
 		float BedThermalExplansionInMikrons = 1.5f;
-		float ExtruderThermalExplansionInMikrons = 1.0f;
+		float ExtruderThermalExplansionInMikrons = 0.95f;
 		float maxNachdehnungInMikrons = 150.0f;
 		float RestAbstandInMikrons = 50.0f;
 		
@@ -2201,52 +2210,67 @@ void calculateZScrewTempLenght( void )
 		if(BedTemperature == -1) maxBedTemperature = BedTemperature = 20.0f; //Wenn kein Heated-Bed dann Standardbedingungen annehmen.
 			
 		//Umrechnung des aktuellen Zustandes auf die heißesten Werte:
-		float MinDistanceInMikrons = MatrixMaximumInMikrons 
+		float MinDistanceInMikronsKalt = MatrixMaximumInMikrons 
 				+ (maxExtruderTemperature - ExtruderTemperature) * ExtruderThermalExplansionInMikrons 
 				+ (maxBedTemperature - BedTemperature) * BedThermalExplansionInMikrons;
+		float MinDistanceInMikronsWarm = MinDistanceInMikronsKalt + maxNachdehnungInMikrons;
 		
 		Com::printFLN( PSTR( "- Alle Werte in Mikrometern / Einheit [um] -" ) );
 		Com::printFLN( PSTR( "Matrix-Minimum: " ) , MatrixMaximumInMikrons );
 		Com::printFLN( PSTR( "Weitere Extruderausdehnung maximal: " ) , (maxExtruderTemperature - ExtruderTemperature) * ExtruderThermalExplansionInMikrons  );
 		Com::printFLN( PSTR( "Weitere Heizbettausdehnung maximal: " ) , (maxBedTemperature - BedTemperature) * BedThermalExplansionInMikrons );
-		Com::printFLN( PSTR( "Minimalabstand bei Maximaltemperaturen: " ) , MinDistanceInMikrons );
+		Com::printFLN( PSTR( "Maximalwert-zMatrix bei Maximaltemperaturen (kalter Drucker): " ) , MinDistanceInMikronsKalt );
+		Com::printFLN( PSTR( "Maximalwert-zMatrix bei Maximaltemperaturen (durchgewaermter Drucker): " ) , MinDistanceInMikronsWarm  ); 
 		
-		Com::printFLN( PSTR( "Wenn das Druckergehaeuse gerade durchgewaermt waere: " ) , MinDistanceInMikrons ); //das sollte rechnerisch ungefähr -0.0 werden, wenn Durchgewärmt
-		Com::printFLN( PSTR( "Wenn das Druckergehaeuse gerade kalt waere: " ) , MinDistanceInMikrons - maxNachdehnungInMikrons ); //das ist, weil wir die Durchwärmung nicht wissen unser Einstellpunkt. -> 
+		//z.B. -200 <-- um diesen Wert dürfte man korrigieren, wenn der Drucker zum Messzeitpunkt voll durchgewärmt wäre. Weiß er aber nicht!
+		//Ein vorgewärmter Drucker justiert das Heizbett eher auf -0.2, ein kalter Drucker justiert es eher auf -0.05 bei Spitzentemperaturen. Beides ist ok.
+		//float SollkorrekturKalt = (MinDistanceInMikronsKalt + RestAbstandInMikrons); 
+		//z.B.  -50 <-- diesen Wert darf man in jedem Fall korrigieren.
+		float SollkorrekturWarm = (MinDistanceInMikronsWarm + RestAbstandInMikrons); 
 		
-		float Sollkorrektur = -1*maxNachdehnungInMikrons - MinDistanceInMikrons - RestAbstandInMikrons;
+		/*
+		Wenn ich den Test mit einem bereits warmen Drucker mache, plane ich unnötig eine Sicherheit ein, die ich nur einrechne, weil der Drucker aktuell kalt sein könnte. 
+		Also warmer Drucker: Bett weiter hoch justieren, also Schraube weiter rein, also Drehsinn Minus.
+		*/		
+		// |+0-|..Puffer..|.......Nachdehnung........|Kalt-Soll-Einstellung|
+		// |+0-|..Puffer..|Warm-Soll-Einstellung|
+		
+		/* TIPP: -> Schraube bis maxNachdehnungInMikrons ~ 150um weiter runter(=Bett weiter hoch =Drehsinn Minus) empfehlen, wenn der Drucker aktuell "mehr druchgewärmt" wäre. */	
+				
+		Com::printFLN( PSTR( " " ) );
 		Com::printFLN( PSTR( "#############" ) );
-		Com::printF( PSTR( "Sollkorrektur: " ) , Sollkorrektur , 0 ); //das ist die Änderung in Mikrometer, die wir vornehmen sollten.
-		Com::printF( PSTR( " [um] = " ), Sollkorrektur*0.001f,3  ); //das ist die Änderung in Millimeter, die wir vornehmen sollten.
-		Com::printFLN( PSTR( " [mm]" ) );
+		Com::printF( PSTR( "Sollkorrektur: " ) , SollkorrekturWarm , 0 ); Com::printF( PSTR( " [um] = " ), SollkorrekturWarm*0.001f,3  ); Com::printFLN( PSTR( " [mm]" ) );
+
+		float ZSchraubenDrehungenWarm = SollkorrekturWarm * 0.002f; //[Sollkorrektur in mm] geteilt durch [Gewinde: 0.5 mm/Umdrehung] -> Sollkorrektur / 1000 / 0.5
+		Com::printF( PSTR( "Sollumdrehungen: " ) , ZSchraubenDrehungenWarm , 1 ); Com::printF( PSTR( " [U] = " ) , ZSchraubenDrehungenWarm*360 , 0 ); Com::printF( PSTR( " [Grad]" )  );
+		
+		if(ZSchraubenDrehungenWarm > 0) Com::printFLN( PSTR( " (+ heisst rausdrehen/linksrum/gegen die Uhr)" ) ); //Bett wird nach unten justiert
+		else 							Com::printFLN( PSTR( " (- heisst reindrehen/rechtsrum/im Uhrzeigersinn)" ) ); //Bett wird nach oben justiert
+		
+		Com::printFLN( PSTR( "Je kaelter der Gesamtdrucker aktuell ist (nach langer Pause frisch angeschaltet), desto besser der Korrekturwert." ) );
+				
 #if MOTHERBOARD == DEVICE_TYPE_RF2000
-		float ZSchraubenDrehungen = Sollkorrektur * 0.002f; //[Sollkorrektur in mm] geteilt durch [Gewinde: 0.5 mm/Umdrehung] -> Sollkorrektur / 1000 / 0.5
-		Com::printF( PSTR( "Sollumdrehungen: " ) , ZSchraubenDrehungen, 1 ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-		if(ZSchraubenDrehungen < 0.25f && ZSchraubenDrehungen > -0.25f){
-			Com::printFLN( PSTR( " (RF2000: Die Z-Schraube ist ok!)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-		}else{
-			if(ZSchraubenDrehungen < 0){
-				Com::printFLN( PSTR( " (weiter rausdrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-			}else{
-				Com::printFLN( PSTR( " (weiter reindrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-			}
-		}
-		Com::printFLN( PSTR( " (RF2000: Minimal eine halbe Schraubendrehung einstellbar.)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		if( -0.5f <= ZSchraubenDrehungenWarm && SollkorrekturWarm < 0.04f ){ // < 0.25mm = 0.5Umdrehungen ist mit dem RF2000 nicht machbar.
+			Com::printFLN( PSTR( " (Die Z-Schraube ist ok!)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+		}else if(SollkorrekturWarm >= 0.04f){ //dann bin ich rechnerisch um Z = 0 (50um mit 10um toleranz, die ich fordere.)
+			//eine korrektur von mehr als +40um heißt, ich bin gerade vermutlich im Z>0
+			Com::printFLN( PSTR( " (Die Z-Schraube weiter raus! Das Bett scheint zu hoch zu liegen.)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+			returnwert = false;
+		} 
+		Com::printFLN( PSTR( " (RF2000: Minimal eine halbe Schraubendrehung (dZ=0.25mm-Schritte) einstellbar.)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
 #else //if MOTHERBOARD == DEVICE_TYPE_RF1000		
-		float ZSchraubenDrehungen = Sollkorrektur * 0.002f; //[Sollkorrektur in mm] geteilt durch [Gewinde: 0.5 mm/Umdrehung] -> Sollkorrektur / 1000 / 0.5
-		Com::printF( PSTR( "Sollumdrehungen: " ) , ZSchraubenDrehungen, 1 ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-		if(ZSchraubenDrehungen < 0){
-			Com::printFLN( PSTR( " (weiter rausdrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-		}else{
-			Com::printFLN( PSTR( " (weiter reindrehen)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
-		}
-#endif
+		if(SollkorrekturWarm >= 0.04f){ //dann bin ich rechnerisch um Z = 0 (50um mit 10um toleranz, die ich fordere.)
+			//eine korrektur von mehr als +40um heißt, ich bin gerade vermutlich im Z>0
+			Com::printFLN( PSTR( " (Die Z-Schraube weiter raus! Das Bett scheint zu hoch zu liegen.)" ) ); //das ist die Änderung in M3-Regelgewinde-Z-Schrauben-Umdrehungen
+			returnwert = false;
+		} 
+#endif	
 		Com::printFLN( PSTR( "#############" ) );
 		
 	}else{
 		Com::printFLN( PSTR( "Error::Die Matrix wurde noch nicht in den Ram geladen. Vorsicht! Diese Funktion macht nur nach einem sauberen Z-Offset-Scan wirklich sinn." ) );
 	}
-	
+	return returnwert;
 } // calculateZScrewTempLenght
 
 /**************************************************************************************************************************************/
@@ -14749,6 +14773,17 @@ void showInformation( void* line2, void* line3, void* line4 )
 
 } // showInformation
 
+void showMyPage( void* line1, void* line2, void* line3, void* line4 )
+{
+    uid.messageLine1 = line1;
+    uid.messageLine2 = line2;
+    uid.messageLine3 = line3;
+    uid.messageLine4 = line4;
+
+    uid.showMessage( true );
+    return;
+
+} // showInformation
 
 void dump( char type, char from )
 {

@@ -731,13 +731,13 @@ extern void scanHeatBed( void );
 // searchZOScan()
 extern void startZOScan( void );
 extern void searchZOScan( void );
-extern void calculateZScrewTempLenght( void );
+extern bool calculateZScrewTempLenght( void );
 
 //Menüumschalter für Z-Step-Höhe
 extern void configureMANUAL_STEPS_Z( int8_t increment );
 
 // abortSearchHeatBedZOffset()
-extern void abortSearchHeatBedZOffset( void );
+extern void abortSearchHeatBedZOffset( bool reloadMatrix );
 
 // testExtruderTemperature()
 extern short testExtruderTemperature( void );
@@ -1044,6 +1044,9 @@ extern void showWarning( void* line2, void* line3 = NULL, void* line4 = NULL );
 
 // showInformation()
 extern void showInformation( void* line2, void* line3 = NULL, void* line4 = NULL );
+
+// showMyPage()
+extern void showMyPage( void* line1, void* line2 = NULL, void* line3 = NULL, void* line4 = NULL );
 
 // dump()
 extern void dump( char type, char from = 0 );
