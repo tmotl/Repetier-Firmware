@@ -2747,51 +2747,51 @@ void UIDisplay::nextPreviousAction(int8_t next)
     {
         if((UI_INVERT_MENU_DIRECTION && next < 0) || (!UI_INVERT_MENU_DIRECTION && next > 0))
         {
-			//up-to-bottom-Patch
-			uint8_t vorher = menuPos[menuLevel];
-			if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
-			else menuPos[menuLevel] = 0; 
-			//gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
-			while(menuPos[menuLevel] != vorher)
-			{				
-				testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-				if(testEnt->showEntry()) break;
+			    //up-to-bottom-Patch
+			    uint8_t vorher = menuPos[menuLevel];
+			    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+			    else menuPos[menuLevel] = 0; 
+			    //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+			    while(menuPos[menuLevel] != vorher)
+			    {				
+				    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+				    if(testEnt->showEntry()) break;
 				
-				if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
-				else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
-			}
-			//alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
-			testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			if(!testEnt->showEntry())
-			{
-				// this new chosen menu item shall not be displayed - revert the so-far used menu item
-				menuPos[menuLevel] = vorher;
-			}
-			//up-to-bottom-Patch
-        }
-        else 
-        {
-			//down-to-top-Patch
-			uint8_t vorher = menuPos[menuLevel];
-			if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
-			else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-			//gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
-			while(menuPos[menuLevel] != vorher)
-			{				
-				testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-				if(testEnt->showEntry()) break;
-				
-				if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
-				else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-			}
-			//alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
-			testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			if(!testEnt->showEntry())
-			{
-				// this new chosen menu item shall not be displayed - revert the so-far used menu item
-				menuPos[menuLevel] = vorher;
-			}
-			//down-to-top-Patch ende
+				    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+				    else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
+			    }
+			    //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+			    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+			    if(!testEnt->showEntry())
+			    {
+				    // this new chosen menu item shall not be displayed - revert the so-far used menu item
+				    menuPos[menuLevel] = vorher;
+			    }
+			    //up-to-bottom-Patch
+         }
+         else 
+         {
+			    //down-to-top-Patch
+			    uint8_t vorher = menuPos[menuLevel];
+			    if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+			    else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+			    //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+			    while(menuPos[menuLevel] != vorher)
+			    {				
+			    	testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+			    	if(testEnt->showEntry()) break;
+			    	
+		    		if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+		    		else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+		    	}
+			    //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+			    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+			    if(!testEnt->showEntry())
+			    {
+			    	// this new chosen menu item shall not be displayed - revert the so-far used menu item
+			    	menuPos[menuLevel] = vorher;
+			    }
+			    //down-to-top-Patch ende
         }
         adjustMenuPos();
         return;
