@@ -2748,73 +2748,51 @@ void UIDisplay::nextPreviousAction(int8_t next)
         if((UI_INVERT_MENU_DIRECTION && next < 0) || (!UI_INVERT_MENU_DIRECTION && next > 0))
         {
 			//up-to-bottom-Patch
-			//Nibbels: (erklärt ohne UI_INVERT_MENU_DIRECTION) Wenn man am Menü ganz unten ist, soll der komplett hochspringen und nicht unten stehenbleiben:
-			if(menuPos[menuLevel]+1 >= nr){
-				menuPos[menuLevel] = 0; //0, menuPos ist unsigned! drum while kopieren und nicht einfach -1 vorherreinschreiben um dem ersten increment eins vorneweg zu nehmen.				
-				//folgend wird das menupos auf gültigkeit geprüft und sonst ignoriert oder geskipped:
-				while(menuPos[menuLevel]+1 < nr)
-				{					
-					testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-					if(testEnt->showEntry())
-						break;
-					menuPos[menuLevel]++;
-				}
-			}else{
-				//originalcode:
-				while(menuPos[menuLevel]+1 < nr)
-				{
-					menuPos[menuLevel]++;
-					testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-					if(testEnt->showEntry())
-						break;
-				}				
-				//originalcode ende
+			uint8_t vorher = menuPos[menuLevel];
+			if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+			else menuPos[menuLevel] = 0; 
+			//gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+			while(menuPos[menuLevel] != vorher)
+			{				
+				testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+				if(testEnt->showEntry()) break;
+				
+				if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+				else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
+			}
+			//alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+			testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+			if(!testEnt->showEntry())
+			{
+				// this new chosen menu item shall not be displayed - revert the so-far used menu item
+				menuPos[menuLevel] = vorher;
 			}
 			//up-to-bottom-Patch
         }
-        else //if(menuPos[menuLevel] > 0)
+        else 
         {
 			//down-to-top-Patch
-			if(menuPos[menuLevel] > 0){
-				//originalcode:
-				uint8_t temp = menuPos[menuLevel];
-				while(menuPos[menuLevel]>0)
-				{
-					menuPos[menuLevel]--;
-
-					testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-					if(testEnt->showEntry())
-						break;
-				}
-
+			uint8_t vorher = menuPos[menuLevel];
+			if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+			else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+			//gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+			while(menuPos[menuLevel] != vorher)
+			{				
 				testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-				if(!testEnt->showEntry())
-				{
-					// this new chosen menu item shall not be displayed - revert the so-far used menu item
-					menuPos[menuLevel] = temp;
-				}
-				//originalcode ende
-			}else{
-				uint8_t temp = menuPos[menuLevel];
-				menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-				while(menuPos[menuLevel] > 0)
-				{
-					testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-					if(testEnt->showEntry())
-						break;
-					menuPos[menuLevel]--; //decrement nur wenn maximalsubmenüpunkt ungültig, dann nächstes nehmen und nochmal prüfen.
-				}
+				if(testEnt->showEntry()) break;
 				
-				testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-				if(!testEnt->showEntry())
-				{
-					// this new chosen menu item shall not be displayed - revert the so-far used menu item
-					menuPos[menuLevel] = temp;
-				}
+				if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+				else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+			}
+			//alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+			testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+			if(!testEnt->showEntry())
+			{
+				// this new chosen menu item shall not be displayed - revert the so-far used menu item
+				menuPos[menuLevel] = vorher;
 			}
 			//down-to-top-Patch ende
         }
-		//Nibbels: Was mir hier nicht ganz klar wurde: Warum baut man beim springen ins negative den temp-Revert-Check-auf-Gültigkeit ein und beim springen ins positive nicht?
         adjustMenuPos();
         return;
     }
