@@ -35,7 +35,7 @@
 // ##########################################################################################
 
 /** \brief Allows to use the device for milling */
-#define FEATURE_MILLING_MODE                0                                                   // 1 = on, 0 = off
+#define FEATURE_MILLING_MODE                1                                                   // 1 = on, 0 = off
 
 
 #if FEATURE_MILLING_MODE
