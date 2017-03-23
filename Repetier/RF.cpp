@@ -12362,8 +12362,17 @@ void nextPreviousZAction( int8_t increment )
             Com::printFLN( PSTR( "increment: " ) , (1.0f-currentZmm) * increment , 3 );
 			
 			if(Printer::isHomed() && increment < 0 && currentZmm < 1.0f){
-				if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
-				else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+				if( Printer::operatingMode == OPERATING_MODE_PRINT )
+				{
+					//Nur so weit runterfahren, wie man über 0 ist. Denn da ist beim Printermode homed der Endschalter.
+					if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
+					else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+				}
+				else
+				{
+					//Beim Milling ist Z=0 das obere des Bauteils. Dann geht Z - ins Bauteil rein. Daher ist überfahren ok.
+					Printer::setDestinationStepsFromMenu( 0, 0, 1 * increment );	
+				}
 			}else{
 				Printer::setDestinationStepsFromMenu( 0, 0, 1 * increment );				
 			}
@@ -12385,8 +12394,17 @@ void nextPreviousZAction( int8_t increment )
             }
 			float currentZmm = Printer::currentZPosition();
 			if(Printer::isHomed() && increment < 0 && currentZmm < 10.0f){
-				if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
-				else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+				if( Printer::operatingMode == OPERATING_MODE_PRINT )
+				{
+					//Nur so weit runterfahren, wie man über 0 ist. Denn da ist beim Printermode homed der Endschalter.
+					if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
+					else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+				}
+				else
+				{
+					//Beim Milling ist Z=0 das obere des Bauteils. Dann geht Z - ins Bauteil rein. Daher ist überfahren ok.
+					Printer::setDestinationStepsFromMenu( 0, 0, 10 * increment );	
+				}
 			}else{
 				Printer::setDestinationStepsFromMenu( 0, 0, 10 * increment );				
 			}
@@ -12407,8 +12425,17 @@ void nextPreviousZAction( int8_t increment )
             }
 			float currentZmm = Printer::currentZPosition();
 			if(Printer::isHomed() && increment < 0 && currentZmm < 50.0f){
-				if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
-				else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+				if( Printer::operatingMode == OPERATING_MODE_PRINT )
+				{
+					//Nur so weit runterfahren, wie man über 0 ist. Denn da ist beim Printermode homed der Endschalter.
+					if(currentZmm > 0) Printer::setDestinationStepsFromMenu( 0, 0, currentZmm * increment );
+					else Printer::setDestinationStepsFromMenu( 0, 0, g_nManualSteps[Z_AXIS]*Printer::invAxisStepsPerMM[Z_AXIS] * increment );
+				}
+				else
+				{
+					//Beim Milling ist Z=0 das obere des Bauteils. Dann geht Z - ins Bauteil rein. Daher ist überfahren ok.
+					Printer::setDestinationStepsFromMenu( 0, 0, 50 * increment );	
+				}
 			}else{
 				Printer::setDestinationStepsFromMenu( 0, 0, 50 * increment );				
 			}
