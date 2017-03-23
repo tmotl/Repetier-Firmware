@@ -1,6 +1,7 @@
 V RF.01.37i.mod (2017-03-22)
 - Menu fix
 - Nicer menu navigation through bottom and top of submenus
+- Nightly: some Cleanup
 
 V RF.01.37h.mod (2017-03-20)
 - Z_BUTTON_DIRECTION removed: https://github.com/RF1000community/Repetier-Firmware/issues/20 -> XYZ_POSITION_BUTTON_DIRECTION introduced.

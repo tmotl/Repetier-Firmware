@@ -91,11 +91,6 @@ private:
     uint16_t            advanceL;                   ///< Recomputated L value
 #endif // USE_ADVANCE
 
-#ifdef DEBUG_STEPCOUNT
-    int32_t             totalStepsRemaining;
-#endif // DEBUG_STEPCOUNT
-
-
 public:
     int32_t             stepsRemaining;            ///< Remaining steps, until move is finished
     static PrintLine*   cur;
@@ -453,11 +448,6 @@ public:
 #if FEATURE_TWO_XSTEPPER
         WRITE(X2_STEP_PIN,HIGH);
 #endif // FEATURE_TWO_XSTEPPER
-
-#ifdef DEBUG_STEPCOUNT
-        totalStepsRemaining--;
-#endif // DEBUG_STEPCOUNT
-
     } // startXStep
 
     inline void startYStep()
@@ -469,11 +459,6 @@ public:
 #if FEATURE_TWO_YSTEPPER
         WRITE(Y2_STEP_PIN,HIGH);
 #endif // FEATURE_TWO_YSTEPPER
-
-#ifdef DEBUG_STEPCOUNT
-        totalStepsRemaining--;
-#endif // DEBUG_STEPCOUNT
-
     } // startYStep
 
     void updateStepsParameter();
@@ -483,9 +468,6 @@ public:
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
     void calculateDirectMove(float axis_diff[],uint8_t pathOptimize);
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
-    void logLine();
-    void logLine2();
 
     inline long getWaitTicks()
     {

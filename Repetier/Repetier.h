@@ -31,8 +31,6 @@
 #include "RF2000.h"
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 
-#include "PID_v1.h"
-
 #include "pins.h"
 #include "HAL.h"
 #include "gcode.h"
