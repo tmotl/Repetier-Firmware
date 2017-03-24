@@ -104,24 +104,12 @@ public:
     static uint8_t          backlashDir;
 #endif // ENABLE_BACKLASH_COMPENSATION
 
-#ifdef DEBUG_STEPCOUNT
-    static long             totalStepsRemaining;
-#endif // DEBUG_STEPCOUNT
-
 #if FEATURE_MEMORY_POSITION
     static float            memoryX;
     static float            memoryY;
     static float            memoryZ;
     static float            memoryE;
 #endif // FEATURE_MEMORY_POSITION
-
-#ifdef DEBUG_SEGMENT_LENGTH
-    static float            maxRealSegmentLength;
-#endif // DEBUG_SEGMENT_LENGTH
-
-#ifdef DEBUG_REAL_JERK
-    static float            maxRealJerk;
-#endif // DEBUG_REAL_JERK
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
     static volatile char    doHeatBedZCompensation;

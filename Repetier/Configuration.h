@@ -216,7 +216,7 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 #define DEBUG_HEAT_BED_Z_COMPENSATION       0                                                   // 1 = on, 0 = off
 
 /** \brief Enables debug outputs from the heat bed scan */
-#define DEBUG_HEAT_BED_SCAN                 2                                                   // 0 = off, 1 = on, 2 = on with more debug outputs
+#define DEBUG_HEAT_BED_SCAN                 0                                                   // 0 = off, 1 = on, 2 = on with more debug outputs
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
@@ -227,16 +227,6 @@ WARNING: Servos can draw a considerable amount of current. Make sure your system
 #define DEBUG_REMEMBER_SCAN_PRESSURE        0                                                   // 1 = on, 0 = off
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-
-
-/** \brief Enables debug outputs about the processing of commands */
-#define DEBUG_COMMAND_PEEK                  0                                                   // 1 = on, 0 = off
-
-/** \brief Enables debug outputs about the processing of queue moves */
-#define DEBUG_QUEUE_MOVE                    0                                                   // 1 = on, 0 = off
-
-/** \brief Enables debug outputs about the processing of direct moves */
-#define DEBUG_DIRECT_MOVE                   0                                                   // 1 = on, 0 = off
 
 /** \brief Enables debug outputs about the heat bed temperature compensation */
 #define DEBUG_HEAT_BED_TEMP_COMPENSATION    0                                                   // 1 = on, 0 = off
@@ -267,21 +257,12 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 /** \brief If enabled, writes the created generic table to serial port at startup. */
 //#define DEBUG_GENERIC
 
-/** \brief If enabled, steps to move and moved steps are compared. */
-//#define DEBUG_STEPCOUNT
-
 /** \brief This enables code to make M666 drop an ok, so you get problems with communication. It is to test host robustness. */
 #define DEBUG_COM_ERRORS
 
 /** \brief Adds a menu point in quick settings to write debg informations to the host in case of hangs where the ui still works. */
 //#define DEBUG_PRINT
 //#define DEBUG_SPLIT
-
-// Find the longest segment length during a print
-//#define DEBUG_SEGMENT_LENGTH
-
-// Find the maximum real jerk during a print
-//#define DEBUG_REAL_JERK
 
 // Uncomment the following line to enable debugging. You can better control debugging below the following line
 //#define DEBUG

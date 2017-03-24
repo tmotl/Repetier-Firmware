@@ -91,11 +91,6 @@ private:
     uint16_t            advanceL;                   ///< Recomputated L value
 #endif // USE_ADVANCE
 
-#ifdef DEBUG_STEPCOUNT
-    int32_t             totalStepsRemaining;
-#endif // DEBUG_STEPCOUNT
-
-
 public:
     int32_t             stepsRemaining;            ///< Remaining steps, until move is finished
     static PrintLine*   cur;
@@ -215,7 +210,7 @@ public:
         if(isZNegativeMove() && Printer::isZMinEndstopHit())
         {
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE && FEATURE_ENABLE_Z_SAFETY
-            if( Printer::isHomed() )
+            if( Printer::isHomed() && PrintLine::direct.task != TASK_MOVE_FROM_BUTTON)
             {
                 // the following checks shall not allow to continue the z-move in case the z home position is unknown
                 if( Printer::isHomed() && PrintLine::direct.task != TASK_MOVE_FROM_BUTTON)
@@ -453,11 +448,6 @@ public:
 #if FEATURE_TWO_XSTEPPER
         WRITE(X2_STEP_PIN,HIGH);
 #endif // FEATURE_TWO_XSTEPPER
-
-#ifdef DEBUG_STEPCOUNT
-        totalStepsRemaining--;
-#endif // DEBUG_STEPCOUNT
-
     } // startXStep
 
     inline void startYStep()
@@ -469,11 +459,6 @@ public:
 #if FEATURE_TWO_YSTEPPER
         WRITE(Y2_STEP_PIN,HIGH);
 #endif // FEATURE_TWO_YSTEPPER
-
-#ifdef DEBUG_STEPCOUNT
-        totalStepsRemaining--;
-#endif // DEBUG_STEPCOUNT
-
     } // startYStep
 
     void updateStepsParameter();
@@ -483,9 +468,6 @@ public:
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
     void calculateDirectMove(float axis_diff[],uint8_t pathOptimize);
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
-    void logLine();
-    void logLine2();
 
     inline long getWaitTicks()
     {
