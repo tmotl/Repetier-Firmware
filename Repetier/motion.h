@@ -218,7 +218,7 @@ public:
             if( Printer::isHomed() )
             {
                 // the following checks shall not allow to continue the z-move in case the z home position is unknown
-                if( Printer::currentZSteps > -Z_OVERRIDE_MAX )
+                if( Printer::isHomed() && PrintLine::direct.task != TASK_MOVE_FROM_BUTTON)
                 {
                     // we allow to overdrive Z-min a little bit so that also G-Codes are able to move to a smaller z-position even when Z-min has fired already
                     return;
