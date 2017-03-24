@@ -101,24 +101,12 @@ float           Printer::backlash[3];
 uint8_t         Printer::backlashDir;
 #endif // ENABLE_BACKLASH_COMPENSATION
 
-#ifdef DEBUG_STEPCOUNT
-long            Printer::totalStepsRemaining;
-#endif // DEBUG_STEPCOUNT
-
 #if FEATURE_MEMORY_POSITION
 float           Printer::memoryX;
 float           Printer::memoryY;
 float           Printer::memoryZ;
 float           Printer::memoryE;
 #endif // FEATURE_MEMORY_POSITION
-
-#ifdef DEBUG_SEGMENT_LENGTH
-float           Printer::maxRealSegmentLength = 0;
-#endif // DEBUG_SEGMENT_LENGTH
-
-#ifdef DEBUG_REAL_JERK
-float           Printer::maxRealJerk = 0;
-#endif // DEBUG_REAL_JERK
 
 #ifdef DEBUG_PRINT
 int             debugWaitLoop = 0;
@@ -618,7 +606,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
     {
         if( Printer::debugErrors() )
         {
-            Com::printFLN( PSTR( "We should not be here." ) );
+            //Com::printFLN( PSTR( "We should not be here." ) );
         }
         queuePositionLastSteps[E_AXIS] = queuePositionTargetSteps[E_AXIS];
         return false; // ignore move
@@ -679,7 +667,7 @@ uint8_t Printer::setDestinationStepsFromMenu( float relativeX, float relativeY, 
     {
         if( Printer::debugErrors() )
         {
-            Com::printFLN( PSTR( "We should not be here." ) );
+            //Com::printFLN( PSTR( "We should not be here." ) );
         }
         return false; // ignore move
     }

@@ -144,28 +144,6 @@ FSTRINGVALUE(Com::tTempSensorDefect,": temp sensor defect")
 FSTRINGVALUE(Com::tTempSensorWorking,": working")
 FSTRINGVALUE(Com::tDryModeUntilRestart,"Printer set into dry run mode until restart!")
 
-#if (DEBUG_QUEUE_MOVE || DEBUG_DIRECT_MOVE)
-FSTRINGVALUE(Com::tDBGId,"ID:")
-FSTRINGVALUE(Com::tDBGVStartEnd,"vStart/End:")
-FSTRINGVALUE(Com::tDBAccelSteps,"accel/decel steps:")
-FSTRINGVALUE(Com::tDBGStartEndSpeed,"st./end speed:")
-FSTRINGVALUE(Com::tDBGFlags,"Flags:")
-FSTRINGVALUE(Com::tDBGJoinFlags,"joinFlags:")
-FSTRINGVALUE(Com::tDBGDelta,"Delta")
-FSTRINGVALUE(Com::tDBGDir,"Dir:")
-FSTRINGVALUE(Com::tDBGFullSpeed,"fullSpeed:")
-FSTRINGVALUE(Com::tDBGVMax,"vMax:")
-FSTRINGVALUE(Com::tDBGAcceleration,"Acceleration:")
-FSTRINGVALUE(Com::tDBGAccelerationPrim,"Acceleration Prim:")
-FSTRINGVALUE(Com::tDBGRemainingSteps,"Remaining steps:")
-FSTRINGVALUE(Com::tDBGAdvanceFull,"advanceFull:")
-FSTRINGVALUE(Com::tDBGAdvanceRate,"advanceRate:")
-FSTRINGVALUE(Com::tDBGLimitInterval,"LimitInterval:")
-FSTRINGVALUE(Com::tDBGMoveDistance,"Move distance on the XYZ space:")
-FSTRINGVALUE(Com::tDBGCommandedFeedrate,"Commanded feedrate:")
-FSTRINGVALUE(Com::tDBGConstFullSpeedMoveTime,"Constant full speed move time:")
-#endif // DEBUG_QUEUE_MOVE || DEBUG_DIRECT_MOVE
-
 #ifdef DEBUG_SPLIT
 FSTRINGVALUE(Com::tDBGDeltaSeconds,"Seconds:")
 FSTRINGVALUE(Com::tDBGDeltaZDelta,"Z delta:")
@@ -176,10 +154,6 @@ FSTRINGVALUE(Com::tDBGDeltaMaxDS,"Max DS:")
 FSTRINGVALUE(Com::tDBGDeltaStepsPerSegment,"Steps Per Segment:")
 FSTRINGVALUE(Com::tDBGDeltaVirtualAxisSteps,"Virtual axis steps:")
 #endif // DEBUG_SPLIT
-
-#ifdef DEBUG_STEPCOUNT
-FSTRINGVALUE(Com::tDBGMissedSteps,"Missed steps:")
-#endif // DEBUG_STEPCOUNT
 
 #ifdef WAITING_IDENTIFIER
 FSTRINGVALUE(Com::tWait,WAITING_IDENTIFIER)

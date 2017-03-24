@@ -244,17 +244,6 @@ void PrintLine::prepareQueueMove(uint8_t check_endstops,uint8_t pathOptimize)
             p->distance = RMath::max((float)sqrt(xydist2 + axis_diff[Z_AXIS] * axis_diff[Z_AXIS]),fabs(axis_diff[E_AXIS]));
         else
             p->distance = RMath::max((float)sqrt(xydist2),fabs(axis_diff[E_AXIS]));
-/*
-#if DEBUG_QUEUE_MOVE
-//      if(Printer::debugEcho())
-        {
-            Com::printF( PSTR( "qCM(): ID=" ), (int)p );
-            Com::printF( PSTR( ", x=" ), Printer::queuePositionTargetSteps[X_AXIS] );
-            Com::printF( PSTR( ", y=" ), Printer::queuePositionTargetSteps[Y_AXIS] );
-            Com::printFLN( PSTR( ", z=" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-        }
-#endif // DEBUG_QUEUE_MOVE
-*/
     }
     else
         p->distance = fabs(axis_diff[E_AXIS]);
@@ -318,24 +307,6 @@ void PrintLine::prepareDirectMove(void)
             p->distance = RMath::max((float)sqrt(xydist2 + axis_diff[Z_AXIS] * axis_diff[Z_AXIS]),fabs(axis_diff[E_AXIS]));
         else
             p->distance = RMath::max((float)sqrt(xydist2),fabs(axis_diff[E_AXIS]));
-/*
-#if DEBUG_DIRECT_MOVE
-//      if(Printer::debugEcho())
-        {
-            Com::printF( PSTR( "pDM(): ID=" ), (int)p );
-            Com::printF( PSTR( ", x=" ), Printer::directPositionCurrentSteps[X_AXIS] );
-            Com::printF( PSTR( "/" ), Printer::directPositionLastSteps[X_AXIS] );
-            Com::printF( PSTR( "/" ), Printer::directPositionTargetSteps[X_AXIS] );
-            Com::printF( PSTR( ", y=" ), Printer::directPositionCurrentSteps[Y_AXIS] );
-            Com::printF( PSTR( "/" ), Printer::directPositionLastSteps[Y_AXIS] );
-            Com::printF( PSTR( "/" ), Printer::directPositionTargetSteps[Y_AXIS] );
-            Com::printF( PSTR( ", z=" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-            Com::printF( PSTR( "/" ), Printer::directPositionLastSteps[Z_AXIS] );
-            Com::printF( PSTR( "/" ), Printer::directPositionTargetSteps[Z_AXIS] );
-            Com::printFLN( PSTR( "" ) );
-        }
-#endif // DEBUG_DIRECT_MOVE
-*/
     }
     else
         p->distance = fabs(axis_diff[E_AXIS]);
@@ -346,35 +317,17 @@ void PrintLine::prepareDirectMove(void)
 
 void PrintLine::stopDirectMove( void )
 {
-#if DEBUG_DIRECT_MOVE
-    char    path = 0;
-#endif // DEBUG_DIRECT_MOVE
-
-
     HAL::forbidInterrupts();
     if( PrintLine::direct.isXYZMove() )
     {
         // decelerate and stop
-#if DEBUG_DIRECT_MOVE
-        path = 1;
-#endif // DEBUG_DIRECT_MOVE
-
         if( PrintLine::direct.stepsRemaining > RF_MICRO_STEPS )
         {
             PrintLine::direct.stepsRemaining = RF_MICRO_STEPS;
-
-#if DEBUG_DIRECT_MOVE
-            path = 2;
-#endif // DEBUG_DIRECT_MOVE
         }
     }
     HAL::allowInterrupts();
-
-#if DEBUG_DIRECT_MOVE
-    Com::printFLN( PSTR( "stopDirectMove(): " ), path );
-#endif // DEBUG_DIRECT_MOVE
     return;
-
 } // stopDirectMove
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
@@ -579,22 +532,6 @@ void PrintLine::calculateQueueMove(float axis_diff[],uint8_t pathOptimize)
         halfStep = 1;
         error[X_AXIS] = error[Y_AXIS] = error[Z_AXIS] = error[E_AXIS] = delta[primaryAxis];
     }
-
-#ifdef DEBUG_STEPCOUNT
-    // Set in delta move calculation
-    totalStepsRemaining = delta[X_AXIS]+delta[Y_AXIS]+delta[Z_AXIS];
-#endif // DEBUG_STEPCOUNT
-
-#if DEBUG_QUEUE_MOVE
-    if(Printer::debugEcho())
-    {
-        logLine();
-        Com::printFLN(Com::tDBGLimitInterval, limitInterval);
-        Com::printFLN(Com::tDBGMoveDistance, distance);
-        Com::printFLN(Com::tDBGCommandedFeedrate, Printer::feedrate);
-        Com::printFLN(Com::tDBGConstFullSpeedMoveTime, timeForMove);
-    }
-#endif // DEBUG_QUEUE_MOVE
 
     // Make result permanent
     if (pathOptimize) waitRelax = 70;
@@ -801,22 +738,6 @@ void PrintLine::calculateDirectMove(float axis_diff[],uint8_t pathOptimize)
         error[X_AXIS] = error[Y_AXIS] = error[Z_AXIS] = error[E_AXIS] = delta[primaryAxis];
     }
 
-#ifdef DEBUG_STEPCOUNT
-    // Set in delta move calculation
-    totalStepsRemaining = delta[X_AXIS]+delta[Y_AXIS]+delta[Z_AXIS];
-#endif // DEBUG_STEPCOUNT
-/*
-#if DEBUG_DIRECT_MOVE
-//    if(Printer::debugEcho())
-    {
-        logLine();
-        Com::printFLN(Com::tDBGLimitInterval, limitInterval);
-        Com::printFLN(Com::tDBGMoveDistance, distance);
-        Com::printFLN(Com::tDBGCommandedFeedrate, Printer::feedrate);
-        Com::printFLN(Com::tDBGConstFullSpeedMoveTime, timeForMove);
-    }
-#endif // DEBUG_DIRECT_MOVE
-*/
     // Make result permanent
     if (pathOptimize) waitRelax = 70;
     DEBUG_MEMORY;
@@ -973,15 +894,6 @@ inline void PrintLine::computeMaxJunctionSpeed(PrintLine *previous,PrintLine *cu
     if(eJerk > Extruder::current->maxStartFeedrate)
         factor = RMath::min(factor,Extruder::current->maxStartFeedrate / eJerk);
     previous->maxJunctionSpeed = RMath::min(previous->fullSpeed * factor,current->fullSpeed);
-
-#if DEBUG_QUEUE_MOVE
-    if(Printer::debugEcho())
-    {
-        Com::printF(PSTR("ID:"),(int)previous);
-        Com::printFLN(PSTR(" MJ:"),previous->maxJunctionSpeed);
-    }
-#endif // DEBUG_QUEUE_MOVE
-
 } // computeMaxJunctionSpeed
 
 
@@ -1015,23 +927,6 @@ void PrintLine::updateStepsParameter()
         decelSteps = decelSteps - RMath::min(static_cast<int32_t>(decelSteps), static_cast<int32_t>(red));
     }
     setParameterUpToDate();
-
-#if DEBUG_QUEUE_MOVE
-    if(Printer::debugEcho())
-    {
-        Com::printFLN(Com::tDBGId,(int)this);
-        Com::printF(Com::tDBGVStartEnd,(long)vStart);
-        Com::printFLN(Com::tSlash,(long)vEnd);
-        Com::printF(Com::tDBAccelSteps,(long)accelSteps);
-        Com::printF(Com::tSlash,(long)decelSteps);
-        Com::printFLN(Com::tSlash,(long)stepsRemaining);
-        Com::printF(Com::tDBGStartEndSpeed,startSpeed,1);
-        Com::printFLN(Com::tSlash,endSpeed,1);
-        Com::printFLN(Com::tDBGFlags,flags);
-        Com::printFLN(Com::tDBGJoinFlags,joinFlags);
-    }
-#endif // DEBUG_QUEUE_MOVE
-
 } // updateStepsParameter
 
 
@@ -1210,40 +1105,6 @@ uint8_t PrintLine::insertWaitMovesIfNeeded(uint8_t pathOptimize, uint8_t waitExt
     return 0;
 
 } // insertWaitMovesIfNeeded
-
-
-void PrintLine::logLine()
-{
-#if DEBUG_QUEUE_MOVE || DEBUG_DIRECT_MOVE
-    Com::printFLN(Com::tDBGId,(int)this);
-    Com::printArrayFLN(Com::tDBGDelta,delta);
-    Com::printFLN(Com::tDBGDir,dir);
-    Com::printFLN(Com::tDBGFlags,flags);
-    Com::printFLN(Com::tDBGFullSpeed,fullSpeed);
-    Com::printFLN(Com::tDBGVMax,(long)vMax);
-    Com::printFLN(Com::tDBGAcceleration,accelerationDistance2);
-    Com::printFLN(Com::tDBGAccelerationPrim,(long)accelerationPrim);
-    Com::printFLN(Com::tDBGRemainingSteps,stepsRemaining);
-
-#ifdef USE_ADVANCE
-#ifdef ENABLE_QUADRATIC_ADVANCE
-    Com::printFLN(Com::tDBGAdvanceFull,advanceFull>>16);
-    Com::printFLN(Com::tDBGAdvanceRate,advanceRate);
-#endif // ENABLE_QUADRATIC_ADVANCE
-#endif // USE_ADVANCE
-#endif // DEBUG_QUEUE_MOVE || DEBUG_DIRECT_MOVE
-
-} // logLine
-
-
-void PrintLine::logLine2()
-{
-    Com::printF(PSTR("Move: dir="),dir);
-    Com::printF(PSTR(", flags="),flags);
-    Com::printF(PSTR(", steps="),stepsRemaining);
-
-} // logLine2
-
 
 void PrintLine::waitForXFreeLines(uint8_t b)
 {
@@ -2193,11 +2054,6 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
                             move->error[Z_AXIS] += directError;
                             Printer::directPositionCurrentSteps[Z_AXIS] += Printer::stepperDirection[Z_AXIS];
                         }
-
-#ifdef DEBUG_STEPCOUNT
-                        move->totalStepsRemaining--;
-#endif // DEBUG_STEPCOUNT
-
                         // Note: There is no need to check whether we are past the z-min endstop here because G-Codes typically are not able to go past the z-min endstop anyways.
                     }
                 }
@@ -2312,14 +2168,6 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
 
     if(doEven && (move->stepsRemaining <= 0 || move->isNoMove()) )  // line finished
     {
-#ifdef DEBUG_STEPCOUNT
-        if(move->totalStepsRemaining)
-        {
-            Com::printF(Com::tDBGMissedSteps,move->totalStepsRemaining);
-            Com::printFLN(Com::tComma,move->stepsRemaining);
-        }
-#endif // DEBUG_STEPCOUNT
-
         if( forQueue )
         {
             removeCurrentLineForbidInterrupt();

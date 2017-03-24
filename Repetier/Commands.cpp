@@ -39,9 +39,6 @@ void Commands::commandLoop()
 
         if(code)
         {
-#if DEBUG_COMMAND_PEEK
-            Com::printFLN( PSTR( "commandLoop(): peek" ) );
-#endif // DEBUG_COMMAND_PEEK
 
 #if SDSUPPORT
             if(sd.savetosd)
@@ -219,10 +216,6 @@ void Commands::waitUntilEndOfAllBuffers()
         UI_MEDIUM; // do check encoder
         if(code)
         {
-#if DEBUG_COMMAND_PEEK
-            Com::printFLN( PSTR( "waitUntilEndOfAllBuffers(): peek" ) );
-#endif // DEBUG_COMMAND_PEEK
-
 #if SDSUPPORT
             if(sd.savetosd)
             {
@@ -1007,7 +1000,7 @@ void Commands::executeGCode(GCode *com)
             {
                 if( Printer::debugErrors() )
                 {
-                    Com::printFLN( PSTR( "M26: this command is not supported" ) );
+                    Com::printFLN( PSTR( "M26: not supported" ) );
                 }
 
 /*              if(com->hasS())
@@ -1775,14 +1768,14 @@ void Commands::executeGCode(GCode *com)
                     if(com->S == 1 || com->S == 0){
                         Printer::enableCaseLight = com->S;
                     }else{
-                                Com::printFLN(PSTR("M355 Param Error S=0||1"));
+                        Com::printFLN(PSTR("M355 Error S=0||1"));
                     }
                 }else{
                         if( Printer::enableCaseLight )  Printer::enableCaseLight = 0;
                         else Printer::enableCaseLight = 1;
                 }
                 WRITE(CASE_LIGHT_PIN, Printer::enableCaseLight);
-                        Com::printFLN(PSTR("M355: X19 set to "),Printer::enableCaseLight);
+                Com::printFLN(PSTR("M355: X19 set to "),Printer::enableCaseLight);
                 break;
 // Ende Idee und Teilcode von WESSIX 
 #endif // FEATURE_CASE_LIGHT
@@ -1939,56 +1932,6 @@ void Commands::executeGCode(GCode *com)
                 break;
             }
 #endif // FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF2000
-
-#if DEBUG_QUEUE_MOVE
-            case 533:   // M533 - Write move data
-            {
-                Com::printF(PSTR("Buf:"),(int)PrintLine::linesCount);
-                Com::printF(PSTR(",LP:"),(int)PrintLine::linesPos);
-                Com::printFLN(PSTR(",WP:"),(int)PrintLine::linesWritePos);
-
-                if(PrintLine::cur == NULL)
-                {
-                    Com::printFLN(PSTR("No move"));
-                    if(PrintLine::linesCount>0)
-                    {
-                        PrintLine &cur = PrintLine::lines[PrintLine::linesPos];
-                        Com::printF(PSTR("JFlags:"),(int)cur.joinFlags);
-                        Com::printFLN(PSTR("Flags:"),(int)cur.flags);
-                        if(cur.isWarmUp())
-                        {
-                            Com::printFLN(PSTR("warmup:"),(int)cur.getWaitForXLinesFilled());
-                        }
-                    }
-                }
-                else
-                {
-                    Com::printF(PSTR("Rem:"),PrintLine::cur->stepsRemaining);
-                    Com::printFLN(PSTR("Int:"),Printer::interval);
-                }
-                break;
-            }
-#endif // DEBUG_QUEUE_MOVE
-
-#ifdef DEBUG_SEGMENT_LENGTH
-            case 534:   // M534
-            {
-                Com::printFLN(PSTR("Max. segment size:"),Printer::maxRealSegmentLength);
-                if(com->hasS())
-                    Printer::maxRealSegmentLength = 0;
-                break;
-            }
-#endif // DEBUG_SEGMENT_LENGTH
-
-#ifdef DEBUG_REAL_JERK
-            case 535:   // M535
-            {
-                Com::printFLN(PSTR("Max. jerk measured:"),Printer::maxRealJerk);
-                if(com->hasS())
-                    Printer::maxRealJerk = 0;
-                break;
-            }
-#endif // DEBUG_REAL_JERK
 
             default:
             {

@@ -147,28 +147,6 @@ public:
     FSTRINGVAR(tTempSensorWorking)
     FSTRINGVAR(tDryModeUntilRestart)
 
-#if (DEBUG_QUEUE_MOVE || DEBUG_DIRECT_MOVE)
-    FSTRINGVAR(tDBGId)
-    FSTRINGVAR(tDBGVStartEnd)
-    FSTRINGVAR(tDBAccelSteps)
-    FSTRINGVAR(tDBGStartEndSpeed)
-    FSTRINGVAR(tDBGFlags)
-    FSTRINGVAR(tDBGJoinFlags)
-    FSTRINGVAR(tDBGDelta)
-    FSTRINGVAR(tDBGDir)
-    FSTRINGVAR(tDBGFullSpeed)
-    FSTRINGVAR(tDBGVMax)
-    FSTRINGVAR(tDBGAcceleration)
-    FSTRINGVAR(tDBGAccelerationPrim)
-    FSTRINGVAR(tDBGRemainingSteps)
-    FSTRINGVAR(tDBGAdvanceFull)
-    FSTRINGVAR(tDBGAdvanceRate)
-    FSTRINGVAR(tDBGLimitInterval)
-    FSTRINGVAR(tDBGMoveDistance)
-    FSTRINGVAR(tDBGCommandedFeedrate)
-    FSTRINGVAR(tDBGConstFullSpeedMoveTime)
-#endif // DEBUG_QUEUE_MOVE || DEBUG_DIRECT_MOVE
-
 #ifdef DEBUG_SPLIT
     FSTRINGVAR(tDBGDeltaSeconds)
     FSTRINGVAR(tDBGDeltaZDelta)
@@ -179,10 +157,6 @@ public:
     FSTRINGVAR(tDBGDeltaStepsPerSegment)
     FSTRINGVAR(tDBGDeltaVirtualAxisSteps)
 #endif // DEBUG_SPLIT
-
-#ifdef DEBUG_STEPCOUNT
-    FSTRINGVAR(tDBGMissedSteps)
-#endif // DEBUG_STEPCOUNT
 
 #ifdef WAITING_IDENTIFIER
     FSTRINGVAR(tWait)

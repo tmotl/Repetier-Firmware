@@ -263,10 +263,6 @@ GCode *GCode::peekCurrentCommand()
 /** \brief Removes the last returned command from cache. */
 void GCode::popCurrentCommand()
 {
-#if DEBUG_COMMAND_PEEK
-    Com::printFLN( PSTR( "popCurrentCommand(): pop" ) );
-#endif // DEBUG_COMMAND_PEEK
-
     if(!bufferLength) return; // Should not happen, but safety first
 
 #ifdef ECHO_ON_EXECUTE
