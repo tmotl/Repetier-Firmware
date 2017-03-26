@@ -252,6 +252,25 @@
 #define FET2                    -1  
 #define FET3                    -1  
 
+//http://www.rf1000.de/viewtopic.php?f=24&t=1119 : 
+#define RESERVE_DIGITAL_PIN_PJ0 15 //RF1000 X25.12 und RF2000 X33.3
+#define RESERVE_DIGITAL_PIN_PJ1 14 //RF1000 X25.13 und RF2000 X33.4
+
+#define RESERVE_DIGITAL_PIN_PC2 35 //X25.4 
+#define RESERVE_DIGITAL_PIN_PC4 33 //X25.5
+#define RESERVE_DIGITAL_PIN_PC5 32 //X25.6
+
+#define RESERVE_DIGITAL_PIN_PD2 19 //X25.7
+#define RESERVE_DIGITAL_PIN_PD3 18 //X25.8
+
+#define RESERVE_ANALOG_PIN_PF3 3 //X25.10
+#define RESERVE_ANALOG_PIN_PF4 4 //X25.11
+
+//#define RESERVE_DIGITAL_PIN_PE2  //X25.9 -> kein digital pin? XCK0/AIN0 ? HW Pin 4
+//#define RESERVE_DIGITAL_PIN_PC0 -> //X25.3 Doppelfunktion! s. Reset & Watchdog
+//#define RESERVE_DIGITAL_PIN_PB6 -> //X25.2 Doppelfunktion! s. Heizplatte
+
+
 #endif // MOTHERBOARD == DEVICE_TYPE_RF1000
 
 
@@ -483,6 +502,16 @@
 #define UI_DISPLAY_D7_PIN       98  
 // PINJ.3, 66, D_D7
 
+#define RESERVE_DIGITAL_PIN_PJ0 15 //RF1000 X25.12 und RF2000 X33.3
+#define RESERVE_DIGITAL_PIN_PJ1 14 //RF1000 X25.13 und RF2000 X33.4
+
+#define RESERVE_DIGITAL_PIN_PE4 2 //RF2000 X33.5
+
+
+#define RESERVE_DIGITAL_PIN_PJ0 15 //RF1000 X25.12 und RF2000 X33.3
+#define RESERVE_DIGITAL_PIN_PJ1 14 //RF1000 X25.13 und RF2000 X33.4
+
+#define RESERVE_DIGITAL_PIN_PE4 2 //RF2000 X33.5
 
 #endif // MOTHERBOARD == DEVICE_TYPE_RF2000
 
