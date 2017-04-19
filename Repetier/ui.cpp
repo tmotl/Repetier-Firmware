@@ -1876,7 +1876,7 @@ void UIDisplay::setStatusP(PGM_P txt,bool error)
     }
 
     uint8_t i=0;
-    while(i<20)
+    while(i<UI_COLS)
     {
         uint8_t c = pgm_read_byte(txt++);
         if(!c) break;
@@ -1899,7 +1899,7 @@ void UIDisplay::setStatus(char *txt,bool error,bool force)
     if(!error && Printer::isUIErrorMessage()) return;
 
     uint8_t i=0;
-    while(*txt && i<16)
+    while(*txt && i< UI_COLS )
         statusMsg[i++] = *txt++;
     statusMsg[i]=0;
 

@@ -327,7 +327,7 @@ extern  char    g_nPrinterReady;
 #define UI_MENU_FILESELECT(name,items,itemsCnt)                         const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {1,0,itemsCnt,name ## _entries};
 
 // Maximum size of a row - if row is larger, text gets scrolled
-#define MAX_COLS                        28
+#define MAX_COLS                        20
 
 #define UI_FLAG_FAST_KEY_ACTION         1
 #define UI_FLAG_SLOW_KEY_ACTION         2
@@ -365,7 +365,7 @@ public:
     int                 repeatDuration;             // Time beween to actions if autorepeat is enabled
     int8_t              oldMenuLevel;
     uint8_t             encoderStartScreen;
-    char                statusMsg[21];
+    char                statusMsg[MAX_COLS + 1];
     int8_t              encoderPos;
     int8_t              encoderLast;
     PGM_P               statusText;
