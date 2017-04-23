@@ -327,7 +327,7 @@ extern  char    g_nPrinterReady;
 #define UI_MENU_FILESELECT(name,items,itemsCnt)                         const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {1,0,itemsCnt,name ## _entries};
 
 // Maximum size of a row - if row is larger, text gets scrolled
-#define MAX_COLS                        28
+#define MAX_COLS                        20 		// check UI_COLS when changed this was 28 in Conrad Firmware.
 
 #define UI_FLAG_FAST_KEY_ACTION         1
 #define UI_FLAG_SLOW_KEY_ACTION         2
@@ -365,7 +365,7 @@ public:
     int                 repeatDuration;             // Time beween to actions if autorepeat is enabled
     int8_t              oldMenuLevel;
     uint8_t             encoderStartScreen;
-    char                statusMsg[21];
+    char                statusMsg[MAX_COLS + 1];
     int8_t              encoderPos;
     int8_t              encoderLast;
     PGM_P               statusText;
@@ -432,7 +432,7 @@ void initializeLCD();
 #define UI_HAS_BACK_KEY                   1
 #define UI_DISPLAY_TYPE                   1     // 1 = LCD Display with 4 bit data bus
 //#define UI_DISPLAY_CHARSET                  1
-#define UI_COLS                          16
+#define UI_COLS                          16		//check MAX_COLS when changed
 #define UI_ROWS                           4
 #define UI_DELAYPERCHAR                 320
 #define UI_INVERT_MENU_DIRECTION        false
@@ -491,7 +491,7 @@ void ui_check_slow_keys(int &action) {
 #define UI_HAS_BACK_KEY                   1
 #define UI_DISPLAY_TYPE                   1     // 1 = LCD Display with 4 bit data bus
 //#define UI_DISPLAY_CHARSET                  1
-#define UI_COLS                          20
+#define UI_COLS                          20		//check MAX_COLS when changed
 #define UI_ROWS                           4
 #define UI_DELAYPERCHAR                 320
 #define UI_INVERT_MENU_DIRECTION        false

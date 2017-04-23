@@ -638,7 +638,7 @@ extern  unsigned long   g_nManualSteps[4];
 
 
 #if FEATURE_PAUSE_PRINTING
-extern  long            g_nPauseSteps[4];
+extern  volatile long	g_nPauseSteps[4];
 extern  volatile long   g_nContinueSteps[4];
 extern  volatile char   g_pauseStatus;
 extern  volatile char   g_pauseMode;
@@ -654,6 +654,7 @@ extern short            g_nSensiblePressureDigits;
 extern short            g_nSensiblePressureOffsetMax;
 extern short            g_nSensiblePressureOffset;
 extern short            g_nSensibleLastPressure;
+extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_FIND_Z_ORIGIN

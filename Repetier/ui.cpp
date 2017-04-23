@@ -1498,12 +1498,14 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
 #endif // FEATURE_SENSIBLE_PRESSURE
                 }
-                
+              
                 if(c2=='M')                                                                             // %sM : State of the sensible offset
                 {
 #if FEATURE_SENSIBLE_PRESSURE
                     if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
                     {
+						if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
+						else addStringP( PSTR( "@" ));
                         addInt((int)g_nSensiblePressureDigits,5);
                     }else{
                         addStringP(ui_text_off);                
@@ -1876,7 +1878,7 @@ void UIDisplay::setStatusP(PGM_P txt,bool error)
     }
 
     uint8_t i=0;
-    while(i<20)
+    while(i<UI_COLS)
     {
         uint8_t c = pgm_read_byte(txt++);
         if(!c) break;
@@ -1899,7 +1901,7 @@ void UIDisplay::setStatus(char *txt,bool error,bool force)
     if(!error && Printer::isUIErrorMessage()) return;
 
     uint8_t i=0;
-    while(*txt && i<16)
+    while(*txt && i< UI_COLS )
         statusMsg[i++] = *txt++;
     statusMsg[i]=0;
 
