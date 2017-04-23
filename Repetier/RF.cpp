@@ -172,7 +172,7 @@ unsigned long   g_nManualSteps[4]           = { (unsigned long)DEFAULT_MANUAL_ST
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_PAUSE_PRINTING
-long            g_nPauseSteps[4]            = { (long)DEFAULT_PAUSE_STEPS_X, (long)DEFAULT_PAUSE_STEPS_Y, (long)DEFAULT_PAUSE_STEPS_Z, (long)DEFAULT_PAUSE_STEPS_EXTRUDER };
+volatile long   g_nPauseSteps[4]            = { (long)DEFAULT_PAUSE_STEPS_X, (long)DEFAULT_PAUSE_STEPS_Y, (long)DEFAULT_PAUSE_STEPS_Z, (long)DEFAULT_PAUSE_STEPS_EXTRUDER };
 volatile long   g_nContinueSteps[4]         = { 0, 0, 0, 0 };
 volatile char   g_pauseStatus               = PAUSE_STATUS_NONE;
 volatile char   g_pauseMode                 = PAUSE_MODE_NONE;
