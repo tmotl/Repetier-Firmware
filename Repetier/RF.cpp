@@ -204,6 +204,7 @@ short           g_nSensiblePressureDigits   = 0;
 short           g_nSensiblePressureOffsetMax = SENSIBLE_PRESSURE_MAX_OFFSET;
 short           g_nSensiblePressureOffset   = 0;
 short           g_nSensibleLastPressure     = 0;
+char            g_nSensiblePressure1stMarke = 0; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_EMERGENCY_STOP_ALL
@@ -6445,12 +6446,13 @@ void loopRF( void )
 					
                     if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps )
                     {						
+						g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
                         //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
                         g_nSensiblePressureSum += pressure;
                         g_nSensiblePressureChecks += 1;
                         //jede 1 sekunden, bzw 0.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
                         if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS ){ 
-						
+							
                             nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
                             
                             //half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5                         
@@ -6518,6 +6520,7 @@ void loopRF( void )
                             g_nSensibleLastPressure = nPressure; //save last pressure.
                         }
                     }else{
+						g_nSensiblePressure1stMarke = 0; //marker für display: auf dieser Höhe regeln wir nichts mehr oder noch nichts.
                         // if sensible not active 
                         // if z-compensation not active
                         if(g_nSensiblePressureSum > 0){

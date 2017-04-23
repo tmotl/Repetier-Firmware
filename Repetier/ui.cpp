@@ -1498,12 +1498,14 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
 #endif // FEATURE_SENSIBLE_PRESSURE
                 }
-                
+              
                 if(c2=='M')                                                                             // %sM : State of the sensible offset
                 {
 #if FEATURE_SENSIBLE_PRESSURE
                     if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
                     {
+						if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
+						else addStringP( PSTR( "@" ));
                         addInt((int)g_nSensiblePressureDigits,5);
                     }else{
                         addStringP(ui_text_off);                
