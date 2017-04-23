@@ -8,7 +8,7 @@ Based on Repetier-Firmware - the fast and user friendly firmware.
 ## Disclaimer
 
 THIS VERSION IS AN UNOFFICIAL MODIFICATION OF mhiers UNOFFICIAL MODIFICATION OF THE ORIGINAL FIRMWARE. It is neither endorsed nor
-supported by the developers of the RF1000 firmware or by the developer of the original "mhier Z-Offset-Scan".  
+supported by the developers of the RF1000 firmware.  
 USE AT YOUR OWN RISK.
 
 For the official version, have a look at the upstream repository:
