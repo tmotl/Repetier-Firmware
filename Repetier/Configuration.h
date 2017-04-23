@@ -716,7 +716,7 @@ Values must be in range 1..255 */
 #define UI_SET_EXTRUDER_RETRACT_DISTANCE    3                                                   // [mm]
 #define COOLDOWN_THRESHOLD                  40                                                  // [°C]
 
-#define SHOW_DEBUGGING_MENU                 1                                                   // 1 = show, 0 = hide
+#define SHOW_DEBUGGING_MENU                 0                                                   // 1 = show, 0 = hide
 
 #define SPEED_MIN_MILLIS                    300
 #define SPEED_MAX_MILLIS                    50
