@@ -73,9 +73,9 @@ _von Nibbels_:
 Es wurden **alle Compilerwarnungen und Compilerfehler eliminiert**.  
 Weitere (passende) **Verbesserungen/Bugfixes/Commits der Entwickler der originalen RepetierFirmware** wurden auch in diesen Mod übernommen, obwohl die original RF2000/RF1000 Firmware diese nicht übernommen hatte.  
 Mit dem Stand vom 20.01.2017 wurde die Firmware auf den neuesten Firmwarestand der Original **RF.01.37** angehoben.  
-Der zusätzliche X35 Temperature-Sensor wurde für den RF2000 aktiviert. 
-In der pins.h wurden alle optionalen Pins für RF1000 und RF2000 aufgelistet.
-Korrektur des RF2000 Statuszeilenlimits auf 20 Zeichen.
+Der zusätzliche X35 Temperature-Sensor wurde für den RF2000 aktiviert.  
+In der pins.h wurden alle optionalen Pins für RF1000 und RF2000 aufgelistet.  
+Korrektur des RF2000 Statuszeilenlimits auf 20 Zeichen.  
 
 _von Nibbels und Wessix entwickelt_:  
 **M3909 Pn Sm** - siehe unten "SenseOffset" (Kompensation der thermischen Nachdehnung)  
