@@ -78,9 +78,9 @@ M3920 Sb - to go into or switch back from SilentMode (This will lower your stepp
 Removed all compiler warnings and errors within the original Firmware.  
 Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
-Activated the X35 Temperature-Sensor for RF2000. 
-Listed all spare pins for RF1000 or RF2000.
-Fixed the RF2000's Status Message length to 20chars.
+Activated the X35 Temperature-Sensor for RF2000.  
+Listed all spare pins for RF1000 or RF2000.  
+Fixed the RF2000's Status Message length to 20chars.  
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm         - See "Nibbels/Wessix SenseOffset"  
