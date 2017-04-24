@@ -1,3 +1,9 @@
+V RF.01.37j.mod (2017-04-24)
+- The SenseOffset will now show when it is ready to controll the nozzles height over bed. You see one character within line 3 of the Mod-Menu. Formerly there was a "@" in front of the digits limit. Now the @ will change to ^ when SenseOffset ist actively controlling within the low layers.
+- The Debugging Menu is now invisible but can be activated within conriguration.h
+- The RF2000 now has the right limit for its 20-char display length. Repetier-Server or Octoprint can now use additional 4 chars to display Information like date, ip-address and other.
+- All the reserve pins are now listed within pins.h. This might help people who try to use the reserve connectors X25/RF1000 or X33/RF2000. Special thanks to X4r3 at this point! http://www.rf1000.de/viewtopic.php?f=24&t=1119&p=17566#p17566
+
 V RF.01.37i.mod (2017-03-22)
 - Menu fix
 - Nicer menu navigation through bottom and top of submenus

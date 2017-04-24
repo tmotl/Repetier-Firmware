@@ -73,6 +73,9 @@ _von Nibbels_:
 Es wurden **alle Compilerwarnungen und Compilerfehler eliminiert**.  
 Weitere (passende) **Verbesserungen/Bugfixes/Commits der Entwickler der originalen RepetierFirmware** wurden auch in diesen Mod übernommen, obwohl die original RF2000/RF1000 Firmware diese nicht übernommen hatte.  
 Mit dem Stand vom 20.01.2017 wurde die Firmware auf den neuesten Firmwarestand der Original **RF.01.37** angehoben.  
+Der zusätzliche X35 Temperature-Sensor wurde für den RF2000 aktiviert. 
+In der pins.h wurden alle optionalen Pins für RF1000 und RF2000 aufgelistet.
+Korrektur des RF2000 Statuszeilenlimits auf 20 Zeichen.
 
 _von Nibbels und Wessix entwickelt_:  
 **M3909 Pn Sm** - siehe unten "SenseOffset" (Kompensation der thermischen Nachdehnung)  
@@ -122,7 +125,8 @@ _Beispiel 3:_
 Der Drucker druckt PLA sehr heiß und sehr langsam. Die Digits schwanken sehr stark zwischen 1000 und 2500. Vermutlich hilft es, das PLA schneller zu drucken, dann stabilisieren sich die Digits, ein gutes Limit in der ersten Lage könnte z.B. 3000 digits sein. Anschließend kann man sein Gefühl für das Material verfeinern.
 
 Wird aus irgendeinem Grund die Z-Kompensation ausgeschaltet wird SenseOffset ebenfalls deaktiviert.
-"M3909 P0" sorgt für die manuelle Abschaltung der Funktion, dies sollte aber normalerweise nicht nötig sein. Die Funktion ist nur aktiv, wenn sich die Z-Höhe unter ~0.2mm befindet. Dieses Arbeitshöhenlimit, ab dem die Funktion inaktiv wird, entspricht dem unteren Grenzwert der Z-Kompensation. Siehe auch M3007 (http://www.rf1000.de/wiki/index.php/GCodes#M3007_-_Minimale_H.C3.B6he_f.C3.BCr_Z-Kompensation_festlegen)
+"M3909 P0" sorgt für die manuelle Abschaltung der Funktion, dies sollte aber normalerweise nicht nötig sein. Ist die Funktion aktiv am Regeln, so ändert sich das "@" im Modmenü zu einem "^" Circumflex, daran erkennt man sehr einfach, ob senseOffset tatsächlich die Extrusionskraft überwacht. Die Funktion ist nur aktiv, wenn sich die Z-Höhe unter ~0.3mm befindet. Dieses Arbeitshöhenlimit, ab dem die Funktion inaktiv wird, entspricht dem unteren Grenzwert der Z-Kompensation. Siehe auch M3007 (http://www.rf1000.de/wiki/index.php/GCodes#M3007_-_Minimale_H.C3.B6he_f.C3.BCr_Z-Kompensation_festlegen)
+![ ](https://downfight.de/picproxy.php?url=https://downfight.de/grafiken/dimi/modmenudisplay.png "Angebratenes ABS")  
 Abschließend, sobald das Druckobjekt ausgegeben wird, wird M3909 inaktiv und vollständig deaktiviert.
 Ohne Z-Kompensation kann SenseOffset nicht aktiviert werden, es wird sofort deaktiviert.
 

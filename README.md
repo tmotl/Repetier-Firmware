@@ -79,6 +79,8 @@ Removed all compiler warnings and errors within the original Firmware.
 Included some Fixes the original developers of the branch "repetier/Repetier-Firmware" committed to their firmware.  
 Upgraded the Firmware to the latest RF.01.37 (2017-01-20)  
 Activated the X35 Temperature-Sensor for RF2000. 
+Listed all spare pins for RF1000 or RF2000.
+Fixed the RF2000's Status Message length to 20chars.
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm         - See "Nibbels/Wessix SenseOffset"  
@@ -117,6 +119,8 @@ Feature called "Nibbels/Wessix SenseOffset". This is a digit limiter which decre
  The printer will automaticly release Pressure inbetween the Nozzle and the HeatBed, whenever the digits rise atop [max.digits] by adjusting the Z-Offset. 
  The adjustment-offset is fixed to positive values (bed does never go closer to the nozzle than without M3909). The adjustment will not violate the "max. SenseOffset" restriction in order to avoid unwanted offsets (not caused by too close nozzle).  
  When choosing "max. SenseOffset" you should already know how much digits your printer normally has (Same Material, same Temperatures, same Speed, same Nozzle) and then add some plus 20% or plus 1000digits of force-tolerance.  
+ Senseoffset can have two states. Active controling and idle. It is idle, whenever Z is not within negative and ~0.3mm height. You can tune this height limit by tweaking M3007 (http://www.rf1000.de/wiki/index.php/GCodes#M3007_-_Minimale_H.C3.B6he_f.C3.BCr_Z-Kompensation_festlegen). Whenever there is active control you see a circumflex "^" within the modmenu, instead of the @-Symbol.
+ ![ ](https://downfight.de/picproxy.php?url=https://downfight.de/grafiken/dimi/modmenudisplay_eng.png "Angebratenes ABS")  
  When the z-compensation gets deactivated the senseoffset-function is deactivated as well.  
  Use "M3909 P0" for manual shutdown of the feature, but normally this is not necessary.  
  You cannot activate the Feature if zCompensation is not active already.  
