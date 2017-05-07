@@ -3194,7 +3194,7 @@ void doHeatBedZCompensation( void )
     if( nCurrentPositionSteps[Z_AXIS] > 0 )
     {
         // check whether we have to perform a compensation in z-direction
-        if( nCurrentPositionSteps[Z_AXIS] < g_maxZCompensationSteps - Extruder::current->zOffset )
+        if( nCurrentPositionSteps[Z_AXIS] < g_maxZCompensationSteps )
         {
             // find the rectangle which covers the current position of the extruder
             nXLeftIndex = 1;
@@ -3262,7 +3262,7 @@ void doHeatBedZCompensation( void )
             g_nMatrix[3]        = g_ZCompensationMatrix[nXRightIndex][nYBackIndex];
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION
 
-            if( nCurrentPositionSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset )
+            if( nCurrentPositionSteps[Z_AXIS] <= g_minZCompensationSteps )
             {
                 // the printer is very close to the surface - we shall print a layer of exactly the desired thickness
                 nNeededZCompensation += g_staticZSteps;
@@ -3270,7 +3270,7 @@ void doHeatBedZCompensation( void )
             else
             {
                 // the printer is already a bit away from the surface - do the actual compensation
-                nDeltaZ = g_maxZCompensationSteps - Extruder::current->zOffset - nCurrentPositionSteps[Z_AXIS];
+                nDeltaZ = g_maxZCompensationSteps - nCurrentPositionSteps[Z_AXIS];
                 nNeededZCompensation = g_offsetZCompensationSteps + 
                                        (nNeededZCompensation - g_offsetZCompensationSteps) * nDeltaZ / (g_maxZCompensationSteps - g_minZCompensationSteps);
                 nNeededZCompensation += g_staticZSteps;
@@ -6444,7 +6444,7 @@ void loopRF( void )
 		
                 if(g_nSensiblePressureDigits && Printer::doHeatBedZCompensation){ //activate feature with G-Code.
 					
-                    if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) //das zOffset des extruders ist negativ und in Steps.
+                    if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps )
                     {						
 						g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
                         //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
@@ -8097,7 +8097,6 @@ void processCommand( GCode* pCommand )
                             {
                                 Com::printFLN( PSTR( "M3001: enabling z compensation" ) );
                             }
-							Commands::waitUntilEndOfAllMoves();
                             queueTask( TASK_ENABLE_Z_COMPENSATION );
                         }
                         else
@@ -11324,32 +11323,14 @@ void processCommand( GCode* pCommand )
 				}
 				break;
 			}
-			
-			case 3919: // 3919 [S]mikrometer - Testfunction for Dip-Down-Hotend beim T1: Einstellen des extruderspezifischen Z-Offsets
+
+			case 3911: // 3911 - Testfunction for Hints to correctly adjust the printers Z-Screw (for ideal Z-min-switch hardware leveling)
 			{
-				if ( pCommand->hasZ() && (pCommand->Z <= 0 && pCommand->Z >= -2.0f) ){
-					if(Printer::debugDryrun()) break;
-					Commands::waitUntilEndOfAllMoves();
-					
-					Extruder *actExtruder = Extruder::current;
-					if(pCommand->hasT() && pCommand->T < NUM_EXTRUDER) actExtruder = &extruder[pCommand->T];
-					if(extruder[1].id == actExtruder->id){ //wenn zielextruder aktuell oder Tn = Extrudernummer 1
-						if(pCommand->Z <= 0 && pCommand->Z >= -2.0f) actExtruder->zOffset = int32_t((float)pCommand->Z * Printer::axisStepsPerMM[Z_AXIS]);
-						//Nur wenn aktuell der extruder mit ID1 aktiv ist, dann sofort nachstellen, ohne T0/T1/... :
-						if(Extruder::current->id == extruder[1].id){
-							Printer::extruderOffset[Z_AXIS] = -Extruder::current->zOffset*Printer::invAxisStepsPerMM[Z_AXIS];	
-							Printer::updateCurrentPosition();							
-						}
-						Com::printFLN( PSTR( "M3919 T1 Spring displace: " ), actExtruder->zOffset * Printer::invAxisStepsPerMM[Z_AXIS] );
-					}else{
-						Com::printFLN( PSTR( "M3919 Error: !=Extr." ), extruder[1].id );
-					}	
-				}else{
-					Com::printFLN( PSTR( "M3919 Help: Write M3919 T1 Z-0.500 when T1 goes down 500um/0.5mm" ) );
-				}
+				calculateZScrewTempLenght();
 				break;
 			}
-			
+
+
 #if FEATURE_SILENT_MODE // Auswahl der Motor-Current-Settings
             case 3920: // 3920 Decide if MOTOR_CURRENT_SILENT or MOTOR_CURRENT
             {

@@ -89,7 +89,7 @@ public:
     static int              extrudeMultiply;                    // Flow multiplier in percdent (factor 1 = 100)
     static float            maxJerk;                            // Maximum allowed jerk in mm/s
     static float            maxZJerk;                           // Maximum allowed jerk in z direction in mm/s
-    static float            extruderOffset[3];                  // offset for different extruder positions.
+    static float            extruderOffset[2];                  // offset for different extruder positions.
     static speed_t          vMaxReached;                        // Maximumu reached speed
     static unsigned long    msecondsPrinting;                   // Milliseconds of printing time (means time with heated extruder)
     static unsigned long    msecondsMilling;                    // Milliseconds of milling time

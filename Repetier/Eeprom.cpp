@@ -173,7 +173,6 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     e->tempControl.pidMax = EXT0_PID_MAX;
 #endif // TEMP_PID
 
-    e->zOffset = EXT0_Z_OFFSET;
     e->yOffset = EXT0_Y_OFFSET;
     e->xOffset = EXT0_X_OFFSET;
     e->watchPeriod = EXT0_WATCHPERIOD;
@@ -210,7 +209,6 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     e->tempControl.pidMax = EXT1_PID_MAX;
 #endif // TEMP_PID
 
-    e->zOffset = EXT1_Z_OFFSET;
     e->yOffset = EXT1_Y_OFFSET;
     e->xOffset = EXT1_X_OFFSET;
     e->watchPeriod = EXT1_WATCHPERIOD;
@@ -248,7 +246,6 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     e->tempControl.pidMax = EXT2_PID_MAX;
 #endif // TEMP_PID
 
-    e->zOffset = EXT2_Z_OFFSET;
     e->yOffset = EXT2_Y_OFFSET;
     e->xOffset = EXT2_X_OFFSET;
     e->watchPeriod = EXT2_WATCHPERIOD;
@@ -285,7 +282,6 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     e->tempControl.pidMax = EXT3_PID_MAX;
 #endif // TEMP_PID
 
-    e->zOffset = EXT3_Z_OFFSET;
     e->yOffset = EXT3_Y_OFFSET;
     e->xOffset = EXT3_X_OFFSET;
     e->watchPeriod = EXT3_WATCHPERIOD;
@@ -322,7 +318,6 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     e->tempControl.pidMax = EXT4_PID_MAX;
 #endif // TEMP_PID
 
-    e->zOffset = EXT4_Z_OFFSET;
     e->yOffset = EXT4_Y_OFFSET;
     e->xOffset = EXT4_X_OFFSET;
     e->watchPeriod = EXT4_WATCHPERIOD;
@@ -359,7 +354,6 @@ void EEPROM::restoreEEPROMSettingsFromConfiguration()
     e->tempControl.pidMax = EXT5_PID_MAX;
 #endif // TEMP_PID
 
-    e->zOffset = EXT5_Z_OFFSET;
     e->yOffset = EXT5_Y_OFFSET;
     e->xOffset = EXT5_X_OFFSET;
     e->watchPeriod = EXT5_WATCHPERIOD;
@@ -743,7 +737,6 @@ void EEPROM::readDataFromEEPROM()
 
         e->xOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_X_OFFSET)*Printer::axisStepsPerMM[X_AXIS]);
         e->yOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_Y_OFFSET)*Printer::axisStepsPerMM[Y_AXIS]);
-		//e->zOffset lasse ich hier raus! Nibbels
         e->watchPeriod = HAL::eprGetInt16(o+EPR_EXTRUDER_WATCH_PERIOD);
 
 #if RETRACT_DURING_HEATUP
