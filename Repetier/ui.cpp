@@ -966,6 +966,10 @@ void UIDisplay::parse(char *txt,bool ram)
                 {
                     addFloat(extruder[1].yOffset/Printer::axisStepsPerMM[Y_AXIS],4,3);
                 }
+                if(c2=='S')                                                                             // %OS : Extruder spring displacement Z [mm]
+                {
+                    addFloat(extruder[1].zOffset/Printer::axisStepsPerMM[Z_AXIS],4,3);
+                }
 #endif // NUM_EXTRUDER>1
 
                 if(c2=='M')                                                                             // %OM : operating mode
@@ -1498,12 +1502,14 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
 #endif // FEATURE_SENSIBLE_PRESSURE
                 }
-                
+              
                 if(c2=='M')                                                                             // %sM : State of the sensible offset
                 {
 #if FEATURE_SENSIBLE_PRESSURE
                     if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
                     {
+						if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
+						else addStringP( PSTR( "@" ));
                         addInt((int)g_nSensiblePressureDigits,5);
                     }else{
                         addStringP(ui_text_off);                
@@ -1876,7 +1882,7 @@ void UIDisplay::setStatusP(PGM_P txt,bool error)
     }
 
     uint8_t i=0;
-    while(i<20)
+    while(i<UI_COLS)
     {
         uint8_t c = pgm_read_byte(txt++);
         if(!c) break;
@@ -1899,7 +1905,7 @@ void UIDisplay::setStatus(char *txt,bool error,bool force)
     if(!error && Printer::isUIErrorMessage()) return;
 
     uint8_t i=0;
-    while(*txt && i<16)
+    while(*txt && i< UI_COLS )
         statusMsg[i++] = *txt++;
     statusMsg[i]=0;
 
@@ -3016,6 +3022,19 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
             break;
         }
+        case UI_ACTION_EXTRUDER_OFFSET_Z:
+        {
+            float   fTemp = extruder[1].zOffset / Printer::axisStepsPerMM[Z_AXIS];
+
+			//Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
+            INCREMENT_MIN_MAX(fTemp,0.025,-2,0);
+            extruder[1].zOffset = int32_t(fTemp * Printer::axisStepsPerMM[Z_AXIS]);
+			if(Extruder::current->id == extruder[1].id){
+				Printer::extruderOffset[Z_AXIS] = -Extruder::current->zOffset*Printer::invAxisStepsPerMM[Z_AXIS];	
+				Printer::updateCurrentPosition();							
+			}
+            break;
+        }
 #endif // NUM_EXTRUDER>1
 
         case UI_ACTION_FEEDRATE_MULTIPLY:
@@ -3904,6 +3923,7 @@ void UIDisplay::executeAction(int action)
 			case UI_ACTION_CONFIG_SINGLE_STEPS:
 			{   
 				configureMANUAL_STEPS_Z( 1 );
+                break;
 			}
 #endif // FEATURE_EXTENDED_BUTTONS
 
