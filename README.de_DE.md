@@ -9,3 +9,4 @@ In community_development wird von Zeit zu Zeit getestet, anschließend wird das 
 
 ## Bitte nutzt die Firmware dort!
 
+# Das ist mein Testplatz. Ich habe für mich selbst die Ultimaker 3-Funktion impementiert, sodass mein rechtes gefedertes Hotend ein gesondertes Z-Offset bekommen kann. Siehe Changelog.

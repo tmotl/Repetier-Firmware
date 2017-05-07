@@ -1,3 +1,24 @@
+V RF.01.37k.TDMod (2017-05-07)
+- This is a Test-Mod to implement Ultimakers "Bed down" for a right nozzle which can move up and down.
+I made this mod to test some Tip-Down-Nozzle on T1.
+M3919 T1 Z-0.6 ;das rechte Hotend reicht wenn gedrückt 0.5mm weiter nach unten.
+Whenever T1 is selected the printer adds some special Z-Offset so the bed drives down a bit. This new T1-Z-Offset is respected by SenseOffset and the Z-Compensation and the Limits of the Z-Compensation as well.
+- When you use M3919 the new offset is activated whenever the next switch to T1 happens.
+- You can change the M3919 Z-Offset for T1 within Menu, but new values are not respected until the next Toolchange to T1 happens.
+
+CAUTION!
+This Mod is my personal Mod with my personal Settings!
+#############################################################
+Both Hotends are on Thermistor Type 8 = E3D Thermistor.
+There is only 1mm Retract predefined within OUTPUT_OBJECT_SCRIPT_PRINT, instead of 5mm
+#############################################################
+
+V RF.01.37j.mod (2017-04-24)
+- The SenseOffset will now show when it is ready to controll the nozzles height over bed. You see one character within line 3 of the Mod-Menu. Formerly there was a "@" in front of the digits limit. Now the @ will change to ^ when SenseOffset ist actively controlling within the low layers.
+- The Debugging Menu is now invisible but can be activated within conriguration.h
+- The RF2000 now has the right limit for its 20-char display length. Repetier-Server or Octoprint can now use additional 4 chars to display Information like date, ip-address and other.
+- All the reserve pins are now listed within pins.h. This might help people who try to use the reserve connectors X25/RF1000 or X33/RF2000. Special thanks to X4r3 at this point! http://www.rf1000.de/viewtopic.php?f=24&t=1119&p=17566#p17566
+
 V RF.01.37i.mod (2017-03-22)
 - Menu fix
 - Nicer menu navigation through bottom and top of submenus

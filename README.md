@@ -8,3 +8,5 @@ You should use [community_stable](https://github.com/RF1000community/Repetier-Fi
 Within the branch community_development we work from time to time. Whenever some new function is good we will move it to stable.  
 
 ## Please look for and download the Firmware there, not here!
+
+# This is my personal Testingversion. I did implement an Ultimaker 3-function for myself because I need an extra Z-Offset for the right Extruder which is springloaded on my experimental E3D-Hotend.
