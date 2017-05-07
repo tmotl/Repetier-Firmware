@@ -1,7 +1,7 @@
 V RF.01.37k.TDMod (2017-05-07)
 - This is a Test-Mod to implement Ultimakers "Bed down" for a right nozzle which can move up and down.
 I made this mod to test some Tip-Down-Nozzle on T1.
-M3919 T1 Z-0.6 ;das rechte Hotend reicht wenn gedrückt 0.5mm weiter nach unten.
+M3919 T1 Z-0.5 ;das rechte Hotend reicht wenn gedrückt 0.5mm weiter nach unten.
 Whenever T1 is selected the printer adds some special Z-Offset so the bed drives down a bit. This new T1-Z-Offset is respected by SenseOffset and the Z-Compensation and the Limits of the Z-Compensation as well.
 - When you use M3919 the new offset is activated whenever the next switch to T1 happens.
 - You can change the M3919 Z-Offset for T1 within Menu, but new values are not respected until the next Toolchange to T1 happens.
