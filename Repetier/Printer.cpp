@@ -86,7 +86,7 @@ int             Printer::feedrateMultiply;                              ///< Mul
 int             Printer::extrudeMultiply;                               ///< Flow multiplier in percdent (factor 1 = 100)
 float           Printer::maxJerk;                                       ///< Maximum allowed jerk in mm/s
 float           Printer::maxZJerk;                                      ///< Maximum allowed jerk in z direction in mm/s
-float           Printer::extruderOffset[2];                             ///< offset for different extruder positions.
+float           Printer::extruderOffset[3];                             ///< offset for different extruder positions.
 unsigned int    Printer::vMaxReached;                                   ///< Maximum reached speed
 unsigned long   Printer::msecondsPrinting;                              ///< Milliseconds of printing time (means time with heated extruder)
 unsigned long   Printer::msecondsMilling;                               ///< Milliseconds of milling time
@@ -394,7 +394,7 @@ void Printer::moveTo(float x,float y,float z,float e,float f)
     if(y != IGNORE_COORDINATE)
         queuePositionTargetSteps[Y_AXIS] = (y + Printer::extruderOffset[Y_AXIS]) * axisStepsPerMM[Y_AXIS];
     if(z != IGNORE_COORDINATE)
-        queuePositionTargetSteps[Z_AXIS] = z * axisStepsPerMM[Z_AXIS];
+        queuePositionTargetSteps[Z_AXIS] = (z + Printer::extruderOffset[Z_AXIS]) * axisStepsPerMM[Z_AXIS];
     if(e != IGNORE_COORDINATE)
         queuePositionTargetSteps[E_AXIS] = e * axisStepsPerMM[E_AXIS];
     if(f != IGNORE_COORDINATE)
@@ -422,6 +422,7 @@ void Printer::moveToReal(float x,float y,float z,float e,float f)
 
     x += Printer::extruderOffset[X_AXIS];
     y += Printer::extruderOffset[Y_AXIS];
+    z += Printer::extruderOffset[Z_AXIS];
 
     if(x != IGNORE_COORDINATE)
         queuePositionTargetSteps[X_AXIS] = floor(x * axisStepsPerMM[X_AXIS] + 0.5);
@@ -476,6 +477,7 @@ void Printer::updateCurrentPosition(bool copyLastCmd)
     queuePositionLastMM[Z_AXIS] = (float)(queuePositionLastSteps[Z_AXIS])*invAxisStepsPerMM[Z_AXIS];
     queuePositionLastMM[X_AXIS] -= Printer::extruderOffset[X_AXIS];
     queuePositionLastMM[Y_AXIS] -= Printer::extruderOffset[Y_AXIS];
+    queuePositionLastMM[Z_AXIS] -= Printer::extruderOffset[Z_AXIS];
 
     if(copyLastCmd)
     {
@@ -524,7 +526,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
 
     x = queuePositionCommandMM[X_AXIS] + Printer::extruderOffset[X_AXIS];
     y = queuePositionCommandMM[Y_AXIS] + Printer::extruderOffset[Y_AXIS];
-    z = queuePositionCommandMM[Z_AXIS];
+    z = queuePositionCommandMM[Z_AXIS] + Printer::extruderOffset[Z_AXIS];
 
     long xSteps = static_cast<long>(floor(x * axisStepsPerMM[X_AXIS] + 0.5));
     long ySteps = static_cast<long>(floor(y * axisStepsPerMM[Y_AXIS] + 0.5));
@@ -630,7 +632,7 @@ uint8_t Printer::setDestinationStepsFromMenu( float relativeX, float relativeY, 
 
     x = queuePositionCommandMM[X_AXIS] + Printer::extruderOffset[X_AXIS];
     y = queuePositionCommandMM[Y_AXIS] + Printer::extruderOffset[Y_AXIS];
-    z = queuePositionCommandMM[Z_AXIS];
+    z = queuePositionCommandMM[Z_AXIS] + Printer::extruderOffset[Z_AXIS];
 
     long xSteps = static_cast<long>(floor(x * axisStepsPerMM[X_AXIS] + 0.5));
     long ySteps = static_cast<long>(floor(y * axisStepsPerMM[Y_AXIS] + 0.5));
@@ -1002,7 +1004,7 @@ void Printer::setup()
 
     maxJerk = MAX_JERK;
     maxZJerk = MAX_ZJERK;
-    extruderOffset[X_AXIS] = extruderOffset[Y_AXIS] = 0;
+    extruderOffset[X_AXIS] = extruderOffset[Y_AXIS] = extruderOffset[Z_AXIS] = 0;
 
     ZOffset = 0;
     interval = 5000;

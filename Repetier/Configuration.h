@@ -313,7 +313,7 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_OUTPUT_FINISHED_OBJECT
 
 /** \brief The following script allows to configure the exact behavior of the automatic object output */
-#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-5\nG1 Z210 F5000\nG1 Y250 F7500"
+#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-1\nG1 Z210 F5000\nG1 Y250 F7500"
 #define OUTPUT_OBJECT_SCRIPT_MILL           "G28 Z0\nG21\nG91\nG1 Y250 F7500"
 
 #endif // FEATURE_OUTPUT_FINISHED_OBJECT
@@ -378,8 +378,8 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_EMERGENCY_STOP_ALL
 
 /** \brief Specifies the pressure at which the emergency z-stop shall be performed, in [digits] */
-#define EMERGENCY_STOP_DIGITS_MIN           -5000
-#define EMERGENCY_STOP_DIGITS_MAX           5000
+#define EMERGENCY_STOP_DIGITS_MIN           -8000
+#define EMERGENCY_STOP_DIGITS_MAX           8000
 
 /** \brief Specifies the interval at which the pressure check shall be performed, in [ms] */
 #define EMERGENCY_STOP_INTERVAL             10
@@ -530,7 +530,7 @@ See http://reprap.org/wiki/MeasuringThermistorBeta for more details.
 
 /** \brief USE_GENERIC_THERMISTORTABLE_2 */
 #define GENERIC_THERM2_T0                   170
-#define GENERIC_THERM2_R0                   1042.7
+#define GENERIC_THERM2_R0                   1042.7f
 #define GENERIC_THERM2_BETA                 4036
 #define GENERIC_THERM2_MIN_TEMP             -20
 #define GENERIC_THERM2_MAX_TEMP             300
@@ -539,7 +539,7 @@ See http://reprap.org/wiki/MeasuringThermistorBeta for more details.
 
 /** \brief USE_GENERIC_THERMISTORTABLE_3 */
 #define GENERIC_THERM3_T0                   170
-#define GENERIC_THERM3_R0                   1042.7
+#define GENERIC_THERM3_R0                   1042.7f
 #define GENERIC_THERM3_BETA                 4036
 #define GENERIC_THERM3_MIN_TEMP             -20
 #define GENERIC_THERM3_MAX_TEMP             300
@@ -710,9 +710,9 @@ Values must be in range 1..255 */
 /** \brief Extreme values */
 #define UI_SET_MIN_HEATED_BED_TEMP          55
 #define UI_SET_MAX_HEATED_BED_TEMP          160
-#define UI_SET_MIN_EXTRUDER_TEMP            120
+#define UI_SET_MIN_EXTRUDER_TEMP            70
 #define UI_SET_MAX_EXTRUDER_TEMP            270
-#define UI_SET_EXTRUDER_FEEDRATE            2                                                   // [mm/sec]
+#define UI_SET_EXTRUDER_FEEDRATE            1.5f                                                 // [mm/sec]
 #define UI_SET_EXTRUDER_RETRACT_DISTANCE    3                                                   // [mm]
 #define COOLDOWN_THRESHOLD                  40                                                  // [°C]
 

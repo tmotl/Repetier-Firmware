@@ -966,6 +966,10 @@ void UIDisplay::parse(char *txt,bool ram)
                 {
                     addFloat(extruder[1].yOffset/Printer::axisStepsPerMM[Y_AXIS],4,3);
                 }
+                if(c2=='S')                                                                             // %OS : Extruder spring displacement Z [mm]
+                {
+                    addFloat(extruder[1].zOffset/Printer::axisStepsPerMM[Z_AXIS],4,3);
+                }
 #endif // NUM_EXTRUDER>1
 
                 if(c2=='M')                                                                             // %OM : operating mode
@@ -3018,6 +3022,19 @@ void UIDisplay::nextPreviousAction(int8_t next)
 
             break;
         }
+        case UI_ACTION_EXTRUDER_OFFSET_Z:
+        {
+            float   fTemp = extruder[1].zOffset / Printer::axisStepsPerMM[Z_AXIS];
+
+			//Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
+            INCREMENT_MIN_MAX(fTemp,0.025,-2,0);
+            extruder[1].zOffset = int32_t(fTemp * Printer::axisStepsPerMM[Z_AXIS]);
+			if(Extruder::current->id == extruder[1].id){
+				Printer::extruderOffset[Z_AXIS] = -Extruder::current->zOffset*Printer::invAxisStepsPerMM[Z_AXIS];	
+				Printer::updateCurrentPosition();							
+			}
+            break;
+        }
 #endif // NUM_EXTRUDER>1
 
         case UI_ACTION_FEEDRATE_MULTIPLY:
@@ -3908,6 +3925,7 @@ void UIDisplay::executeAction(int action)
 		configureMANUAL_STEPS_Z( 1 );
                 break;
 	}
+
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_MILLING_MODE
