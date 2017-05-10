@@ -240,6 +240,45 @@ void Extruder::initHeatedBed()
 } // initHeatedBed
 
 
+#if defined(USE_GENERIC_THERMISTORTABLE_1) || defined(USE_GENERIC_THERMISTORTABLE_2) || defined(USE_GENERIC_THERMISTORTABLE_3)
+void createGenericTable(short table[GENERIC_THERM_NUM_ENTRIES][2],short minTemp,short maxTemp,float beta,float r0,float t0,float r1,float r2)
+{
+    t0 += 273.15f;
+    float rs, vs;
+    if(r1==0)
+    {
+        rs = r2;
+        vs = GENERIC_THERM_VREF;
+    }
+    else
+    {
+        vs =static_cast<float>((GENERIC_THERM_VREF * r1) / (r1 + r2));
+        rs = (r2 * r1) / (r1 + r2);
+    }
+    float k = r0 * exp(-beta / t0);
+    float delta = (maxTemp-minTemp) / (GENERIC_THERM_NUM_ENTRIES - 1.0f);
+    for(uint8_t i = 0; i < GENERIC_THERM_NUM_ENTRIES; i++)
+    {
+#if FEATURE_WATCHDOG
+        HAL::pingWatchdog();
+#endif // FEATURE_WATCHDOG
+        float t = maxTemp - i * delta;
+        float r = exp(beta / (t + 272.65)) * k;
+        float v = 4092 * r * vs / ((rs + r) * GENERIC_THERM_VREF);
+        int adc = static_cast<int>(v);
+        t *= 8;
+        if(adc > 4092) adc = 4092;
+        table[i][0] = (adc >> (ANALOG_REDUCE_BITS));
+        table[i][1] = static_cast<int>(t);
+#ifdef DEBUG_GENERIC
+        Com::printF(Com::tGenTemp,table[i][0]);
+        Com::printFLN(Com::tComma,table[i][1]);
+#endif
+    }
+}
+#endif
+
+
 /** \brief Initalizes all extruder.
 Updates the pin configuration needed for the extruder and activates extruder 0.
 Starts a interrupt based analog input reader, which is used by simple thermistors
@@ -626,6 +665,7 @@ const short temptable_1[NUMTEMPS_1][2] PROGMEM =
     {1771,960},{2357,800},{2943,640},{3429,480},{3760,320},{3869,240},{3912,200},{3948,160},{4077,-160},{4094,-440}
 };
 
+// is 200k thermistor
 #define NUMTEMPS_2 21
 const short temptable_2[NUMTEMPS_2][2] PROGMEM =
 {
@@ -634,7 +674,9 @@ const short temptable_2[NUMTEMPS_2][2] PROGMEM =
     {849*4, 77*8},{902*4, 65*8},{955*4, 49*8},{1008*4, 17*8},{1020*4, 0*8} //safety
 };
 
-#define NUMTEMPS_3 28
+// mendel-parts thermistor (EPCOS G550) = NTC mit 100kOhm
+#define NUMTEMPS_3 28 
+
 const short temptable_3[NUMTEMPS_3][2] PROGMEM =
 {
     {1*4,864*8},{21*4,300*8},{25*4,290*8},{29*4,280*8},{33*4,270*8},{39*4,260*8},{46*4,250*8},{54*4,240*8},{64*4,230*8},{75*4,220*8},
@@ -642,6 +684,7 @@ const short temptable_3[NUMTEMPS_3][2] PROGMEM =
     {441*4,120*8},{513*4,110*8},{588*4,100*8},{734*4,80*8},{856*4,60*8},{938*4,40*8},{986*4,20*8},{1008*4,0*8},{1018*4,-20*8}
 };
 
+// is 10k thermistor
 #define NUMTEMPS_4 20
 const short temptable_4[NUMTEMPS_4][2] PROGMEM =
 {
@@ -650,7 +693,8 @@ const short temptable_4[NUMTEMPS_4][2] PROGMEM =
     {955*4, -11*8},{1008*4, -35*8}
 };
 
-#define NUMTEMPS_8 34
+// ATC Semitec 104GT-2 / E3D Hotend Thermistor
+#define NUMTEMPS_8 34 
 const short temptable_8[NUMTEMPS_8][2] PROGMEM =
 {
     {0,8000},{69,2400},{79,2320},{92,2240},{107,2160},{125,2080},{146,2000},{172,1920},{204,1840},{222,1760},{291,1680},{350,1600},
@@ -658,7 +702,8 @@ const short temptable_8[NUMTEMPS_8][2] PROGMEM =
     {2851,640},{3137,560},{3385,480},{3588,400},{3746,320},{3863,240},{3945,160},{4002,80},{4038,0},{4061,-80},{4075,-160}
 };
 
-#define NUMTEMPS_9 67 // 100k Honeywell 135-104LAG-J01
+// 100k Honeywell 135-104LAG-J01
+#define NUMTEMPS_9 67 
 const short temptable_9[NUMTEMPS_9][2] PROGMEM =
 {
     {1*4, 941*8},{19*4, 362*8},{37*4, 299*8}, //top rating 300C
@@ -671,7 +716,8 @@ const short temptable_9[NUMTEMPS_9][2] PROGMEM =
     {955*4, 35*8},{973*4, 27*8},{991*4, 17*8},{1009*4, 1*8},{1023*4, 0}  //to allow internal 0 degrees C
 };
 
-#define NUMTEMPS_10 20 // 100k 0603 SMD Vishay NTCS0603E3104FXT (4.7k pullup)
+// 100k 0603 SMD Vishay NTCS0603E3104FXT (4.7k pullup)
+#define NUMTEMPS_10 20 
 const short temptable_10[NUMTEMPS_10][2] PROGMEM =
 {
     {1*4, 704*8},{54*4, 216*8},{107*4, 175*8},{160*4, 152*8},{213*4, 137*8},{266*4, 125*8},{319*4, 115*8},{372*4, 106*8},{425*4, 99*8},
@@ -679,7 +725,8 @@ const short temptable_10[NUMTEMPS_10][2] PROGMEM =
     {955*4, 17*8},{1008*4, 0}
 };
 
-#define NUMTEMPS_11 31 // 100k GE Sensing AL03006-58.2K-97-G1 (4.7k pullup)
+// 100k GE Sensing AL03006-58.2K-97-G1 (4.7k pullup)
+#define NUMTEMPS_11 31 
 const short temptable_11[NUMTEMPS_11][2] PROGMEM =
 {
     {1*4, 936*8},{36*4, 300*8},{71*4, 246*8},{106*4, 218*8},{141*4, 199*8},{176*4, 185*8},{211*4, 173*8},{246*4, 163*8},{281*4, 155*8},
@@ -688,20 +735,25 @@ const short temptable_11[NUMTEMPS_11][2] PROGMEM =
     {946*4, 38*8},{981*4, 23*8},{1005*4, 5*8},{1016*4, 0}
 };
 
-#define NUMTEMPS_12 31 // 100k RS thermistor 198-961 (4.7k pullup)
+// 100k RS thermistor 198-961 (4.7k pullup)
+#define NUMTEMPS_12 31 
 const short temptable_12[NUMTEMPS_12][2] PROGMEM =
 {
     {1*4, 929*8},{36*4, 299*8},{71*4, 246*8},{106*4, 217*8},{141*4, 198*8},{176*4, 184*8},{211*4, 173*8},{246*4, 163*8},{281*4, 154*8},{316*4, 147*8},
     {351*4, 140*8},{386*4, 134*8},{421*4, 128*8},{456*4, 122*8},{491*4, 117*8},{526*4, 112*8},{561*4, 107*8},{596*4, 102*8},{631*4, 97*8},{666*4, 91*8},
     {701*4, 86*8},{736*4, 81*8},{771*4, 76*8},{806*4, 70*8},{841*4, 63*8},{876*4, 56*8},{911*4, 48*8},{946*4, 38*8},{981*4, 23*8},{1005*4, 5*8},{1016*4, 0*8}
 };
-#define NUMTEMPS_13 19 // PT100 E3D
+
+// PT100 E3D
+#define NUMTEMPS_13 19 
 const short temptable_13[NUMTEMPS_13][2] PROGMEM =
 {
     {0,0},{908,8},{942,10*8},{982,20*8},{1015,8*30},{1048,8*40},{1080,8*50},{1113,8*60},{1146,8*70},{1178,8*80},{1211,8*90},{1276,8*110},{1318,8*120}
     ,{1670,8*230},{2455,8*500},{3445,8*900},{3666,8*1000},{3871,8*1100},{4095,8*2000}
 };
-#define NUMTEMPS_14 46 // Thermistor NTC 3950 100k Ohm (result seems a bit to cold for my amazon-ntcs)
+
+// Thermistor NTC 3950 100k Ohm (result seems a bit to cold for my amazon-ntcs)
+#define NUMTEMPS_14 46 
 const short temptable_14[NUMTEMPS_14][2] PROGMEM = {
     {1*4,8*938}, {31*4,8*314}, {41*4,8*290}, {51*4,8*272}, {61*4,8*258}, {71*4,8*247}, {81*4,8*237}, {91*4,8*229}, {101*4,8*221}, {111*4,8*215}, {121*4,8*209},
     {131*4,8*204}, {141*4,8*199}, {151*4,8*195}, {161*4,8*190}, {171*4,8*187}, {181*4,8*183}, {191*4,8*179}, {201*4,8*176}, {221*4,8*170}, {241*4,8*165}, 
@@ -709,7 +761,9 @@ const short temptable_14[NUMTEMPS_14][2] PROGMEM = {
     {571*4,8*105}, {611*4,8*100}, {681*4,8*90}, {711*4,8*85}, {811*4,8*69}, {831*4,8*65}, {881*4,8*55}, 
     {901*4,8*51},  {941*4,8*39}, {971*4,8*28}, {981*4,8*23}, {991*4,8*17}, {1001*4,8*9}, {1021*4,8*-27},{1023*4,8*-200}
 };
-#define NUMTEMPS_15 103 // Thermistor NTC 3950 100k Ohm (other source)
+
+// Thermistor NTC 3950 100k Ohm (other source)
+#define NUMTEMPS_15 103 
 const short temptable_15[NUMTEMPS_15][2] PROGMEM = {
     {1*4,938*8},{11*4,423*8},{21*4,351*8},{31*4,314*8},{41*4,290*8},{51*4,272*8},{61*4,258*8},{71*4,247*8},\
 {81*4,237*8},{91*4,229*8},{101*4,221*8},{111*4,215*8},{121*4,209*8},{131*4,204*8},{141*4,199*8},{151*4,195*8},\
@@ -781,23 +835,24 @@ void TemperatureController::updateCurrentTemperature()
     switch(type)
     {
 #if ANALOG_INPUTS>0
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
+        case 1: // Epcos B57560G0107F000
+        case 2: // is 200k thermistor
+        case 3: // V2 Sensor Conrad Renkforce / mendel-parts thermistor (EPCOS G550) = NTC mit 100kOhm
+        case 4: // is 10k thermistor
+        case 5: // user thermistor 0
+        case 6: // user thermistor 1
+        case 7: // user thermistor 2
+        case 8: // E3D Thermistor
+        case 9: // 100k Honeywell 135-104LAG-J01
+        case 10: // 100k 0603 SMD Vishay NTCS0603E3104FXT (4.7k pullup)
+        case 11: // 100k GE Sensing AL03006-58.2K-97-G1 (4.7k pullup)
+        case 12: // 100k RS thermistor 198-961 (4.7k pullup)
+		//case 13 weiter unten, E3D PT100.
         case 14: // Thermistor NTC 3950 100k Ohm
         case 15: // Thermistor NTC 3950 100k Ohm
-        case 97: 
-        case 98:
-        case 99:
+        case 97: // Define Raw Thermistor and Restistor-Settings within configuration.h see USE_GENERIC_THERMISTORTABLE_1 and GENERIC_THERM_NUM_ENTRIES 
+        case 98: // Define Raw Thermistor and Restistor-Settings within configuration.h see USE_GENERIC_THERMISTORTABLE_2 and GENERIC_THERM_NUM_ENTRIES 
+        case 99: // Define Raw Thermistor and Restistor-Settings within configuration.h see USE_GENERIC_THERMISTORTABLE_3 and GENERIC_THERM_NUM_ENTRIES 
         {
             currentTemperature = (1023<<(2-ANALOG_REDUCE_BITS))-(osAnalogInputValues[sensorPin]>>(ANALOG_REDUCE_BITS)); // Convert to 10 bit result
             break;
@@ -827,10 +882,10 @@ void TemperatureController::updateCurrentTemperature()
         case 2:
         case 3:
         case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 8:
+        case 5: //user thermistor 0
+        case 6: //user thermistor 1
+        case 7: //user thermistor 2
+        case 8: //E3D Thermistor
         case 9:
         case 10:
         case 11:

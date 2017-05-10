@@ -3920,12 +3920,11 @@ void UIDisplay::executeAction(int action)
 
 
 #if FEATURE_EXTENDED_BUTTONS
-	case UI_ACTION_CONFIG_SINGLE_STEPS:
-	{   
-		configureMANUAL_STEPS_Z( 1 );
+			case UI_ACTION_CONFIG_SINGLE_STEPS:
+			{   
+				configureMANUAL_STEPS_Z( 1 );
                 break;
-	}
-
+			}
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_MILLING_MODE
