@@ -216,9 +216,9 @@ for 2 row displays. You can add additional pages or change the default pages lik
     UI_PAGE4(ui_page2,"X:%x0 mm","Y:%x1 mm","Z:%x2 mm %sC","%os")
 
     #if NUM_EXTRUDER>1
-		UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,UI_TEXT_PAGE_EXTRUDER2,UI_TEXT_PAGE_BED,"%os")
+        UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,UI_TEXT_PAGE_EXTRUDER2,UI_TEXT_PAGE_BED,"%os")
     #else
-		UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,"",UI_TEXT_PAGE_BED,"%os")
+        UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,"",UI_TEXT_PAGE_BED,"%os")
     #endif // NUM_EXTRUDER>1
 
     #if EEPROM_MODE!=0

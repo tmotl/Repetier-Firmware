@@ -743,7 +743,7 @@ void EEPROM::readDataFromEEPROM()
 
         e->xOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_X_OFFSET)*Printer::axisStepsPerMM[X_AXIS]);
         e->yOffset = int32_t(HAL::eprGetFloat(o+EPR_EXTRUDER_Y_OFFSET)*Printer::axisStepsPerMM[Y_AXIS]);
-		//e->zOffset lasse ich hier raus! Nibbels
+        //e->zOffset lasse ich hier raus! Nibbels
         e->watchPeriod = HAL::eprGetInt16(o+EPR_EXTRUDER_WATCH_PERIOD);
 
 #if RETRACT_DURING_HEATUP

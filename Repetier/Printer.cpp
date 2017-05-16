@@ -1481,46 +1481,6 @@ void Printer::homeZAxis()
 
         setHomed( false );
 
-#if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-        if( ZEndstopUnknown )
-        {
-            // in case we do not know which z-endstop is currently active, we always move downwards first
-            // in case z-min was active, z-min will not be active anymore
-            // in case z-max was active, it will remain active
-            UI_STATUS_UPD( UI_TEXT_DRIVING_FREE_Z );
-
-            if( Printer::debugInfo() )
-            {
-                Com::printFLN( PSTR( "driving free downwards" ) );
-            }
-            PrintLine::moveRelativeDistanceInSteps(0,0,UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS,0,homingFeedrate[Z_AXIS],true,false);
-
-            if( READ(Z_MAX_PIN) != ENDSTOP_Z_MAX_INVERTING )
-            {
-                // in case z-max is still active, we move upwards in order to drive it free
-                if( Printer::debugInfo() )
-                {
-                    Com::printFLN( PSTR( "driving free upwards" ) );
-                }
-                PrintLine::moveRelativeDistanceInSteps(0,0,-UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS,0,homingFeedrate[Z_AXIS],true,false);
-            }
-
-            if( READ(Z_MAX_PIN) == ENDSTOP_Z_MAX_INVERTING )
-            {
-                // there is no active z-endstop any more, we can continue with all movements normally
-                if( Printer::debugInfo() )
-                {
-                    Com::printFLN( PSTR( "driven free" ) );
-                }
-
-                lastZDirection        = 0;
-                endstopZMinHit        = ENDSTOP_NOT_HIT;
-                endstopZMaxHit        = ENDSTOP_NOT_HIT;
-                ZEndstopUnknown       = 0;
-            }
-        }
-#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
-
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
         g_nZScanZPosition = 0;
         queueTask( TASK_DISABLE_Z_COMPENSATION );

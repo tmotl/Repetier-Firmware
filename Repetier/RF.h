@@ -638,7 +638,7 @@ extern  unsigned long   g_nManualSteps[4];
 
 
 #if FEATURE_PAUSE_PRINTING
-extern  volatile long	g_nPauseSteps[4];
+extern  volatile long    g_nPauseSteps[4];
 extern  volatile long   g_nContinueSteps[4];
 extern  volatile char   g_pauseStatus;
 extern  volatile char   g_pauseMode;

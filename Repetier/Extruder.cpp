@@ -847,7 +847,7 @@ void TemperatureController::updateCurrentTemperature()
         case 10: // 100k 0603 SMD Vishay NTCS0603E3104FXT (4.7k pullup)
         case 11: // 100k GE Sensing AL03006-58.2K-97-G1 (4.7k pullup)
         case 12: // 100k RS thermistor 198-961 (4.7k pullup)
-		//case 13 weiter unten, E3D PT100.
+        //case 13 weiter unten, E3D PT100.
         case 14: // Thermistor NTC 3950 100k Ohm
         case 15: // Thermistor NTC 3950 100k Ohm
         case 97: // Define Raw Thermistor and Restistor-Settings within configuration.h see USE_GENERIC_THERMISTORTABLE_1 and GENERIC_THERM_NUM_ENTRIES 

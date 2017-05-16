@@ -1,3 +1,8 @@
+V RF.01.37k4.TDMod (2017-05-16)
+- fixed missing translations
+- removed drive-free - i really dont want and need that!
+- replaced tabs with spaces
+
 V RF.01.37k3.TDMod (2017-05-16)
 - Prevent Move by GCODE (G0, G1, ...) if not homed in printer mode. This should prevent crashes when the printer resets with repetierhost still sending commands
 - Fixed M3117 by changing gcode.cpp to prevent parsing text based commands alike in parseASCII(*com)

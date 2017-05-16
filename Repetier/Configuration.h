@@ -113,13 +113,13 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
-#define Z_OFFSET_BUTTON_STEPS       		5
+#define Z_OFFSET_BUTTON_STEPS               5
 
 /**
 XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons within "Menu:Position->X-/Y-/Z-Position".
 XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you want to stick to standard coordinates direction.
 */
-#define XYZ_POSITION_BUTTON_DIRECTION		1
+#define XYZ_POSITION_BUTTON_DIRECTION        1
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE    0                                                   // 1 = on, 0 = off
@@ -616,7 +616,7 @@ instead of driving both with a single stepper. The same works for the other axis
 //Das hier drunter sind einigermaßen sinnvolle Stepsizes, wenn man Microsteps = 32 hat!!!
 //Siehe: https://github.com/RF1000community/Repetier-Firmware/issues/4
 //Dieser statische Ansatz wird evtl. mal umgebaut. Man könnte auch eine Funktion schreiben, die sinnvolle Einstellwerte automatisch anhand Microsteps und Mikrometertabelle sucht.
-#define NUM_ACCEPTABLE_STEP_SIZE_TABLE	7
+#define NUM_ACCEPTABLE_STEP_SIZE_TABLE    7
 #define ACCEPTABLE_STEP_SIZE_TABLE { 5,13,26,51,64,128,256 }
 #endif // FEATURE_EXTENDED_BUTTONS
 
