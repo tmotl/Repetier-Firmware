@@ -1,3 +1,12 @@
+V RF.01.37k3.TDMod (2017-05-16)
+- Prevent Move by GCODE (G0, G1, ...) if not homed in printer mode. This should prevent crashes when the printer resets with repetierhost still sending commands
+- Fixed M3117 by changing gcode.cpp to prevent parsing text based commands alike in parseASCII(*com)
+- changed standard thermistor setting back to type 3 (V2)
+- removed change function of the Tip-Down-Spring-Setting within menu CONFIGURATION - Z-Configuration to prevent some missunderstanding. Now the user gets an info message how to change.
+- implemented https://github.com/repetier/Repetier-Firmware/commit/371c1b709f0f3d7664e345813e84e27b591c58f4 
+- rewrote some GCODE parsing functions details according to original repetier/Repetier
+- changed Gcode buffer to 22 instead of 16 to test possible effects
+
 V RF.01.37k2.TDMod (2017-05-07)
 - Added better Thermistor-Comments in Extruder.cpp
 - Added Generic Thermistor-Table-Function from original repetier/Repetier (in testing)

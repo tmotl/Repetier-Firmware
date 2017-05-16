@@ -221,7 +221,7 @@ Overridden if EEPROM activated.*/
 
 /** \brief What type of sensor is used?
 3 is mendel-parts thermistor (EPCOS G550) */
-#define EXT0_TEMPSENSOR_TYPE                8
+#define EXT0_TEMPSENSOR_TYPE                3
 
 /** \brief Analog input pin for reading temperatures or pin enabling SS for MAX6675 */
 #define EXT0_TEMPSENSOR_PIN                 TEMP_0_PIN
@@ -368,7 +368,7 @@ The codes are only executed for multiple extruder when changing the extruder. */
 
 /** \brief What type of sensor is used?
 3 is mendel-parts thermistor (EPCOS G550) */
-#define EXT1_TEMPSENSOR_TYPE                8
+#define EXT1_TEMPSENSOR_TYPE                3
 
 /** \brief Analog input pin for reading temperatures or pin enabling SS for MAX6675 */
 #define EXT1_TEMPSENSOR_PIN                 TEMP_1_PIN
@@ -893,7 +893,7 @@ Overridden if EEPROM activated. */
 /** \brief Number of moves we can cache in advance.
 This number of moves can be cached in advance. If you wan't to cache more, increase this. Especially on
 many very short moves the cache may go empty. The minimum value is 5. */
-#define MOVE_CACHE_SIZE                     16
+#define MOVE_CACHE_SIZE                     22
 
 /** \brief Low filled cache size.
 If the cache contains less then MOVE_CACHE_LOW segments, the time per segment is limited to LOW_TICKS_PER_MOVE clock cycles.

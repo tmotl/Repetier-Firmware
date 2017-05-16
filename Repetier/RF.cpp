@@ -6441,18 +6441,18 @@ void loopRF( void )
                 //check: "only at printing" -> here the condition is already valid
                 //check: "only when z-compensation is active" -> yes
                 //check: "only when close to surface" -> yes                
-		
+
                 if(g_nSensiblePressureDigits && Printer::doHeatBedZCompensation){ //activate feature with G-Code.
-					
+                        
                     if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) //das zOffset des extruders ist negativ und in Steps.
-                    {						
-						g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
+                    {
+                        g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
                         //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
                         g_nSensiblePressureSum += pressure;
                         g_nSensiblePressureChecks += 1;
                         //jede 1 sekunden, bzw 0.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
                         if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS ){ 
-							
+                            
                             nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
                             
                             //half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5                         
@@ -6520,7 +6520,7 @@ void loopRF( void )
                             g_nSensibleLastPressure = nPressure; //save last pressure.
                         }
                     }else{
-						g_nSensiblePressure1stMarke = 0; //marker für display: auf dieser Höhe regeln wir nichts mehr oder noch nichts.
+                        g_nSensiblePressure1stMarke = 0; //marker für display: auf dieser Höhe regeln wir nichts mehr oder noch nichts.
                         // if sensible not active 
                         // if z-compensation not active
                         if(g_nSensiblePressureSum > 0){
@@ -14284,6 +14284,14 @@ unsigned char isSupportedMCommand( unsigned int currentMCode, char neededMode, c
 
 unsigned char isMovingAllowed( const char* pszCommand, char outputLog )
 {
+    if( Printer::operatingMode == OPERATING_MODE_PRINT && !Printer::isHomed() )
+    {
+        // do not allow to move in case the printer just started and has no homing
+        // this is a temporary fix to the wall-crashes when the printer resets
+        Com::printF( pszCommand );
+        Com::printFLN( PSTR( ": this command can not be used as long as the printer is not homed." ) );
+        return 0;
+    }
     if( Printer::blockAll )
     {
         // do not allow to move in case the movements have been blocked

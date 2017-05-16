@@ -780,6 +780,8 @@ UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
 UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
 UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
 UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
+UI_STRING(ui_text_extruder_offset_z_msg,UI_TEXT_EXTRUDER_OFFSET_Z_MSG)
+
 
 
 void UIDisplay::parse(char *txt,bool ram)
@@ -3024,15 +3026,9 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_EXTRUDER_OFFSET_Z:
         {
-            float   fTemp = extruder[1].zOffset / Printer::axisStepsPerMM[Z_AXIS];
-
-			//Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
-            INCREMENT_MIN_MAX(fTemp,0.025,-2,0);
-            extruder[1].zOffset = int32_t(fTemp * Printer::axisStepsPerMM[Z_AXIS]);
-			if(Extruder::current->id == extruder[1].id){
-				Printer::extruderOffset[Z_AXIS] = -Extruder::current->zOffset*Printer::invAxisStepsPerMM[Z_AXIS];	
-				Printer::updateCurrentPosition();							
-			}
+            //Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
+            
+                    showInformation( (void*)ui_text_extruder_offset_z_msg );
             break;
         }
 #endif // NUM_EXTRUDER>1
