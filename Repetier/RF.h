@@ -657,6 +657,12 @@ extern short            g_nSensibleLastPressure;
 extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
+#if FEATURE_SENSIBLE_COMPENSATION
+extern long             g_nSensibleCompensationSum;
+extern char             g_nSensibleCompensationChecks;
+extern float            g_nSensibleCompensationDigits;
+#endif // FEATURE_SENSIBLE_COMPENSATION
+
 #if FEATURE_FIND_Z_ORIGIN
 extern  volatile char   g_nFindZOriginStatus;
 extern  long            g_nZOriginPosition[3];

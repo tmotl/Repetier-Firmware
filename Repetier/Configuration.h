@@ -105,10 +105,15 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #define FEATURE_PRINT_PRESSURE          1
                                                     
 #if FEATURE_SENSIBLE_PRESSURE
-    #define SENSIBLE_PRESSURE_DIGIT_CHECKS              10                                      // MAximal auf 127 stellen, denn das wir mit char verglichen!!
+    #define SENSIBLE_PRESSURE_DIGIT_CHECKS              10                                      // MAximal auf 127 stellen, denn das wird mit char verglichen!!
     //nachfolgend soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
     #define SENSIBLE_PRESSURE_MAX_OFFSET                180     
 #endif // FEATURE_SENSIBLE_PRESSURE
+
+#define FEATURE_SENSIBLE_COMPENSATION           1
+#if FEATURE_SENSIBLE_COMPENSATION
+   
+#endif // FEATURE_SENSIBLE_COMPENSATION
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 

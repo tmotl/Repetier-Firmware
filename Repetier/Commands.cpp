@@ -369,9 +369,7 @@ void Commands::printTemperatures(bool showRaw)
     Com::printF(Com::tF);
     Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
 #endif //FEATURE_PRINT_PRESSURE
-
     Com::println();
-
 } // printTemperatures
 
 

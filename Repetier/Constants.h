@@ -20,8 +20,8 @@
 #define CONSTANTS_H
 
 
-#define REPETIER_VERSION                    "RF.01.37k4.TDMod"
-#define UI_PRINTER_COMPANY                  "Nibbels DualTD"
+#define REPETIER_VERSION                    "RF.01.37l.Mod"
+#define UI_PRINTER_COMPANY                  "TipDown+DigitComp"
 #define UI_VERSION_STRING                   "V " REPETIER_VERSION
 
 
