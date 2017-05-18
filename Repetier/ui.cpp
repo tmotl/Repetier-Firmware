@@ -780,6 +780,8 @@ UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
 UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
 UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
 UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
+UI_STRING(ui_text_extruder_offset_z_msg,UI_TEXT_EXTRUDER_OFFSET_Z_MSG)
+
 
 
 void UIDisplay::parse(char *txt,bool ram)
@@ -965,6 +967,10 @@ void UIDisplay::parse(char *txt,bool ram)
                 if(c2=='F')                                                                             // %OF : Extruder offset Y [mm]
                 {
                     addFloat(extruder[1].yOffset/Printer::axisStepsPerMM[Y_AXIS],4,3);
+                }
+                if(c2=='S')                                                                             // %OS : Extruder spring displacement Z [mm]
+                {
+                    addFloat(extruder[1].zOffset/Printer::axisStepsPerMM[Z_AXIS],4,3);
                 }
 #endif // NUM_EXTRUDER>1
 
@@ -1504,8 +1510,8 @@ void UIDisplay::parse(char *txt,bool ram)
 #if FEATURE_SENSIBLE_PRESSURE
                     if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
                     {
-						if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
-						else addStringP( PSTR( "@" ));
+                        if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
+                        else addStringP( PSTR( "@" ));
                         addInt((int)g_nSensiblePressureDigits,5);
                     }else{
                         addStringP(ui_text_off);                
@@ -1523,8 +1529,8 @@ void UIDisplay::parse(char *txt,bool ram)
             case 'S':
             {
                 if(c2=='e') addFloat(Extruder::current->stepsPerMM,3,1);                                // %Se : Steps per mm current extruder
-				if(c2=='z') addFloat(g_nManualSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,4,0); // %Sz : Mikrometer per Z-Single_Step (Z_Axis)
-                break;				
+                if(c2=='z') addFloat(g_nManualSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,4,0); // %Sz : Mikrometer per Z-Single_Step (Z_Axis)
+                break;                
             }
             case 'p':
             {
@@ -2749,51 +2755,51 @@ void UIDisplay::nextPreviousAction(int8_t next)
     {
         if((UI_INVERT_MENU_DIRECTION && next < 0) || (!UI_INVERT_MENU_DIRECTION && next > 0))
         {
-			    //up-to-bottom-Patch
-			    uint8_t vorher = menuPos[menuLevel];
-			    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
-			    else menuPos[menuLevel] = 0; 
-			    //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
-			    while(menuPos[menuLevel] != vorher)
-			    {				
-				    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-				    if(testEnt->showEntry()) break;
-				
-				    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
-				    else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
-			    }
-			    //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
-			    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			    if(!testEnt->showEntry())
-			    {
-				    // this new chosen menu item shall not be displayed - revert the so-far used menu item
-				    menuPos[menuLevel] = vorher;
-			    }
-			    //up-to-bottom-Patch
+                //up-to-bottom-Patch
+                uint8_t vorher = menuPos[menuLevel];
+                if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+                else menuPos[menuLevel] = 0; 
+                //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+                while(menuPos[menuLevel] != vorher)
+                {                
+                    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                    if(testEnt->showEntry()) break;
+                
+                    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+                    else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
+                }
+                //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+                testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                if(!testEnt->showEntry())
+                {
+                    // this new chosen menu item shall not be displayed - revert the so-far used menu item
+                    menuPos[menuLevel] = vorher;
+                }
+                //up-to-bottom-Patch
          }
          else 
          {
-			    //down-to-top-Patch
-			    uint8_t vorher = menuPos[menuLevel];
-			    if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
-			    else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-			    //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
-			    while(menuPos[menuLevel] != vorher)
-			    {				
-			    	testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			    	if(testEnt->showEntry()) break;
-			    	
-		    		if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
-		    		else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-		    	}
-			    //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
-			    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			    if(!testEnt->showEntry())
-			    {
-			    	// this new chosen menu item shall not be displayed - revert the so-far used menu item
-			    	menuPos[menuLevel] = vorher;
-			    }
-			    //down-to-top-Patch ende
+                //down-to-top-Patch
+                uint8_t vorher = menuPos[menuLevel];
+                if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+                else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+                //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+                while(menuPos[menuLevel] != vorher)
+                {                
+                    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                    if(testEnt->showEntry()) break;
+                    
+                    if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+                    else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+                }
+                //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+                testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                if(!testEnt->showEntry())
+                {
+                    // this new chosen menu item shall not be displayed - revert the so-far used menu item
+                    menuPos[menuLevel] = vorher;
+                }
+                //down-to-top-Patch ende
         }
         adjustMenuPos();
         return;
@@ -2842,34 +2848,34 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_XPOSITION:
         {
-			/*
-			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
-			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
-			see configuration.h
-			*/
+            /*
+            XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+            XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+            see configuration.h
+            */
             nextPreviousXAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }
         case UI_ACTION_YPOSITION:
         {
-			/*
-			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
-			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
-			see configuration.h
-			*/
+            /*
+            XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+            XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+            see configuration.h
+            */
             nextPreviousYAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }
         case UI_ACTION_ZPOSITION:
         {
-			/*
-			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
-			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
-			see configuration.h
-			*/
+            /*
+            XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+            XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+            see configuration.h
+            */
             nextPreviousZAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
-        }			
+        }            
         case UI_ACTION_ZOFFSET:
         {           
             //INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
@@ -3016,6 +3022,13 @@ void UIDisplay::nextPreviousAction(int8_t next)
             EEPROM::updateChecksum();
 #endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
 
+            break;
+        }
+        case UI_ACTION_EXTRUDER_OFFSET_Z:
+        {
+            //Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
+            
+                    showInformation( (void*)ui_text_extruder_offset_z_msg );
             break;
         }
 #endif // NUM_EXTRUDER>1
@@ -3903,11 +3916,11 @@ void UIDisplay::executeAction(int action)
 
 
 #if FEATURE_EXTENDED_BUTTONS
-	case UI_ACTION_CONFIG_SINGLE_STEPS:
-	{   
-		configureMANUAL_STEPS_Z( 1 );
+            case UI_ACTION_CONFIG_SINGLE_STEPS:
+            {   
+                configureMANUAL_STEPS_Z( 1 );
                 break;
-	}
+            }
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_MILLING_MODE
@@ -4667,32 +4680,32 @@ void UIDisplay::executeAction(int action)
 #endif // DEBUG_PRINT
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-			case UI_ACTION_RF_DO_MHIER_BED_SCAN:
-			{           
-				//macht an, wenn an, macht aus:         
-				startZOScan();
-				//gehe zurück und zeige dem User was passiert.
-				uid.menuLevel = 0; 
-				uid.menuPos[0] = 0;
-				//wartet nur wenn an:
-				//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
-				break;
-			}
-			case UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX:
-			{
-				// save the determined values to the EEPROM		
-				if(g_ZMatrixChangedInRam){
-					uid.executeAction(UI_ACTION_TOP_MENU);
-					saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );     
-					if( Printer::debugInfo() )
-					{
-						Com::printFLN( PSTR( "Manual Input: the heat bed compensation matrix has been saved" ) );
-					}                     
+            case UI_ACTION_RF_DO_MHIER_BED_SCAN:
+            {           
+                //macht an, wenn an, macht aus:         
+                startZOScan();
+                //gehe zurück und zeige dem User was passiert.
+                uid.menuLevel = 0; 
+                uid.menuPos[0] = 0;
+                //wartet nur wenn an:
+                //Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
+                break;
+            }
+            case UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX:
+            {
+                // save the determined values to the EEPROM        
+                if(g_ZMatrixChangedInRam){
+                    uid.executeAction(UI_ACTION_TOP_MENU);
+                    saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );     
+                    if( Printer::debugInfo() )
+                    {
+                        Com::printFLN( PSTR( "Manual Input: the heat bed compensation matrix has been saved" ) );
+                    }                     
                     showInformation( (void*)ui_text_manual, (void*)ui_text_saving_success );
-				}else{
+                }else{
                     showInformation( (void*)ui_text_manual, (void*)ui_text_saving_needless );
-				}
-			}
+                }
+            }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
         }
     }

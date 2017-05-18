@@ -100,6 +100,7 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     uint8_t     id;
     int32_t     xOffset;
     int32_t     yOffset;
+    int32_t     zOffset;
     float       stepsPerMM;                 ///< Steps per mm.
     int8_t      enablePin;                  ///< Pin to enable extruder stepper motor.
     uint8_t     enableOn;

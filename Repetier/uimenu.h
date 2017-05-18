@@ -132,6 +132,7 @@ List of placeholder:
 %Oa : Active Extruder
 %OE : Extruder offset X [mm]
 %OF : Extruder offset Y [mm]
+%OS : Extruder spring displacement Z [mm]
 %px : mode of the Position X menu
 %py : mode of the Position Y menu
 %pz : mode of the Position Z menu
@@ -215,9 +216,9 @@ for 2 row displays. You can add additional pages or change the default pages lik
     UI_PAGE4(ui_page2,"X:%x0 mm","Y:%x1 mm","Z:%x2 mm %sC","%os")
 
     #if NUM_EXTRUDER>1
-		UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,UI_TEXT_PAGE_EXTRUDER2,UI_TEXT_PAGE_BED,"%os")
+        UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,UI_TEXT_PAGE_EXTRUDER2,UI_TEXT_PAGE_BED,"%os")
     #else
-		UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,"",UI_TEXT_PAGE_BED,"%os")
+        UI_PAGE4(ui_page3,UI_TEXT_PAGE_EXTRUDER1,"",UI_TEXT_PAGE_BED,"%os")
     #endif // NUM_EXTRUDER>1
 
     #if EEPROM_MODE!=0
@@ -381,6 +382,17 @@ UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_mhier_z_scan,UI_TEXT_DO_MHIER_BED_SCAN,UI_A
 #define UI_MENU_HEAT_MHIER_COUNT 0
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
+#if NUM_EXTRUDER>1
+UI_MENU_ACTION2C(ui_menu_extruder_offsetz2,UI_ACTION_EXTRUDER_OFFSET_Z,UI_TEXT_EXTRUDER_OFFSET_Z2)
+UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_extruder_offset_z,UI_TEXT_EXTRUDER_OFFSET_Z,ui_menu_extruder_offsetz2, MENU_MODE_PRINTER, MENU_MODE_MILLER)
+#define EXTRUDER_OFFSET_TYPE_ENTRY_Z ,&ui_menu_extruder_offset_z
+#define EXTRUDER_OFFSET_TYPE_COUNT_Z 1
+#else
+#define EXTRUDER_OFFSET_TYPE_ENTRY_Z
+#define EXTRUDER_OFFSET_TYPE_COUNT_Z 0
+#endif // NUM_EXTRUDER>1
+
+
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_save_active_zMatrix,UI_TEXT_DO_SAVE_ACTIVE_ZMATRIX,UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX,MENU_MODE_PRINTER,0)
 #define UI_MENU_SAVE_ACTIVE_ZMATRIX  , &ui_menu_save_active_zMatrix 
@@ -418,13 +430,13 @@ UI_MENU_ACTIONCOMMAND_FILTER(ui_menu_set_xy_end,UI_TEXT_SET_SCAN_XY_END,UI_ACTIO
 UI_MENU_CHANGEACTION_FILTER(ui_menu_set_delta_x,UI_TEXT_SET_SCAN_DELTA_X,UI_ACTION_RF_SET_SCAN_DELTA_X,0,MENU_MODE_PRINTER)
 UI_MENU_CHANGEACTION_FILTER(ui_menu_set_delta_y,UI_TEXT_SET_SCAN_DELTA_Y,UI_ACTION_RF_SET_SCAN_DELTA_Y,0,MENU_MODE_PRINTER)
 
-#define UI_MENU_Z {UI_MENU_ADDCONDBACK /*UI_MENU_ADJUST_HOTEND*/ &ui_menu_heat_bed_scan UI_MENU_HEAT_BED_MODE_COND UI_MENU_HEAT_MHIER_COND , &ui_menu_zoffset_z , &ui_menu_z_mode , &ui_menu_work_part_scan UI_SPEED_Z /*UI_SPEED_Z_NOTEST*/,&ui_menu_set_z_origin UI_MENU_FIND_Z_COND, &ui_menu_set_z_matrix_heat_bed UI_MENU_SAVE_ACTIVE_ZMATRIX, &ui_menu_set_z_matrix_work_part, &ui_menu_set_xy_start, &ui_menu_set_xy_end, &ui_menu_set_delta_x, &ui_menu_set_delta_y} 
-UI_MENU(ui_menu_z,UI_MENU_Z,8 + UI_MENU_BACKCNT + 4 + 1 + UI_MENU_HEAT_MHIER_COUNT + UI_MENU_HEAT_BED_MODE_COUNT + UI_MENU_SAVE_ACTIVE_ZMATRIX_COUNT + UI_MENU_FIND_Z_COUNT /*+UI_MENU_ADJUST_HOTEND_COUNT*/)
+#define UI_MENU_Z {UI_MENU_ADDCONDBACK /*UI_MENU_ADJUST_HOTEND*/ &ui_menu_heat_bed_scan UI_MENU_HEAT_BED_MODE_COND UI_MENU_HEAT_MHIER_COND , &ui_menu_zoffset_z EXTRUDER_OFFSET_TYPE_ENTRY_Z , &ui_menu_z_mode , &ui_menu_work_part_scan UI_SPEED_Z /*UI_SPEED_Z_NOTEST*/,&ui_menu_set_z_origin UI_MENU_FIND_Z_COND, &ui_menu_set_z_matrix_heat_bed UI_MENU_SAVE_ACTIVE_ZMATRIX, &ui_menu_set_z_matrix_work_part, &ui_menu_set_xy_start, &ui_menu_set_xy_end, &ui_menu_set_delta_x, &ui_menu_set_delta_y} 
+UI_MENU(ui_menu_z,UI_MENU_Z,8 + UI_MENU_BACKCNT + 4 + 1 + UI_MENU_HEAT_MHIER_COUNT + UI_MENU_HEAT_BED_MODE_COUNT + UI_MENU_SAVE_ACTIVE_ZMATRIX_COUNT + EXTRUDER_OFFSET_TYPE_COUNT_Z + UI_MENU_FIND_Z_COUNT /*+UI_MENU_ADJUST_HOTEND_COUNT*/)
 
 #else
 
-#define UI_MENU_Z {UI_MENU_ADDCONDBACK &ui_menu_heat_bed_scan UI_MENU_HEAT_BED_MODE_COND UI_MENU_HEAT_MHIER_COND , &ui_menu_zoffset_z , &ui_menu_z_mode UI_SPEED_Z /*UI_SPEED_Z_NOTEST*/, &ui_menu_set_z_matrix_heat_bed UI_MENU_SAVE_ACTIVE_ZMATRIX}
-UI_MENU(ui_menu_z,UI_MENU_Z,UI_MENU_BACKCNT + 4 + 1 + UI_MENU_HEAT_MHIER_COUNT + UI_MENU_HEAT_BED_MODE_COUNT + UI_MENU_SAVE_ACTIVE_ZMATRIX_COUNT )
+#define UI_MENU_Z {UI_MENU_ADDCONDBACK &ui_menu_heat_bed_scan UI_MENU_HEAT_BED_MODE_COND UI_MENU_HEAT_MHIER_COND , &ui_menu_zoffset_z EXTRUDER_OFFSET_TYPE_ENTRY_Z , &ui_menu_z_mode UI_SPEED_Z /*UI_SPEED_Z_NOTEST*/, &ui_menu_set_z_matrix_heat_bed UI_MENU_SAVE_ACTIVE_ZMATRIX}
+UI_MENU(ui_menu_z,UI_MENU_Z,UI_MENU_BACKCNT + 4 + 1 + UI_MENU_HEAT_MHIER_COUNT + UI_MENU_HEAT_BED_MODE_COUNT + UI_MENU_SAVE_ACTIVE_ZMATRIX_COUNT + EXTRUDER_OFFSET_TYPE_COUNT_Z )
 
 #endif // FEATURE_MILLING_MODE
 
@@ -758,7 +770,7 @@ UI_MENU_ACTION2C(ui_menu_extruder_offsetx2,UI_ACTION_EXTRUDER_OFFSET_X,UI_TEXT_E
 UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_extruder_offset_x,UI_TEXT_EXTRUDER_OFFSET_X,ui_menu_extruder_offsetx2, MENU_MODE_PRINTER, MENU_MODE_MILLER)
 UI_MENU_ACTION2C(ui_menu_extruder_offsety2,UI_ACTION_EXTRUDER_OFFSET_Y,UI_TEXT_EXTRUDER_OFFSET_Y2)
 UI_MENU_ACTIONSELECTOR_FILTER(ui_menu_extruder_offset_y,UI_TEXT_EXTRUDER_OFFSET_Y,ui_menu_extruder_offsety2, MENU_MODE_PRINTER, MENU_MODE_MILLER)
-#define EXTRUDER_OFFSET_TYPE_ENTRY_XY ,&ui_menu_extruder_offset_x ,&ui_menu_extruder_offset_y
+#define EXTRUDER_OFFSET_TYPE_ENTRY_XY ,&ui_menu_extruder_offset_x ,&ui_menu_extruder_offset_y 
 #define EXTRUDER_OFFSET_TYPE_COUNT_XY 2
 #else
 #define EXTRUDER_OFFSET_TYPE_ENTRY_XY

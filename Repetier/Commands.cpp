@@ -280,6 +280,7 @@ void Commands::printCurrentPosition()
         Com::printFLN(Com::tSpaceEColon,Printer::queuePositionLastSteps[E_AXIS]*Printer::invAxisStepsPerMM[E_AXIS]*(Printer::unitIsInches?0.03937:1),2);
         //Com::printF(PSTR("OffX:"),Printer::extruderOffset[X_AXIS]); // to debug offset handling
         //Com::printFLN(PSTR(" OffY:"),Printer::extruderOffset[Y_AXIS]);
+        //Com::printFLN(PSTR(" OffZ:"),Printer::extruderOffset[Z_AXIS]); //to support Nozzle-Tip-Down-Hotends
 
 /*      Com::printF(Com::tXColon,Printer::directPositionTargetSteps[X_AXIS]);
         Com::printF(Com::tSpaceYColon,Printer::directPositionTargetSteps[Y_AXIS]);
@@ -368,9 +369,7 @@ void Commands::printTemperatures(bool showRaw)
     Com::printF(Com::tF);
     Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
 #endif //FEATURE_PRINT_PRESSURE
-
     Com::println();
-
 } // printTemperatures
 
 
