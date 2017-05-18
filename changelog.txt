@@ -1,3 +1,8 @@
+V RF.01.37l.TDMod (2017-05-18)
+- Pause continues without E if Extrude/Retract-Buttons are used manually. This should prevent those Emergency-Blocks @Coniniue()
+- Added a configuration #define Z_FIRMWARE_RETRACT_MM to have one place to specify the retraction mm of the firmwares functions
+- linked Pause and outputObject to the Z_FIRMWARE_RETRACT_MMs value
+
 V RF.01.37l.TDMod (2017-05-17)
 - Testversion for automatic digit-compensation. The more force on the extruder, the more it will decrease in Z. This ist approx. 0.01mm / 1000 digits.
 As we know the force on the extruder and the rate of decrease we compensate it within z-compensation. 

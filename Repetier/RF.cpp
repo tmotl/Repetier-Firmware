@@ -11660,7 +11660,10 @@ extern void processButton( int nAction )
                         Com::printF( PSTR( "Button: E-steps: " ), (int)Printer::directPositionTargetSteps[E_AXIS] );
                         Com::printFLN( PSTR( " [steps]" ) );
                     }
-                }       
+                    
+                    //In case of double pause and in case we tempered with the retract, we dont want to drive the E-Axis back to some old location - that much likely causes emergency block.
+                    g_nContinueSteps[E_AXIS] = 0;
+                }
             }
             break;
         }
@@ -11709,6 +11712,9 @@ extern void processButton( int nAction )
                         Com::printF( PSTR( "processButton(): current manual E steps: " ), (int)Printer::directPositionTargetSteps[E_AXIS] );
                         Com::printFLN( PSTR( " [steps]" ) );
                     }
+                    
+                    //In case of double pause and in case we tempered with the retract, we dont want to drive the E-Axis back to some old location - that much likely causes emergency block.
+                    g_nContinueSteps[E_AXIS] = 0;
                 }
             }
             break;

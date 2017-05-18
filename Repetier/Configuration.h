@@ -120,6 +120,9 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
 #define Z_OFFSET_BUTTON_STEPS               5
 
+/** \brief The Firmwares E-Retract within PAUSE and OUTPUT_OBJECT_SCRIPT */
+#define Z_FIRMWARE_RETRACT_MM               1
+
 /**
 XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons within "Menu:Position->X-/Y-/Z-Position".
 XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you want to stick to standard coordinates direction.
@@ -318,7 +321,7 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_OUTPUT_FINISHED_OBJECT
 
 /** \brief The following script allows to configure the exact behavior of the automatic object output */
-#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-1\nG1 Z210 F5000\nG1 Y250 F7500"
+#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-" STR(Z_FIRMWARE_RETRACT_MM) "\nG1 Z210 F5000\nG1 Y250 F7500"
 #define OUTPUT_OBJECT_SCRIPT_MILL           "G28 Z0\nG21\nG91\nG1 Y250 F7500"
 
 #endif // FEATURE_OUTPUT_FINISHED_OBJECT
