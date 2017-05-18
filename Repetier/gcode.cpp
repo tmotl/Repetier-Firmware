@@ -203,15 +203,7 @@ void GCode::checkAndPushCommand()
     {
         if( ((lastLineNumber+1) & 0xffff) != (actLineNumber & 0xffff) )
         {
-            //https://github.com/repetier/Repetier-Firmware/commit/371c1b709f0f3d7664e345813e84e27b591c58f4 ::
-            if(static_cast<uint16_t>(lastLineNumber - actLineNumber) < 40)
-            {
-                // we have seen that line already. So we assume it is a repeated resend and we ignore it
-                commandsReceivingWritePosition = 0;
-                Com::printFLN(Com::tSkip,actLineNumber);
-                Com::printFLN(Com::tOk);
-            }
-            else if(waitingForResend<0)   // after a resend, we have to skip the garbage in buffers, no message for this
+            if(waitingForResend<0)   // after a resend, we have to skip the garbage in buffers, no message for this
             {
                 if(Printer::debugErrors())
                 {
@@ -590,20 +582,20 @@ void GCode::readFromSD()
 
     while( sd.filesize > sd.sdpos && commandsReceivingWritePosition < MAX_CMD_SIZE)    // consume data until no data or buffer full
     {
-        timeOfLastDataPacket = HAL::timeInMilliseconds();
+    timeOfLastDataPacket = HAL::timeInMilliseconds();
         int n = sd.file.read();
         if(n==-1)
         {
-            if( Printer::debugErrors() )
-                {
-                        Com::printFLN(Com::tSDReadError);
-                }
-                UI_ERROR("SD Read Error");
+    if( Printer::debugErrors() )
+        {
+                Com::printFLN(Com::tSDReadError);
+        }
+        UI_ERROR("SD Read Error");
 
-                // Second try in case of recoverable errors
-                sd.file.seekSet(sd.sdpos);
-                n = sd.file.read();
-            if(n==-1)
+        // Second try in case of recoverable errors
+        sd.file.seekSet(sd.sdpos);
+        n = sd.file.read();
+    if(n==-1)
             {
                 if( Printer::debugErrors() )
                 {
@@ -769,12 +761,12 @@ bool GCode::parseBinary(uint8_t *buffer)
     }
     if(isV2())   // Read G,M as 16 bit value
     {
-        if(hasM())
+        if(params & 2)
         {
             M=*(uint16_t *)p;
             p+=2;
         }
-        if(hasG())
+        if(params & 4)
         {
             G=*(uint16_t *)p;
             p+=2;
@@ -782,86 +774,75 @@ bool GCode::parseBinary(uint8_t *buffer)
     }
     else
     {
-        if(hasM())
+        if(params & 2)
         {
             M=*p++;
         }
-        if(hasG())
+        if(params & 4)
         {
             G=*p++;
         }
     }
-    if(hasM() && (M == 23 || M == 28 || M == 29 || M == 30 || M == 32 || M == 117 || M == 3117))
+
+    if(params & 8)
     {
-        if(hasString())   // set text pointer to string
-        {
-            text = (char*)p;
-            text[textlen] = 0; // Terminate string overwriting checksum
-            waitUntilAllCommandsAreParsed=true; // Don't destroy string until executed
-        }
+        X=*(float *)p;
+        p+=4;
     }
-    else
+    if(params & 16)
     {
-        if(hasX())
-        {
-            X=*(float *)p;
-            p+=4;
-        }
-        if(hasY())
-        {
-            Y=*(float *)p;
-            p+=4;
-        }
-        if(hasZ())
-        {
-            Z =*(float *)p;
-            p+=4;
-        }
-        if(hasE())
-        {
-            E=*(float *)p;
-            p+=4;
-        }
-        if(hasF())
-        {
-            F=*(float *)p;
-            p+=4;
-        }
-        if(hasT())
-        {
-            T=*p++;
-        }
-        if(hasS())
-        {
-            S=*(int32_t*)p;
-            p+=4;
-        }
-        if(hasP())
-        {
-            P=*(int32_t*)p;
-            p+=4;
-        }
-        if(hasI())
-        {
-            I=*(float *)p;
-            p+=4;
-        }
-        if(hasJ())
-        {
-            J=*(float *)p;
-            p+=4;
-        }
-        if(hasR())
-        {
-            R=*(float *)p;
-            p+=4;
-        }
-        if(hasString())   // set text pointer to string
-        {
-            text = (char*)p;
-            text[textlen] = 0; // Terminate string overwriting checksum
-            waitUntilAllCommandsAreParsed=true; // Don't destroy string until executed
-        }
+        Y=*(float *)p;
+        p+=4;
+    }
+    if(params & 32)
+    {
+        Z =*(float *)p;
+        p+=4;
+    }
+    if(params & 64)
+    {
+        E=*(float *)p;
+        p+=4;
+    }
+    if(params & 256)
+    {
+        F=*(float *)p;
+        p+=4;
+    }
+    if(params & 512)
+    {
+        T=*p++;
+    }
+    if(params & 1024)
+    {
+        S=*(int32_t*)p;
+        p+=4;
+    }
+    if(params & 2048)
+    {
+        P=*(int32_t*)p;
+        p+=4;
+    }
+    if(hasI())
+    {
+        I=*(float *)p;
+        p+=4;
+    }
+    if(hasJ())
+    {
+        J=*(float *)p;
+        p+=4;
+    }
+    if(hasR())
+    {
+        R=*(float *)p;
+        p+=4;
+    }
+    if(hasString())   // set text pointer to string
+    {
+        text = (char*)p;
+        text[textlen] = 0; // Terminate string overwriting checksum
+        waitUntilAllCommandsAreParsed=true; // Don't destroy string until executed
     }
     return true;
 

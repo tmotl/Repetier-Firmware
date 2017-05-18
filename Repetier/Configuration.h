@@ -105,29 +105,21 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 #define FEATURE_PRINT_PRESSURE          1
                                                     
 #if FEATURE_SENSIBLE_PRESSURE
-    #define SENSIBLE_PRESSURE_DIGIT_CHECKS              10                                      // MAximal auf 127 stellen, denn das wird mit char verglichen!!
+    #define SENSIBLE_PRESSURE_DIGIT_CHECKS              10                                      // MAximal auf 127 stellen, denn das wir mit char verglichen!!
     //nachfolgend soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
     #define SENSIBLE_PRESSURE_MAX_OFFSET                180     
 #endif // FEATURE_SENSIBLE_PRESSURE
 
-#define FEATURE_SENSIBLE_COMPENSATION           1
-#if FEATURE_SENSIBLE_COMPENSATION
-   
-#endif // FEATURE_SENSIBLE_COMPENSATION
-
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
-#define Z_OFFSET_BUTTON_STEPS               5
-
-/** \brief The Firmwares E-Retract within PAUSE and OUTPUT_OBJECT_SCRIPT */
-#define Z_FIRMWARE_RETRACT_MM               1
+#define Z_OFFSET_BUTTON_STEPS       		5
 
 /**
 XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons within "Menu:Position->X-/Y-/Z-Position".
 XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you want to stick to standard coordinates direction.
 */
-#define XYZ_POSITION_BUTTON_DIRECTION        1
+#define XYZ_POSITION_BUTTON_DIRECTION		1
 
 /** \brief Allows to cause an emergency stop via a 3-times push of the pause button */
 #define FEATURE_EMERGENCY_STOP_VIA_PAUSE    0                                                   // 1 = on, 0 = off
@@ -321,7 +313,7 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_OUTPUT_FINISHED_OBJECT
 
 /** \brief The following script allows to configure the exact behavior of the automatic object output */
-#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-" STR(Z_FIRMWARE_RETRACT_MM) "\nG1 Z210 F5000\nG1 Y250 F7500"
+#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-5\nG1 Z210 F5000\nG1 Y250 F7500"
 #define OUTPUT_OBJECT_SCRIPT_MILL           "G28 Z0\nG21\nG91\nG1 Y250 F7500"
 
 #endif // FEATURE_OUTPUT_FINISHED_OBJECT
@@ -386,8 +378,8 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_EMERGENCY_STOP_ALL
 
 /** \brief Specifies the pressure at which the emergency z-stop shall be performed, in [digits] */
-#define EMERGENCY_STOP_DIGITS_MIN           -8000
-#define EMERGENCY_STOP_DIGITS_MAX           8000
+#define EMERGENCY_STOP_DIGITS_MIN           -5000
+#define EMERGENCY_STOP_DIGITS_MAX           5000
 
 /** \brief Specifies the interval at which the pressure check shall be performed, in [ms] */
 #define EMERGENCY_STOP_INTERVAL             10
@@ -538,7 +530,7 @@ See http://reprap.org/wiki/MeasuringThermistorBeta for more details.
 
 /** \brief USE_GENERIC_THERMISTORTABLE_2 */
 #define GENERIC_THERM2_T0                   170
-#define GENERIC_THERM2_R0                   1042.7f
+#define GENERIC_THERM2_R0                   1042.7
 #define GENERIC_THERM2_BETA                 4036
 #define GENERIC_THERM2_MIN_TEMP             -20
 #define GENERIC_THERM2_MAX_TEMP             300
@@ -547,7 +539,7 @@ See http://reprap.org/wiki/MeasuringThermistorBeta for more details.
 
 /** \brief USE_GENERIC_THERMISTORTABLE_3 */
 #define GENERIC_THERM3_T0                   170
-#define GENERIC_THERM3_R0                   1042.7f
+#define GENERIC_THERM3_R0                   1042.7
 #define GENERIC_THERM3_BETA                 4036
 #define GENERIC_THERM3_MIN_TEMP             -20
 #define GENERIC_THERM3_MAX_TEMP             300
@@ -624,7 +616,7 @@ instead of driving both with a single stepper. The same works for the other axis
 //Das hier drunter sind einigermaßen sinnvolle Stepsizes, wenn man Microsteps = 32 hat!!!
 //Siehe: https://github.com/RF1000community/Repetier-Firmware/issues/4
 //Dieser statische Ansatz wird evtl. mal umgebaut. Man könnte auch eine Funktion schreiben, die sinnvolle Einstellwerte automatisch anhand Microsteps und Mikrometertabelle sucht.
-#define NUM_ACCEPTABLE_STEP_SIZE_TABLE    7
+#define NUM_ACCEPTABLE_STEP_SIZE_TABLE	7
 #define ACCEPTABLE_STEP_SIZE_TABLE { 5,13,26,51,64,128,256 }
 #endif // FEATURE_EXTENDED_BUTTONS
 
@@ -718,9 +710,9 @@ Values must be in range 1..255 */
 /** \brief Extreme values */
 #define UI_SET_MIN_HEATED_BED_TEMP          55
 #define UI_SET_MAX_HEATED_BED_TEMP          160
-#define UI_SET_MIN_EXTRUDER_TEMP            70
+#define UI_SET_MIN_EXTRUDER_TEMP            120
 #define UI_SET_MAX_EXTRUDER_TEMP            270
-#define UI_SET_EXTRUDER_FEEDRATE            1.5f                                                 // [mm/sec]
+#define UI_SET_EXTRUDER_FEEDRATE            2                                                   // [mm/sec]
 #define UI_SET_EXTRUDER_RETRACT_DISTANCE    3                                                   // [mm]
 #define COOLDOWN_THRESHOLD                  40                                                  // [°C]
 

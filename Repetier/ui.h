@@ -146,11 +146,9 @@
 #define UI_ACTION_RIGHT                     1129
 #define UI_ACTION_ZMODE                     1130
 
-#define UI_ACTION_EXTRUDER_OFFSET_Z         1136
-
 //Nibbels : nicht in processbutton sondern in executeaction!
 #define UI_ACTION_RF_DO_MHIER_BED_SCAN      1666 
-#define UI_ACTION_CONFIG_SINGLE_STEPS        1667 
+#define UI_ACTION_CONFIG_SINGLE_STEPS		1667 
 #define UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX 1668
 
 #define UI_ACTION_FET1_OUTPUT               2001
@@ -329,7 +327,7 @@ extern  char    g_nPrinterReady;
 #define UI_MENU_FILESELECT(name,items,itemsCnt)                         const UIMenuEntry * const name ## _entries[] PROGMEM = items;const UIMenu name PROGMEM = {1,0,itemsCnt,name ## _entries};
 
 // Maximum size of a row - if row is larger, text gets scrolled
-#define MAX_COLS                        20         // check UI_COLS when changed this was 28 in Conrad Firmware.
+#define MAX_COLS                        20 		// check UI_COLS when changed this was 28 in Conrad Firmware.
 
 #define UI_FLAG_FAST_KEY_ACTION         1
 #define UI_FLAG_SLOW_KEY_ACTION         2
@@ -434,7 +432,7 @@ void initializeLCD();
 #define UI_HAS_BACK_KEY                   1
 #define UI_DISPLAY_TYPE                   1     // 1 = LCD Display with 4 bit data bus
 //#define UI_DISPLAY_CHARSET                  1
-#define UI_COLS                          16        //check MAX_COLS when changed
+#define UI_COLS                          16		//check MAX_COLS when changed
 #define UI_ROWS                           4
 #define UI_DELAYPERCHAR                 320
 #define UI_INVERT_MENU_DIRECTION        false
@@ -493,7 +491,7 @@ void ui_check_slow_keys(int &action) {
 #define UI_HAS_BACK_KEY                   1
 #define UI_DISPLAY_TYPE                   1     // 1 = LCD Display with 4 bit data bus
 //#define UI_DISPLAY_CHARSET                  1
-#define UI_COLS                          20        //check MAX_COLS when changed
+#define UI_COLS                          20		//check MAX_COLS when changed
 #define UI_ROWS                           4
 #define UI_DELAYPERCHAR                 320
 #define UI_INVERT_MENU_DIRECTION        false

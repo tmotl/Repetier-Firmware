@@ -214,7 +214,6 @@ Overridden if EEPROM activated.*/
 
 #define EXT0_X_OFFSET                       0
 #define EXT0_Y_OFFSET                       0
-#define EXT0_Z_OFFSET                       0 //to support Nozzle-Tip-Down-Hotends
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
 #define EXT0_STEPS_PER_MM                   (8.75 * RF_MICRO_STEPS)
@@ -361,7 +360,6 @@ The codes are only executed for multiple extruder when changing the extruder. */
 
 #define EXT1_X_OFFSET                       (int32_t)(33.9 * XAXIS_STEPS_PER_MM)        // [steps]
 #define EXT1_Y_OFFSET                       (int32_t)( 0.1 * YAXIS_STEPS_PER_MM)        // [steps]
-#define EXT1_Z_OFFSET                       (int32_t)( 0.0 * YAXIS_STEPS_PER_MM)        // [steps] //to support Nozzle-Tip-Down-Hotends
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
 #define EXT1_STEPS_PER_MM                   (8.75 * RF_MICRO_STEPS)
@@ -893,7 +891,7 @@ Overridden if EEPROM activated. */
 /** \brief Number of moves we can cache in advance.
 This number of moves can be cached in advance. If you wan't to cache more, increase this. Especially on
 many very short moves the cache may go empty. The minimum value is 5. */
-#define MOVE_CACHE_SIZE                     22
+#define MOVE_CACHE_SIZE                     16
 
 /** \brief Low filled cache size.
 If the cache contains less then MOVE_CACHE_LOW segments, the time per segment is limited to LOW_TICKS_PER_MOVE clock cycles.
@@ -1129,7 +1127,7 @@ Above this value the z compensation will distribute the roughness of the surface
 #define DEFAULT_PAUSE_STEPS_X               (XAXIS_STEPS_PER_MM *50)
 #define DEFAULT_PAUSE_STEPS_Y               (YAXIS_STEPS_PER_MM *50)
 #define DEFAULT_PAUSE_STEPS_Z               (ZAXIS_STEPS_PER_MM *2)
-#define DEFAULT_PAUSE_STEPS_EXTRUDER        (EXT0_STEPS_PER_MM * Z_FIRMWARE_RETRACT_MM)
+#define DEFAULT_PAUSE_STEPS_EXTRUDER        (EXT0_STEPS_PER_MM *10)
 
 #define PAUSE_X_MIN                         (XAXIS_STEPS_PER_MM *5)
 #define PAUSE_Y_MIN                         (YAXIS_STEPS_PER_MM *5)
