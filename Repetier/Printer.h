@@ -204,6 +204,9 @@ public:
     static unsigned char    wrongType;
 #endif // FEATURE_TYPE_EEPROM
 
+#if FEATURE_UNLOCK_MOVEMENT
+    static unsigned char    g_unlock_movement;
+#endif //FEATURE_UNLOCK_MOVEMENT
 
     static inline void setMenuMode(uint8_t mode,bool on)
     {

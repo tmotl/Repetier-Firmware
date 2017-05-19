@@ -745,9 +745,6 @@ can set it on for safety. */
 #define XYZ_DIRECTION_CHANGE_DELAY          250                                                 // [us]
 #define XYZ_STEPPER_HIGH_DELAY              250                                                 // [us]
 #define XYZ_STEPPER_LOW_DELAY               250                                                 // [us]
-#define EXTRUDER_DIRECTION_CHANGE_DELAY     250                                                 // [us]
-#define EXTRUDER_STEPPER_HIGH_DELAY         40000                                               // [us]
-#define EXTRUDER_STEPPER_LOW_DELAY          250                                                 // [us]
 #define LOOP_INTERVAL                       2000                                                // [ms]
 
 /** \brief Automatic filament change, unmounting of the filament - ensure that G1 does not attempt to extrude more than EXTRUDE_MAXLENGTH */
@@ -893,7 +890,7 @@ Overridden if EEPROM activated. */
 /** \brief Number of moves we can cache in advance.
 This number of moves can be cached in advance. If you wan't to cache more, increase this. Especially on
 many very short moves the cache may go empty. The minimum value is 5. */
-#define MOVE_CACHE_SIZE                     22
+#define MOVE_CACHE_SIZE                     16
 
 /** \brief Low filled cache size.
 If the cache contains less then MOVE_CACHE_LOW segments, the time per segment is limited to LOW_TICKS_PER_MOVE clock cycles.

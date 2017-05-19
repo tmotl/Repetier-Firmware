@@ -933,7 +933,6 @@ void Commands::executeGCode(GCode *com)
                 float yOff = Printer::originOffsetMM[Y_AXIS];
                 float zOff = Printer::originOffsetMM[Z_AXIS];
 
-
                 if(com->hasX()) xOff = Printer::convertToMM(com->X)-Printer::queuePositionLastMM[X_AXIS];
                 if(com->hasY()) yOff = Printer::convertToMM(com->Y)-Printer::queuePositionLastMM[Y_AXIS];
                 if(com->hasZ()) zOff = Printer::convertToMM(com->Z)-Printer::queuePositionLastMM[Z_AXIS];
@@ -1065,13 +1064,16 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                         Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
 #if NUM_EXTRUDER>0
                     if(reportTempsensorError()) break;
                     previousMillisCmd = HAL::timeInMilliseconds();
                     if(Printer::debugDryrun()) break;
 
 #ifdef EXACT_TEMPERATURE_TIMING
-                     Commands::waitUntilEndOfAllMoves();
+                    Commands::waitUntilEndOfAllMoves();
 #else
                     if(com->hasP() || (com->hasS() && com->S == 0))
                     Commands::waitUntilEndOfAllMoves();
@@ -1105,6 +1107,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                         Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
                     if(reportTempsensorError()) break;
                     previousMillisCmd = HAL::timeInMilliseconds();
                     if(Printer::debugDryrun()) break;
@@ -1124,6 +1129,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                    Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
 #if NUM_EXTRUDER>0
                     if(reportTempsensorError()) break;
                     previousMillisCmd = HAL::timeInMilliseconds();
@@ -1221,6 +1229,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                    Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
 #if HAVE_HEATED_BED
                     if(Printer::debugDryrun()) break;
                     if (com->hasS())

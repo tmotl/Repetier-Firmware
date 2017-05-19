@@ -123,6 +123,11 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief The Firmwares E-Retract within PAUSE and OUTPUT_OBJECT_SCRIPT */
 #define Z_FIRMWARE_RETRACT_MM               1
 
+/** \brief The Firmwares disalowes movement before you at least: pressed a printers button, set a temperature, homed once 
+If you did not do this, a previous watchdog reset is assumed and fail-drive against some border without homing is blocked thatway. 
+This is a fix for repetier-server not knowing that the printer reset and still sending commands
+*/
+#define FEATURE_UNLOCK_MOVEMENT             1
 /**
 XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons within "Menu:Position->X-/Y-/Z-Position".
 XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you want to stick to standard coordinates direction.

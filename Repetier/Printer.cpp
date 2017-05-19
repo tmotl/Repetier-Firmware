@@ -206,6 +206,10 @@ unsigned long   Printer::fanOffDelay = 0;
 unsigned char   Printer::wrongType;
 #endif // FEATURE_TYPE_EEPROM
 
+#if FEATURE_UNLOCK_MOVEMENT
+//When the printer resets, we should not do movement, because it would not be homed. At least some interaction with buttons or temperature-commands are needed to allow movement.
+unsigned char   Printer::g_unlock_movement = 0;
+#endif //FEATURE_UNLOCK_MOVEMENT
 
 void Printer::constrainQueueDestinationCoords()
 {
@@ -1232,6 +1236,10 @@ void Printer::setup()
     }
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
+#if FEATURE_UNLOCK_MOVEMENT
+    g_unlock_movement = 0;
+#endif //FEATURE_UNLOCK_MOVEMENT
+
 #if FEATURE_WATCHDOG
     if( Printer::debugInfo() )
     {
@@ -1527,7 +1535,10 @@ void Printer::homeAxis(bool xaxis,bool yaxis,bool zaxis) // home non-delta print
     char    homingOrder;
     char    unlock = !uid.locked;
     
-
+    //Bei beliebiger user interaktion oder Homing soll G1 etc. erlaubt werden. Dann ist der Drucker nicht abgestürzt, sondern bedient worden.
+#if FEATURE_UNLOCK_MOVEMENT
+    g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
     lastCalculatedPosition(startX,startY,startZ);
 
 #if FEATURE_MILLING_MODE

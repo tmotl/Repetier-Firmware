@@ -2484,7 +2484,7 @@ void UIDisplay::okAction()
                 {
                     sd.startPrint();
                     BEEP_START_PRINTING
-                    menuLevel = 0;
+                    uid.executeAction(UI_ACTION_TOP_MENU);
                 }
                 break;
             }
@@ -3600,11 +3600,7 @@ void UIDisplay::executeAction(int action)
         action -= UI_ACTION_TOPMENU;
         menuLevel = 0;
     }
-/*  if(action>=2000 && action<3000)
-    {
-        setStatusP(ui_action);
-    }
-*/  else if((action>=UI_ACTION_RF_MIN_REPEATABLE && action<=UI_ACTION_RF_MAX_REPEATABLE) ||
+    else if((action>=UI_ACTION_RF_MIN_REPEATABLE && action<=UI_ACTION_RF_MAX_REPEATABLE) ||
             (action>=UI_ACTION_RF_MIN_SINGLE && action<=UI_ACTION_RF_MAX_SINGLE))
     {
         processButton( action );
@@ -4705,6 +4701,7 @@ void UIDisplay::executeAction(int action)
                 }else{
                     showInformation( (void*)ui_text_manual, (void*)ui_text_saving_needless );
                 }
+                break;
             }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
         }
@@ -4791,6 +4788,10 @@ void UIDisplay::slowAction()
         }
         if(lastAction!=lastButtonAction)
         {
+#if FEATURE_UNLOCK_MOVEMENT
+            //Bei beliebiger user interaktion oder Homing soll G1 etc. erlaubt werden. Dann ist der Drucker nicht abgestürzt, sondern bedient worden.
+            Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
             if(lastButtonAction==0)
             {
 /*              if(lastAction>=2000 && lastAction<3000)

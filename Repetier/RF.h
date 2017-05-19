@@ -806,12 +806,6 @@ extern short moveZDownFast( bool execRunStandardTasks=true );
 // moveZ()
 extern int moveZ( int nSteps );
 
-// freeZ()
-void freeZ( int nSteps );
-
-// moveExtruder()
-extern int moveExtruder( int nSteps );
-
 // restoreDefaultScanParameters()
 extern void restoreDefaultScanParameters( void );
 
