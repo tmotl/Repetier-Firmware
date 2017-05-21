@@ -9,4 +9,10 @@ In community_development wird von Zeit zu Zeit getestet, anschließend wird das 
 
 ## Bitte nutzt die Firmware dort!
 
-# Das ist mein Testplatz. Ich habe für mich selbst die Ultimaker 3-Funktion impementiert, sodass mein rechtes gefedertes Hotend ein gesondertes Z-Offset bekommen kann. Siehe Changelog.
+# Das ist mein Testplatz. Ich habe für mich selbst die Ultimaker 3-Funktion impementiert, sodass mein rechtes gefedertes Hotend ein gesondertes Z-Offset bekommen kann. Siehe Changelog.  
+  
+  
+  
+Zusatzfeatures dieses Mods (verglichen mit dem community-mod):  
+- Tip-Down-Support für T1  
+- Digit-Compensation (Verbesserte Z-Kompensation: Das Bett gleicht die Höhenunterschiede durch Kraft auf den Messdosen aus.)  

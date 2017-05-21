@@ -7586,6 +7586,7 @@ void processCommand( GCode* pCommand )
                             }
                             Commands::waitUntilEndOfAllMoves();
                             queueTask( TASK_ENABLE_Z_COMPENSATION );
+                            Commands::waitUntilEndOfAllMoves();
                         }
                         else
                         {
@@ -10747,6 +10748,7 @@ void processCommand( GCode* pCommand )
                 if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
                 {
                     //Statusänderung per M3909 P10000 (for 10000 [digits])
+                    Commands::waitUntilEndOfAllMoves();
                     if (pCommand->hasP() ){                     
                         if ( pCommand->P >= 0 && pCommand->P < EMERGENCY_PAUSE_DIGITS_MAX )
                         {

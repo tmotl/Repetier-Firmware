@@ -1791,7 +1791,7 @@ void Commands::executeGCode(GCode *com)
 #endif // FEATURE_CASE_LIGHT
             case 400:   // M400 - Finish all moves
             {
-                        Commands::waitUntilEndOfAllMoves();
+                Commands::waitUntilEndOfAllMoves();
                 break;
             }
 
