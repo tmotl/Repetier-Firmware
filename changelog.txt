@@ -1,4 +1,10 @@
-V RF.01.37l.TDMod (2017-05-18)
+V RF.01.37l3.TDMod (2017-05-19)
+- fixed some details
+- cleanup
+- New FEATURE_UNLOCK_MOVEMENT : No G1/G0 Movement allowed until one Temperature is set, one homing or some printers button is pressed. This Feature makes the change of "V RF.01.37k3.TDMod (2017-05-16)" to a real feature and prevents some bug with the menu->Load Filament function. This function used internal G-Codes and therefore the load filament extrusion was not possible until this fix.
+
+
+V RF.01.37l2.TDMod (2017-05-18)
 - Pause continues without E if Extrude/Retract-Buttons are used manually. This should prevent those Emergency-Blocks @Coniniue()
 - Added a configuration #define Z_FIRMWARE_RETRACT_MM to have one place to specify the retraction mm of the firmwares functions
 - linked Pause and outputObject to the Z_FIRMWARE_RETRACT_MMs value
