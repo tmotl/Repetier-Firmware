@@ -367,7 +367,15 @@ void Commands::printTemperatures(bool showRaw)
 
 #if FEATURE_PRINT_PRESSURE
     Com::printF(Com::tF);
+#if FEATURE_DIGIT_Z_COMPENSATION
+    if(Printer::doHeatBedZCompensation && g_nSensibleCompensationDigits != 0.0){ 
+        Com::printF(Com::tColon,(int)g_nSensibleCompensationDigits);
+    }else{
+        Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
+    }
+#else
     Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
+#endif //FEATURE_DIGIT_Z_COMPENSATION
 #endif //FEATURE_PRINT_PRESSURE
     Com::println();
 } // printTemperatures

@@ -1,3 +1,7 @@
+V RF.01.37l4.TDMod (2017-05-19)
+- cleanup
+- made the function for digits compensation faster and more accurate. The digits are now measured with a higher frequency.
+
 V RF.01.37l3.TDMod (2017-05-19)
 - fixed some details
 - cleanup

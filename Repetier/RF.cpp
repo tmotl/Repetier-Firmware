@@ -357,14 +357,16 @@ short readStrainGauge( unsigned char uAddress )
 
 /* brief: This is for correcting sinking hotends at high digit values because of DMS-Sensor by Nibbels  */
 #if FEATURE_DIGIT_Z_COMPENSATION
-    if(Printer::doHeatBedZCompensation && g_nSensibleCompensationChecks <= 3){ 
+    if(Printer::doHeatBedZCompensation){ 
         HAL::forbidInterrupts();
         g_nSensibleCompensationSum     += Result;
         g_nSensibleCompensationChecks  += 1;
         if( g_nSensibleCompensationChecks == 4 ){
-            g_nSensibleCompensationDigits = (float)(g_nSensibleCompensationSum >> 4); //*0.25
-            g_nSensibleCompensationSum = (g_nSensibleCompensationSum >> 2) + (g_nSensibleCompensationSum >> 4); //*0.75
-            g_nSensibleCompensationChecks = 3; //*=0.75 sind bei 4 eben 3
+            g_nSensibleCompensationDigits = (float)(g_nSensibleCompensationSum >> 2); //*0.25
+            g_nSensibleCompensationSum = (g_nSensibleCompensationSum >> 1) + (g_nSensibleCompensationSum >> 2); //*0.75
+            g_nSensibleCompensationChecks = 3; //*=0.75 bei 4 ist 3
+        }else{
+            g_nSensibleCompensationDigits = (float)(Result); //startwert / failwert
         }
         HAL::allowInterrupts();
     }
