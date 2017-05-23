@@ -1448,8 +1448,8 @@ void Commands::executeGCode(GCode *com)
 #endif // DEBUG_PRINT
 
                 while(wait-HAL::timeInMilliseconds() < 100000L)
-        {
-            Printer::defaultLoopActions();
+                {
+                    Printer::defaultLoopActions();
                 }
                 if(com->hasX())
                     Printer::enableXStepper();

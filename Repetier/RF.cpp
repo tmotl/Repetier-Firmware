@@ -206,11 +206,11 @@ short           g_nSensibleLastPressure     = 0;
 char            g_nSensiblePressure1stMarke = 0; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
-#if FEATURE_SENSIBLE_COMPENSATION
+#if FEATURE_DIGIT_Z_COMPENSATION
 long            g_nSensibleCompensationSum    = 0;
 char            g_nSensibleCompensationChecks = 0;
 float           g_nSensibleCompensationDigits = 0;
-#endif // FEATURE_SENSIBLE_COMPENSATION
+#endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_EMERGENCY_STOP_ALL
 unsigned long   g_uLastZPressureTime_IgnoreUntil = 0;
@@ -354,6 +354,21 @@ short readStrainGauge( unsigned char uAddress )
     Register = Wire.read();
     (void)Register; //Nibbels: Tut so als würde die variable benutzt werden. Macht aber nix.
     Wire.endTransmission();
+
+/* brief: This is for correcting sinking hotends at high digit values because of DMS-Sensor by Nibbels  */
+#if FEATURE_DIGIT_Z_COMPENSATION
+    if(Printer::doHeatBedZCompensation && g_nSensibleCompensationChecks <= 3){ 
+        HAL::forbidInterrupts();
+        g_nSensibleCompensationSum     += Result;
+        g_nSensibleCompensationChecks  += 1;
+        if( g_nSensibleCompensationChecks == 4 ){
+            g_nSensibleCompensationDigits = (float)(g_nSensibleCompensationSum >> 4); //*0.25
+            g_nSensibleCompensationSum = (g_nSensibleCompensationSum >> 2) + (g_nSensibleCompensationSum >> 4); //*0.75
+            g_nSensibleCompensationChecks = 3; //*=0.75 sind bei 4 eben 3
+        }
+        HAL::allowInterrupts();
+    }
+#endif // FEATURE_DIGIT_Z_COMPENSATION
 
     return Result;
 
@@ -2902,14 +2917,14 @@ void doHeatBedZCompensation( void )
     }
 
     long nNeededDigitCompensationSteps = 0;
-#if FEATURE_SENSIBLE_COMPENSATION
+#if FEATURE_DIGIT_Z_COMPENSATION
     //Etwa 5500 digits verursachen 0.055 mm tiefere nozzle: ca. 0.00001 = 1/100.000 mm pro digit.
     //0.00001 ist vermutlich konservativ bis ok.
     //Je höher die Kraft nach unten, desto mehr muss das Bett ausweichen: Z nach oben/+.
     
     //VORSICHT: Die Messzellen könnten falsch verbaut sein, darum Digits immer positiv nutzen. Negative Digits würden sowieso in die falsche Richtung tunen. Ein kleiner Versatz der Nullposition wäre beim Druck egal.
     nNeededDigitCompensationSteps = (long)(abs(g_nSensibleCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
-#endif // FEATURE_SENSIBLE_COMPENSATION
+#endif // FEATURE_DIGIT_Z_COMPENSATION
 
 
 #if DEBUG_HEAT_BED_Z_COMPENSATION
@@ -6072,21 +6087,7 @@ void loopRF( void )
                         //offset muss bleiben! g_nSensiblePressureOffset != 0
                     }               
                 }
-#endif // FEATURE_SENSIBLE_PRESSURE         
-
-/* brief: This is for correcting sinking hotends at high digit values because of DMS-Sensor by Nibbels  */
-#if FEATURE_SENSIBLE_COMPENSATION
-                if(Printer::doHeatBedZCompensation){ 
-                    g_nSensibleCompensationSum     += pressure;
-                    g_nSensibleCompensationChecks  += 1;
-                    if( g_nSensibleCompensationChecks >= 4 ){
-                        g_nSensibleCompensationDigits = (float)(g_nSensibleCompensationSum / g_nSensibleCompensationChecks);
-                        g_nSensibleCompensationSum *= 0.75; 
-                        g_nSensibleCompensationChecks *= 0.75;
-                    }
-                }
-#endif // FEATURE_SENSIBLE_COMPENSATION
-
+#endif // FEATURE_SENSIBLE_PRESSURE
                 
                 if( g_nPressureChecks == EMERGENCY_PAUSE_CHECKS )
                 {

@@ -110,10 +110,10 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
     #define SENSIBLE_PRESSURE_MAX_OFFSET                180     
 #endif // FEATURE_SENSIBLE_PRESSURE
 
-#define FEATURE_SENSIBLE_COMPENSATION           1
-#if FEATURE_SENSIBLE_COMPENSATION
+#define FEATURE_DIGIT_Z_COMPENSATION           1
+#if FEATURE_DIGIT_Z_COMPENSATION
    
-#endif // FEATURE_SENSIBLE_COMPENSATION
+#endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
@@ -858,7 +858,7 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 #define ALLOW_EXTENDED_COMMUNICATION        2                                                   // 0 = do not allow, 1 = allow "Wait", 2 = allow "Wait" and debug outputs
 
 /** \brief Configures the delay between the stop of a print and the clean-up like disabling of heaters, disabling of steppers and the outputting of the object */
-#define CLEAN_UP_DELAY_AFTER_STOP_PRINT     1000                                                // [ms]
+#define CLEAN_UP_DELAY_AFTER_STOP_PRINT     2000                                                // [ms]
 
 /** \brief Configures the duration for which the processing of commands shall be blocked. */
 #define COMMAND_BLOCK_DELAY                 1000                                                // [ms]

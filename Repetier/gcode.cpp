@@ -316,7 +316,7 @@ void GCode::executeFString(FSTRINGPARAM(cmd))
 {
     char    buf[80];
     uint8_t buflen;
-    char    c;
+    char    c = 0;
     GCode   code;
 
 
@@ -362,7 +362,7 @@ void GCode::executeString(char *cmd)
 {
     char    buf[80];
     uint8_t buflen;
-    char    c;
+    char    c = 0;
     GCode   code;
 
 

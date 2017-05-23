@@ -569,9 +569,6 @@ extern const char   ui_text_saving_success[]        PROGMEM;
 extern  unsigned long   g_uLastCommandLoop;
 extern  unsigned long   g_uStartOfIdle;
 
-extern  unsigned long   g_uLastCommandLoop;
-extern  unsigned long   g_uStartOfIdle;
-
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 extern  long            g_offsetZCompensationSteps; // this is the minimal distance between the heat bed and the extruder at the moment when the z-min endstop is hit
 extern  long            g_minZCompensationSteps;
@@ -657,11 +654,11 @@ extern short            g_nSensibleLastPressure;
 extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
-#if FEATURE_SENSIBLE_COMPENSATION
+#if FEATURE_DIGIT_Z_COMPENSATION
 extern long             g_nSensibleCompensationSum;
 extern char             g_nSensibleCompensationChecks;
 extern float            g_nSensibleCompensationDigits;
-#endif // FEATURE_SENSIBLE_COMPENSATION
+#endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_FIND_Z_ORIGIN
 extern  volatile char   g_nFindZOriginStatus;
