@@ -5132,8 +5132,8 @@ int moveZ( int nSteps )
         if( bBreak )
         {
             // do not continue here in case the current operation has been cancelled
-            if( nSteps > 0 )    nSteps = nMaxLoops;
-            else                nSteps = -nMaxLoops;
+            if( nSteps > 0 )    nSteps = i;
+            else                nSteps = -i;
             break;
         }
 
