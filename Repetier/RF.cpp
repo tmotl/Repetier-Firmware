@@ -60,6 +60,8 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_
 FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z1, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z1 )
 FSTRINGVALUE( ui_text_question, UI_TEXT_UNKNOWN )
 FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z2, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2 )
+FSTRINGVALUE( ui_text_heat_bed_scan_done, UI_TEXT_HEAT_BED_SCAN_DONE )
+
 
 FSTRINGVALUE( ui_text_saving_success, UI_TEXT_SAVING_SUCCESS )
 
@@ -1947,6 +1949,7 @@ void searchZOScan( void )
 
                 // move a bit away from the heat bed in order to achieve better measurements in case of hardware configurations where the extruder is very close to the heat bed after the z-homing
                 g_nZScanZPosition += moveZ( HEAT_BED_SCAN_Z_START_STEPS );
+                GCode::keepAlive( Processing );
                 g_ZOSScanStatus = 6;    
                 break;
             }
@@ -1964,6 +1967,7 @@ void searchZOScan( void )
 #endif // DEBUG_HEAT_BED_SCAN == 2
                 PrintLine::moveRelativeDistanceInSteps( xScanPosition, 0, 0, 0, MAX_FEEDRATE_X, true, true );
                 PrintLine::moveRelativeDistanceInSteps( 0, yScanPosition, 0, 0, MAX_FEEDRATE_Y, true, true );
+                GCode::keepAlive( Processing );
 
                 g_ZOSScanStatus = 8;    
                 break;
@@ -1971,13 +1975,14 @@ void searchZOScan( void )
             case 8:
             {   
                 HAL::delayMilliseconds( HEAT_BED_SCAN_DELAY );
+                GCode::keepAlive( Processing );
                 g_ZOSScanStatus = 9;    
                 break;
             }
             case 9:
             {   
 #if DEBUG_HEAT_BED_SCAN == 2
-                    Com::printFLN( PSTR( "ZOS(): STEP 5 : Idle Pressure" ) );
+                Com::printFLN( PSTR( "ZOS(): STEP 5 : Idle Pressure" ) );
 #endif // DEBUG_HEAT_BED_SCAN == 2
                 int err = readIdlePressure( &g_nCurrentIdlePressure );
                 if( err != 0 ) {
@@ -2002,6 +2007,7 @@ void searchZOScan( void )
                     Com::printFLN( PSTR( " g_nMinPressureIdle = " ), g_nMinPressureIdle );
                     Com::printFLN( PSTR( " g_nMaxPressureIdle = " ), g_nMaxPressureIdle );
 #endif // DEBUG_HEAT_BED_SCAN == 2
+                GCode::keepAlive( Processing );
                 g_ZOSScanStatus = 10;   
                 break;
             }
@@ -2019,7 +2025,7 @@ void searchZOScan( void )
                   abortSearchHeatBedZOffset(false);
                   break;
                 }
-        
+                GCode::keepAlive( Processing );
                 g_ZOSScanStatus = 20;   
                 break;
             }
@@ -2057,6 +2063,7 @@ void searchZOScan( void )
                       Com::printF( PSTR( "ZOS(): Z = " ), g_nZScanZPosition );
                       Com::printFLN( PSTR( " Minimum-Z = " ), g_min_nZScanZPosition );
 #endif // DEBUG_HEAT_BED_SCAN
+                      GCode::keepAlive( Processing );
                 }
                 g_ZOSScanStatus = 50;   
                 break;
@@ -2077,6 +2084,7 @@ void searchZOScan( void )
                             
                 // update the matrix: shift by nZ and check for integer overflow
                 bool overflow = false;
+                bool overH = false;
                 bool overnull = false;
                 
                 //Nibbels: scaling nZ according to learning Rate for additional corrective scans
@@ -2109,7 +2117,8 @@ void searchZOScan( void )
                     weighted_nZ = (long)(g_ZOSlearningGradient*xy_weight*(float)nZ + (1.0-g_ZOSlearningGradient)*(float)nZ);
                     newValue = (long)g_ZCompensationMatrix[x][y] + weighted_nZ;
                     if(newValue > 32767 || newValue < -32768) overflow = true;
-                    if(newValue > 0) overnull = true; //darf nicht positiv werden.
+                    if(newValue > 0 ) overnull = true; //darf nicht positiv werden. //darf nicht über limit sein.
+                    if(newValue > (HEAT_BED_SCAN_Z_START_STEPS - -1*g_nScanHeatBedUpFastSteps) ) overH = true; //darf nicht positiv werden. //darf nicht über limit sein.
                     g_ZCompensationMatrix[x][y] = newValue;
                   }
                 }
@@ -2122,21 +2131,31 @@ void searchZOScan( void )
                   Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
 #endif // DEBUG_HEAT_BED_SCAN
                   abortSearchHeatBedZOffset(true);
-                    break;
+                  break;
                 }
                 // fail if z>0 occurred
                 if(overnull) {
                   // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is bigger than z=zero
-                  Com::printFLN( PSTR( "ZOS(): ERROR::At least one measured correction is z>0!" ) );
+                  Com::printFLN( PSTR( "ZOS(): WARNING::At least one measured correction is z>0!" ) );
                   Com::printFLN( PSTR( "ZOS(): FIX::Clean Hotend-Nozzle" ) );
-                  Com::printFLN( PSTR( "ZOS(): FIX::Z-Schraube etwas weiter rausdrehen." ) );
+                  Com::printFLN( PSTR( "ZOS(): FIX::Fix Z-Schraube" ) );
 #if DEBUG_HEAT_BED_SCAN == 2
-                  Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );   
-                  Com::printFLN( PSTR( "ZOS(): FIX::Scrape off Filament-Popel from Scan-Position :)" ) );
+                  Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );
+#endif // DEBUG_HEAT_BED_SCAN
+                  //showMyPage( (void*)ui_text_heat_bed_scan_done, (void*)ui_text_question, (void*)ui_text_heat_bed_zoffset_fix_z2, (void*)ui_text_heat_bed_zoffset_fix_z1 );
+                }
+                // fail if z>(Starthöhe - ein bisschen) occurred
+                if(overH) {
+                  // load the unaltered compensation matrix from the EEPROM since the current in-memory matrix is bigger than z=zero
+                  Com::printFLN( PSTR( "ZOS(): ERROR::Z-Matrix höher Start-Z!" ) );
+#if DEBUG_HEAT_BED_SCAN == 2
+                  Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );
+                  Com::printFLN( PSTR( "ZOS(): FIX::Clean Hotend-Nozzle" ) );
+                  Com::printFLN( PSTR( "ZOS(): FIX::Fix Z-Schraube" ) );
                   Com::printFLN( PSTR( "ZOS(): ReLoading zMatrix from EEPROM to RAM" ) );
 #endif // DEBUG_HEAT_BED_SCAN
                   abortSearchHeatBedZOffset(true);
-                    break;
+                  break;
                 }
                 
                 // determine the minimal distance between extruder and heat bed
@@ -2156,7 +2175,6 @@ void searchZOScan( void )
                 moveZ( abs(g_nZScanZPosition) );    // g_nZScanZPosition is negative. we need to move the heatbed down to be at z=0 again
                 HAL::delayMilliseconds( g_nScanSlowStepDelay );
                 Commands::printCurrentPosition();
-                UI_STATUS_UPD( UI_TEXT_FIND_Z_ORIGIN_DONE );
                 
 #if DEBUG_HEAT_BED_SCAN == 2
                 Com::printFLN( PSTR( "ZOS(): finished" ) );
@@ -2903,6 +2921,7 @@ void doHeatBedZCompensation( void )
             else
             {
                 // the printer is already a bit away from the surface - do the actual compensation
+                //Kommentar Nibbels zu "- Extruder::current->zOffset" -> Das ist hier nur die Änderung der Compensations-Limits, keine Höhenänderung! Das Bett wurde bereits bei T0->T1 verfahren.
                 nDeltaZ = g_maxZCompensationSteps - Extruder::current->zOffset - nCurrentPositionSteps[Z_AXIS];
                 nNeededZCompensation = g_offsetZCompensationSteps + 
                                        (nNeededZCompensation - g_offsetZCompensationSteps) * nDeltaZ / (g_maxZCompensationSteps - g_minZCompensationSteps);
@@ -2917,8 +2936,14 @@ void doHeatBedZCompensation( void )
     }
     else
     {
-        // we do not perform a compensation in case the z-position from the G-code is 0 (because this would drive the extruder against the heat bed)
-        nNeededZCompensation = g_staticZSteps;
+        //RF1000 dev: we do not perform a compensation in case the z-position from the G-code is 0 (because this would drive the extruder against the heat bed)
+        //nNeededZCompensation = g_staticZSteps;
+        
+        //Nibbels: Wenn ich meine Z-Matrix um 4mm ins Plus setze (Oder wohin auch immer ins Plus), dann G1 Z0 -> Fährt -4mm auf Z = 0, dann G1 Z0.2 -> Fährt +4,2mm in Compensationsposition.
+        // Das Verhalten ist ziemlich bescheuert, der soll wen möglich immer, wenn Z-Compensation Aktiv ist auf mindestens den höchsten Punkt der Z-Matrix anheben, weil er sonst gegen das Bett crashen könnte.
+        // after the first layers, only the static offset to the surface must be compensated
+        //Dann evtl. lieber über dem Zenit bleiben + kleines Offset?? 29.05.2017
+        nNeededZCompensation = g_offsetZCompensationSteps + g_staticZSteps + (long)(0.01 * Printer::axisStepsPerMM[Z_AXIS]);
     }
 
     long nNeededDigitCompensationSteps = 0;
@@ -4503,6 +4528,7 @@ short moveZUpFast( bool execRunStandardTasks )
         }
         else {
           Commands::checkForPeriodicalActions();
+          GCode::keepAlive( Processing );
         }
 
         if( g_abortZScan )
@@ -10617,7 +10643,7 @@ void processCommand( GCode* pCommand )
                             }   
                             
                             //das ist ein negativer wert! Je mehr Abstand, desto negativer. Positiv verboten.
-                            if(g_offsetZCompensationSteps + hochrunterSteps > 0){
+                            if(g_offsetZCompensationSteps + hochrunterSteps > (HEAT_BED_SCAN_Z_START_STEPS - -1*g_nScanHeatBedUpFastSteps)){
                                 Com::printF( PSTR( "M3902: Fehler::Z-Matrix wuerde positiv werden. Das waere eine Kollision um " ), (int)(g_offsetZCompensationSteps + hochrunterSteps) );
                                 Com::printFLN( PSTR( " [Steps] bzw. " ), Printer::invAxisStepsPerMM[Z_AXIS]*(float)(g_offsetZCompensationSteps + hochrunterSteps),2 );
                                 Com::printFLN( PSTR( " [mm]" ) );
@@ -10626,19 +10652,32 @@ void processCommand( GCode* pCommand )
                                 
                                 short   x;
                                 short   y;
-                                short   deltaZ  = (short)hochrunterSteps;                                                                           
+                                short   deltaZ  = (short)hochrunterSteps;
                                 bool overflow = false;
+                                bool overnull = false;
+                                bool overH = false;
                                 
                                 for( x=1; x<=g_uZMatrixMax[X_AXIS]; x++ )
                                 {
                                     for( y=1; y<=g_uZMatrixMax[Y_AXIS]; y++ )
                                     {
-                                        g_ZCompensationMatrix[x][y] += deltaZ;  
-                                        if(g_ZCompensationMatrix[x][y] > 0) overflow = true; //overflow oder kollision, kann einfach nicht sein und abfrage ist kurz.
+                                        if((long)g_ZCompensationMatrix[x][y] + (long)deltaZ >= 32767){
+                                            overflow = true;
+                                        }else{
+                                            g_ZCompensationMatrix[x][y] += deltaZ;  
+                                            if(g_ZCompensationMatrix[x][y] > 0) overnull = true; //overflow oder kollision, kann einfach nicht sein und abfrage ist kurz.
+                                            if(g_ZCompensationMatrix[x][y] > (HEAT_BED_SCAN_Z_START_STEPS - -1*g_nScanHeatBedUpFastSteps) ) overH = true;
+                                        }
                                     }
                                 }
-                                if(overflow){
-                                    Com::printFLN( PSTR( "M3901: ERROR::Some type of Overflow or positiv Matrix::ReLoading zMatrix from EEPROM to RAM" ) );
+                                if(overnull){
+                                    Com::printFLN( PSTR( "M3901: WARNING::positive Matrix::Please fix Z-Screw" ) );
+                                }
+                                if(overH){
+                                    Com::printFLN( PSTR( "M3901: ERROR::Very positive Matrix::ReLoading zMatrix from EEPROM to RAM" ) );
+                                    loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
+                                }else if(overflow){
+                                    Com::printFLN( PSTR( "M3901: ERROR::Overflow in Matrix::ReLoading zMatrix from EEPROM to RAM" ) );
                                     loadCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );
                                 }else{
                                     if(hochrunter == 0.00f){

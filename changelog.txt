@@ -1,3 +1,9 @@
+V RF.01.37m.TDMod (2017-05-19)
+- Fix for MoveZ
+- Changed z-Compensation to respect positive matrix values
+- Changed ZOS and M3902 to accept positive matrix values
+- Changed limits for Z-Offset-Scan s Move-Z-Up/Down/Fast/Slow according to allowed positive matrix values.
+
 V RF.01.37l4.TDMod (2017-05-19)
 - cleanup
 - made the function for digits compensation faster and more accurate. The digits are now measured with a higher frequency.

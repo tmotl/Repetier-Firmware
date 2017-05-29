@@ -506,7 +506,6 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
     register long   p;
     float           x, y, z;
 
-
     if(!relativeCoordinateMode)
     {
         if(com->hasX()) queuePositionCommandMM[X_AXIS] = queuePositionLastMM[X_AXIS] = convertToMM(com->X) - originOffsetMM[X_AXIS];

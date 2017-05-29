@@ -776,7 +776,7 @@ void Commands::executeGCode(GCode *com)
             {
                 GCode::readFromSerial();
                 Commands::checkForPeriodicalActions();
-        GCode::keepAlive( Processing );
+                GCode::keepAlive( Processing );
             }
             break;
         }
@@ -924,11 +924,13 @@ void Commands::executeGCode(GCode *com)
 
         case 90: // G90
         {
+            Commands::waitUntilEndOfAllMoves();
             Printer::relativeCoordinateMode = false;
             break;
         }
         case 91: // G91
         {
+            Commands::waitUntilEndOfAllMoves();
             Printer::relativeCoordinateMode = true;
             break;
         }
