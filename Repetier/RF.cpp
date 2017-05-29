@@ -359,6 +359,7 @@ short readStrainGauge( unsigned char uAddress )
 #if FEATURE_DIGIT_Z_COMPENSATION
     if(Printer::doHeatBedZCompensation){ 
         HAL::forbidInterrupts();
+        //wenn ein retract stattfindet und das nicht echtzeit-schnell funktioniert, könnte es leichte probleme geben, aber prinzipiell wäre dann der Einfluss nicht so schädlich, wie ständig die digitabsenkung zu ignorieren.
         g_nSensibleCompensationSum     += Result;
         g_nSensibleCompensationChecks  += 1;
         if( g_nSensibleCompensationChecks == 4 ){
@@ -1848,6 +1849,7 @@ void startZOScan( void )
                 resetZCompensation();
             }
             // start the heat bed scan
+            g_abortZScan = 0;
             g_ZOSScanStatus = 1;
             BEEP_START_HEAT_BED_SCAN
         }
@@ -2032,7 +2034,7 @@ void searchZOScan( void )
 #endif // DEBUG_HEAT_BED_SCAN
 
                       // move two of the fast steps from moveZUpFast() down again
-                      g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
+                      g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps ); //der bewegt sich ins plus, also weg. --
                       HAL::delayMilliseconds( g_nScanSlowStepDelay );
                       g_nZScanZPosition += moveZ( -g_nScanHeatBedUpFastSteps );
                       HAL::delayMilliseconds( g_nScanSlowStepDelay );
@@ -2206,6 +2208,7 @@ void abortSearchHeatBedZOffset( bool reloadMatrix )
     Printer::disableZStepper();
     Extruder::disableAllExtruders();
 
+    g_abortZScan = 1;
     g_nZScanZPosition = 0;
     return;
 
@@ -4507,7 +4510,7 @@ short moveZUpFast( bool execRunStandardTasks )
             break;
         }
 
-        if( g_nZScanZPosition < -g_nScanZMaxCompensationSteps || g_nZScanZPosition > g_nScanZMaxCompensationSteps )
+        if( g_nZScanZPosition < -g_nScanZMaxCompensationSteps || g_nZScanZPosition > HEAT_BED_SCAN_Z_START_STEPS )
         {
             if( Printer::debugErrors() )
             {
@@ -4564,7 +4567,7 @@ short moveZDownSlow( bool execRunStandardTasks )
             break;
         }
 
-        if( g_nZScanZPosition < -g_nScanZMaxCompensationSteps || g_nZScanZPosition > g_nScanZMaxCompensationSteps )
+        if( g_nZScanZPosition < -g_nScanZMaxCompensationSteps || g_nZScanZPosition > HEAT_BED_SCAN_Z_START_STEPS )
         {
             if( Printer::debugErrors() )
             {
@@ -4636,7 +4639,7 @@ short moveZUpSlow( short* pnContactPressure, bool execRunStandardTasks )
             break;
         }
 
-        if( g_nZScanZPosition < -g_nScanZMaxCompensationSteps || g_nZScanZPosition > g_nScanZMaxCompensationSteps )
+        if( g_nZScanZPosition < -g_nScanZMaxCompensationSteps || g_nZScanZPosition > HEAT_BED_SCAN_Z_START_STEPS )
         {
             if( Printer::debugErrors() )
             {
@@ -4704,7 +4707,6 @@ int moveZ( int nSteps )
     int     i;
     int     nMaxLoops;
     char    bBreak;
-    char    nRun = 1;
     
 
     // Warning: this function does not check any end stops
@@ -4738,16 +4740,6 @@ int moveZ( int nSteps )
     for( i=0; i<nMaxLoops; i++ )
     {
         bBreak = 0;
-        nRun   --;
-
-        if( !nRun )
-        {
-            // process the standard commands from time to time also while the moving in z-direction is in progress
-            // runStandardTasks();
-            nRun = 10;
-//          Com::printF( PSTR( "moveZ(): " ), i );
-//          Com::printFLN( PSTR( " / " ), nMaxLoops );
-        }
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
         if( g_abortZScan )
@@ -4773,8 +4765,8 @@ int moveZ( int nSteps )
         if( bBreak )
         {
             // do not continue here in case the current operation has been cancelled
-            if( nSteps > 0 )    nSteps = nMaxLoops;
-            else                nSteps = -nMaxLoops;
+            if( nSteps > 0 )    nSteps = i;
+            else                nSteps = -i;
             break;
         }
 
@@ -5929,8 +5921,6 @@ void loopRF( void )
             if( (uTime - g_uPauseTime) > EXTRUDER_CURRENT_PAUSE_DELAY )
             {
                 char    nProcessExtruder = 0;
-
-
 #if FEATURE_MILLING_MODE
                 if( Printer::operatingMode == OPERATING_MODE_PRINT )
                 {
