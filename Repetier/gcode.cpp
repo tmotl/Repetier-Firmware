@@ -114,7 +114,7 @@ uint8_t GCode::computeBinarySize(char *ptr)  // unsigned int bitfield) {
         if(bitfield2 & 1) s+= 4;
         if(bitfield2 & 2) s+= 4;
         if(bitfield2 & 4) s+= 4;
-        if(bitfield & 32768) s+=RMath::min(80,(uint8_t)ptr[4]+1);
+        if(bitfield & 32768) s+=RMath::min((uint8_t)80,(uint8_t)ptr[4]+1);
     }
     else
     {

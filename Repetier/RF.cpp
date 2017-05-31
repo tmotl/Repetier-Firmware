@@ -1566,7 +1566,7 @@ void scanHeatBed( void )
 #if FEATURE_PRECISE_HEAT_BED_SCAN
                 if( Printer::debugInfo() )
                 {
-                    Com::printFLN( PSTR( "scanHeatBed(): calibration delay [s] =  " ), PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY );
+                    Com::printFLN( PSTR( "scanHeatBed(): calibration delay [s] =  " ), (uint32_t)PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY );
                 }
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
                 break;
@@ -2673,7 +2673,7 @@ void configureMANUAL_STEPS_Z( int8_t increment )
     g_nManualSteps[Z_AXIS] = stepsize_table[loop];
     
     Com::printF( PSTR( "Z-Single-Step height has changed to " ), (float)((float)g_nManualSteps[Z_AXIS]* Printer::invAxisStepsPerMM[Z_AXIS] * 1000.0f ) , 0 );
-    Com::printF( PSTR( " [um] / " ), g_nManualSteps[Z_AXIS] );
+    Com::printF( PSTR( " [um] / " ), (uint32_t)g_nManualSteps[Z_AXIS] );
     Com::printFLN( PSTR( " [MicroSteps]." ));
         
     return;
@@ -7546,7 +7546,7 @@ void setExtruderCurrent( unsigned short level )
 
     if( Printer::debugInfo() )
     {
-        Com::printFLN( PSTR( "setExtruderCurrent(): new extruder current level: " ), (unsigned long)level );
+        Com::printFLN( PSTR( "setExtruderCurrent(): new extruder current level: " ), (int32_t)level );
     }
     return;
 

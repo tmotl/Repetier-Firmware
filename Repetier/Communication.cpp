@@ -434,7 +434,7 @@ void Com::print(const char *text)
 } // print
 
 
-void Com::print(long value)
+void Com::print(int32_t value)
 {
     if(value<0)
     {

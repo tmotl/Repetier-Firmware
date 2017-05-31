@@ -438,7 +438,7 @@ void initializeLCD()
 #if UI_DISPLAY_TYPE<4
 void UIDisplay::printRow(uint8_t r,char *txt,char *txt2,uint8_t changeAtCol)
 {
-    changeAtCol = RMath::min(UI_COLS,changeAtCol);
+    changeAtCol = RMath::min((uint8_t)UI_COLS,changeAtCol);
     uint8_t col=0;
 
     // Set row
@@ -2033,7 +2033,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
 
             if(DIR_IS_SUBDIR(p))
                 printCols[uid.col++] = 6; // Prepend folder symbol
-            length = RMath::min((int)strlen(tempLongFilename), MAX_COLS-uid.col);
+            length = RMath::min( (int)strlen(tempLongFilename), (int)(MAX_COLS-uid.col) );
             memcpy(printCols+uid.col, tempLongFilename, length);
             uid.col += length;
             printCols[uid.col] = 0;
@@ -2112,7 +2112,7 @@ void UIDisplay::refreshPage()
     if(menuLevel==0)
     {
         UIMenu *men = (UIMenu*)pgm_read_word(&(ui_pages[menuPos[0]]));
-        short nr = pgm_read_word_near(&(men->numEntries));
+        uint16_t nr = pgm_read_word_near(&(men->numEntries));
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
         for(r=0; r<nr && r<UI_ROWS; r++)
         {
@@ -2125,7 +2125,7 @@ void UIDisplay::refreshPage()
     else
     {
         UIMenu *men = (UIMenu*)menu[menuLevel];
-        short nr = pgm_read_word_near((void*)&(men->numEntries));
+        uint16_t nr = pgm_read_word_near(&(men->numEntries));
         mtype = pgm_read_byte((void*)&(men->menuType));
         uint8_t offset = menuTop[menuLevel];
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
@@ -2742,7 +2742,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
     }
 
     UIMenu *men = (UIMenu*)menu[menuLevel];
-    short nr = pgm_read_word_near(&(men->numEntries));
+    uint8_t nr = (uint8_t)pgm_read_word_near(&(men->numEntries));
     uint8_t mtype = HAL::readFlashByte((const prog_char*)&(men->menuType));
     UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
     UIMenuEntry *ent =(UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));

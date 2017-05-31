@@ -1957,7 +1957,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
     HAL::forbidInterrupts();
 
     if(doEven) move->checkEndstops();
-    uint8_t max_loops = RMath::min((long)Printer::stepsPerTimerCall,move->stepsRemaining);
+    uint8_t max_loops = RMath::min((int32_t)Printer::stepsPerTimerCall,move->stepsRemaining);
 
     if(move->stepsRemaining>0)
     {
