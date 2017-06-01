@@ -76,10 +76,9 @@ void Commands::checkForPeriodicalActions()
     g_uLastCommandLoop = HAL::timeInMilliseconds();
 
     Extruder::manageTemperatures();
-    if(--counter250ms==0)
+    if(--counter250ms==0) //Nibbels: executePeriodical limitiert diese abfrage: das ist ein zusätzlicher teiler!
     {
-        if(manageMonitor<=1+NUM_EXTRUDER)
-            writeMonitor();
+        if( Printer::debugInfo() ) writeMonitor();
         counter250ms=5;
     }
     UI_SLOW;
@@ -2047,7 +2046,7 @@ void Commands::writeLowestFreeRAM()
     {
         lowestRAMValueSend = lowestRAMValue;
 
-        if( Printer::debugInfo() )
+        if( true ) //Printer::debugInfo()
         {
             Com::printFLN(Com::tFreeRAM,lowestRAMValue);
         }

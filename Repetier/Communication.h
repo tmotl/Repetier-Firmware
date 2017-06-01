@@ -60,6 +60,7 @@ public:
     FSTRINGVAR(tBrownOut)
     FSTRINGVAR(tWatchdog)
     FSTRINGVAR(tSoftwareReset)
+    FSTRINGVAR(tUnknownReset)
     FSTRINGVAR(tUnknownCommand)
     FSTRINGVAR(tFreeRAM)
     FSTRINGVAR(tXColon)

@@ -17,7 +17,6 @@
 
 
 #include "Repetier.h"
-#include "ui.h"
 
 #if SDSUPPORT
 

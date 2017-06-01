@@ -18,7 +18,6 @@
 
 #include "Repetier.h"
 #include "pins_arduino.h"
-#include "ui.h"
 
 #if EEPROM_MODE!=0
 #include "Eeprom.h"
@@ -1480,7 +1479,7 @@ disabled, the function is not called.
 */
 void writeMonitor()
 {
-    if( Printer::debugInfo() )
+    if(manageMonitor<NUM_TEMPERATURE_LOOPS)
     {
         TemperatureController *act = tempController[manageMonitor];
         Com::printF(Com::tMTEMPColon,(long)HAL::timeInMilliseconds());
@@ -1488,7 +1487,6 @@ void writeMonitor()
         Com::printF(Com::tSpace,act->targetTemperatureC,0);
         Com::printFLN(Com::tSpace,pwm_pos[act->pwmIndex]);
     }
-
 } // writeMonitor
 
 

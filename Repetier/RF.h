@@ -655,8 +655,6 @@ extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv o
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_DIGIT_Z_COMPENSATION
-extern long             g_nSensibleCompensationSum;
-extern char             g_nSensibleCompensationChecks;
 extern float            g_nSensibleCompensationDigits;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 

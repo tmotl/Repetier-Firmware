@@ -450,9 +450,29 @@ public:
 
     static inline void delayMicroseconds(unsigned int delayUs)
     {
-        pingWatchdog();
-        ::delayMicroseconds(delayUs);
+#if FEATURE_WATCHDOG
+        if(delayUs < WATCHDOG_TIMEOUT*1000){
+#endif // FEATURE_WATCHDOG
+            pingWatchdog();
+            ::delayMicroseconds(delayUs);
+#if FEATURE_WATCHDOG
+        }else{
+            // external watchdog
+            unsigned int    doneUs = 0;
+            unsigned int    tempUs;
 
+            pingWatchdog();
+            while( doneUs < delayUs )
+            {
+                tempUs = delayUs - doneUs;
+                if( tempUs > WATCHDOG_TIMEOUT*1000 ) tempUs = WATCHDOG_TIMEOUT*1000; //10.000
+    
+                ::delayMicroseconds(tempUs);
+                doneUs += tempUs;
+                pingWatchdog();
+            }
+        }
+#endif // FEATURE_WATCHDOG
     } // delayMicroseconds
 
     static inline void delayMilliseconds(unsigned int delayMs)

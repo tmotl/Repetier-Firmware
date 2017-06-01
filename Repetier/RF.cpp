@@ -60,8 +60,6 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_search_aborted, UI_TEXT_HEAT_BED_ZOFFSET_
 FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z1, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z1 )
 FSTRINGVALUE( ui_text_question, UI_TEXT_UNKNOWN )
 FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z2, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2 )
-FSTRINGVALUE( ui_text_heat_bed_scan_done, UI_TEXT_HEAT_BED_SCAN_DONE )
-
 
 FSTRINGVALUE( ui_text_saving_success, UI_TEXT_SAVING_SUCCESS )
 
@@ -186,9 +184,6 @@ long            g_nParkPosition[3]          = { PARK_POSITION_X, PARK_POSITION_Y
 #endif // FEATURE_PARK
 
 #if FEATURE_EMERGENCY_PAUSE
-unsigned long   g_uLastPressureTime         = 0;
-long            g_nPressureSum              = 0;
-char            g_nPressureChecks           = 0;
 long            g_nEmergencyPauseDigitsMin  = 0;
 long            g_nEmergencyPauseDigitsMax  = 0;
 #endif // FEATURE_EMERGENCY_PAUSE
@@ -209,16 +204,11 @@ char            g_nSensiblePressure1stMarke = 0; //sagt, ob regelung aktiv oder 
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_DIGIT_Z_COMPENSATION
-long            g_nSensibleCompensationSum    = 0;
-char            g_nSensibleCompensationChecks = 0;
 float           g_nSensibleCompensationDigits = 0;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_EMERGENCY_STOP_ALL
 unsigned long   g_uLastZPressureTime_IgnoreUntil = 0;
-unsigned long   g_uLastZPressureTime        = 0;
-long            g_nZPressureSum             = 0;
-char            g_nZPressureChecks          = 0;
 #endif // FEATURE_EMERGENCY_STOP_ALL
 
 #if FEATURE_FIND_Z_ORIGIN
@@ -359,6 +349,8 @@ short readStrainGauge( unsigned char uAddress )
 
 /* brief: This is for correcting sinking hotends at high digit values because of DMS-Sensor by Nibbels  */
 #if FEATURE_DIGIT_Z_COMPENSATION
+    static long g_nSensibleCompensationSum    = 0;
+    static char g_nSensibleCompensationChecks = 0;
     if(Printer::doHeatBedZCompensation){ 
         HAL::forbidInterrupts();
         //wenn ein retract stattfindet und das nicht echtzeit-schnell funktioniert, könnte es leichte probleme geben, aber prinzipiell wäre dann der Einfluss nicht so schädlich, wie ständig die digitabsenkung zu ignorieren.
@@ -2142,7 +2134,6 @@ void searchZOScan( void )
 #if DEBUG_HEAT_BED_SCAN == 2
                   Com::printFLN( PSTR( "ZOS(): HELP::http://www.rf1000.de/viewtopic.php?f=74&t=1674&start=10#p17016" ) );
 #endif // DEBUG_HEAT_BED_SCAN
-                  //showMyPage( (void*)ui_text_heat_bed_scan_done, (void*)ui_text_question, (void*)ui_text_heat_bed_zoffset_fix_z2, (void*)ui_text_heat_bed_zoffset_fix_z1 );
                 }
                 // fail if z>(Starthöhe - ein bisschen) occurred
                 if(overH) {
@@ -5996,6 +5987,11 @@ void loopRF( void )
 
 
 #if FEATURE_EMERGENCY_PAUSE
+
+    static unsigned long   g_uLastPressureTime         = 0;
+    static long            g_nPressureSum              = 0;
+    static char            g_nPressureChecks           = 0;
+
     if( g_nEmergencyPauseDigitsMin || g_nEmergencyPauseDigitsMax )
     {
         if( (uTime - g_uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
@@ -6150,6 +6146,9 @@ void loopRF( void )
 #endif // FEATURE_EMERGENCY_PAUSE
 
 #if FEATURE_EMERGENCY_STOP_ALL
+    static unsigned long   g_uLastZPressureTime        = 0;
+    static long            g_nZPressureSum             = 0;
+    static char            g_nZPressureChecks          = 0;
     if( (uTime - g_uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
     {
         g_uLastZPressureTime = uTime;

@@ -340,13 +340,15 @@ void HAL::showStartReason()
     // Check startup - does nothing if bootloader sets MCUSR to 0
     uint8_t mcu = MCUSR;
 
-    if( Printer::debugInfo() )
+    if( MCUSR != 0 ) //Printer::debugInfo()
     {
         if(mcu & 1) Com::printInfoFLN(Com::tPowerUp);
         if(mcu & 2) Com::printInfoFLN(Com::tExternalReset);
         if(mcu & 4) Com::printInfoFLN(Com::tBrownOut);
         if(mcu & 8) Com::printInfoFLN(Com::tWatchdog);
         if(mcu & 32) Com::printInfoFLN(Com::tSoftwareReset);
+    }else{
+        Com::printInfoFLN(Com::tUnknownReset);
     }
     MCUSR=0;
 
@@ -356,8 +358,6 @@ void HAL::showStartReason()
 int HAL::getFreeRam()
 {
     int freeram = 0;
-
-
     BEGIN_INTERRUPT_PROTECTED
     uint8_t * heapptr, * stackptr;
     heapptr = (uint8_t *)malloc(4);         // get heap pointer
