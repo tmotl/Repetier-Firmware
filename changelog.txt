@@ -3,7 +3,7 @@ V RF.01.37m2.TDMod (2017-05-19)
 - changed UI_ACTION_TOPMENU to avoid mod menü when jumping back. commented UI_ACTION_TOPMENU at definition.
 - activated free ram debugging
 - removed Z_FIRMWARE_RETRACT_MM from Output-Object until I find out how to concat preprocessor strings, this doesnt really work as supposed since 1.37l2.
-- Killed SKIP_M109_IF_WITHIN and put TEMP_TOLERANCE in that place to standarize that. Changed TEMP_TOLERANCE to 2 from 2.0 (not float)
+- Killed SKIP_M109_IF_WITHIN and put TEMP_TOLERANCE in that place to standarize that. 
 
 V RF.01.37m.TDMod (2017-05-19)
 - Fix for MoveZ

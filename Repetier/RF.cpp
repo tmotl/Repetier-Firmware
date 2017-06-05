@@ -13311,7 +13311,7 @@ void updateRGBLightStatus( void )
 #if NUM_EXTRUDER >= 1
         if( extruder[0].tempControl.targetTemperatureC > EXTRUDER_MIN_TEMP )
         {
-            if( abs( extruder[0].tempControl.targetTemperatureC - extruder[0].tempControl.currentTemperatureC ) < RGB_LIGHT_TEMP_TOLERANCE )
+            if( fabs( extruder[0].tempControl.targetTemperatureC - extruder[0].tempControl.currentTemperatureC ) < RGB_LIGHT_TEMP_TOLERANCE )
             {
                 // we have reached the target temperature
                 newStatus = RGB_STATUS_PRINTING;
@@ -13331,7 +13331,7 @@ void updateRGBLightStatus( void )
 #if NUM_EXTRUDER == 2
         if( extruder[1].tempControl.targetTemperatureC > EXTRUDER_MIN_TEMP )
         {
-            if( abs( extruder[1].tempControl.targetTemperatureC - extruder[1].tempControl.currentTemperatureC ) < RGB_LIGHT_TEMP_TOLERANCE )
+            if( fabs( extruder[1].tempControl.targetTemperatureC - extruder[1].tempControl.currentTemperatureC ) < RGB_LIGHT_TEMP_TOLERANCE )
             {
                 if( newStatus == RGB_STATUS_IDLE )
                 {
@@ -13353,7 +13353,7 @@ void updateRGBLightStatus( void )
 
         if( heatedBedController.targetTemperatureC > HEATED_BED_MIN_TEMP )
         {
-            if( abs( heatedBedController.targetTemperatureC - heatedBedController.currentTemperatureC ) < RGB_LIGHT_TEMP_TOLERANCE )
+            if( fabs( heatedBedController.targetTemperatureC - heatedBedController.currentTemperatureC ) < RGB_LIGHT_TEMP_TOLERANCE )
             {
                 // we have reached the target temperature
                 if( newStatus == RGB_STATUS_IDLE )

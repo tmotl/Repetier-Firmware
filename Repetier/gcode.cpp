@@ -347,9 +347,7 @@ void GCode::executeFString(FSTRINGPARAM(cmd))
         {
 #ifdef DEBUG_PRINT
             debugWaitLoop = 7;
-#endif // DEBUG_PRINT
-
-    code.echoCommand();
+#endif // DEBUG_PRINT    
             Commands::executeGCode(&code);
             Printer::defaultLoopActions();
         }
