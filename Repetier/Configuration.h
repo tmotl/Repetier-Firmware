@@ -120,7 +120,7 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
 #define Z_OFFSET_BUTTON_STEPS               5
 
-/** \brief The Firmwares E-Retract within PAUSE and OUTPUT_OBJECT_SCRIPT */
+/** \brief The Firmwares E-Retract within PAUSE */
 #define Z_FIRMWARE_RETRACT_MM               1
 
 /** \brief The Firmwares disalowes movement before you at least: pressed a printers button, set a temperature, homed once 
@@ -258,8 +258,7 @@ with a dry run, you can test the speed of path computations, which are still per
 /** \brief Writes the free RAM to output, if it is less then at the last test. Should always return
 values >500 for safety, since it doesn't catch every function call. Nice to tweak cache
 usage or for seraching for memory induced errors. Switch it off for production, it costs execution time. */
-//#define DEBUG_FREE_MEMORY
-//#define DEBUG_ADVANCE
+#define DEBUG_FREE_MEMORY
 
 #ifdef DEBUG_FREE_MEMORY
 #define DEBUG_MEMORY                        Commands::checkFreeMemory();
@@ -326,7 +325,7 @@ usage or for seraching for memory induced errors. Switch it off for production, 
 #if FEATURE_OUTPUT_FINISHED_OBJECT
 
 /** \brief The following script allows to configure the exact behavior of the automatic object output */
-#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 E-" STR(Z_FIRMWARE_RETRACT_MM) "\nG1 Z210 F5000\nG1 Y250 F7500"
+#define OUTPUT_OBJECT_SCRIPT_PRINT          "G21\nG91\nG1 Z210 F5000\nG1 Y250 F7500"
 #define OUTPUT_OBJECT_SCRIPT_MILL           "G28 Z0\nG21\nG91\nG1 Y250 F7500"
 
 #endif // FEATURE_OUTPUT_FINISHED_OBJECT
@@ -889,9 +888,6 @@ need to increase this value. For one 6.8 Ohm heater 10 is ok. With two 6.8 Ohm h
 extrusion position might be at any value like 23344. If you then have an G1 E-2 it will roll back 23 meter! */
 #define EXTRUDE_MAXLENGTH                   100
 
-/** \brief Skip wait, if the extruder temperature is already within x degrees. Only fixed numbers, 0 = off */
-#define SKIP_M109_IF_WITHIN                 2
-
 /** \brief Set PID scaling
 PID values assume a usable range from 0-255. This can be further limited to EXT0_PID_MAX by two methods.
 Set the value to 0: Normal computation, just clip output to EXT0_PID_MAX if computed value is too high.
@@ -902,7 +898,7 @@ If your EXT0_PID_MAX is low, you should prefer the second method. */
 /** \brief Temperature range for target temperature to hold in M109 command. 5 means +/-5 degC
 Uncomment define to force the temperature into the range for given watchperiod. */
 //#define TEMP_HYSTERESIS                   5
-#define TEMP_TOLERANCE                      2.0                                                 // [°C]
+#define TEMP_TOLERANCE                      2                                                 // [°C]
 
 /** \brief Bits of the ADC converter */
 #define ANALOG_INPUT_BITS                   10

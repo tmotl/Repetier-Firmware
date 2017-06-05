@@ -3599,6 +3599,7 @@ void UIDisplay::executeAction(int action)
     {
         action -= UI_ACTION_TOPMENU;
         menuLevel = 0;
+        if(uid.menuPos[0] == 1) uid.menuPos[0] = 0;
     }
     else if((action>=UI_ACTION_RF_MIN_REPEATABLE && action<=UI_ACTION_RF_MAX_REPEATABLE) ||
             (action>=UI_ACTION_RF_MIN_SINGLE && action<=UI_ACTION_RF_MAX_SINGLE))
@@ -3683,6 +3684,7 @@ void UIDisplay::executeAction(int action)
             case UI_ACTION_TOP_MENU:
             {
                 menuLevel = 0;
+                if(uid.menuPos[0] == 1) uid.menuPos[0] = 0;
                 break;
             }
             case UI_ACTION_EMERGENCY_STOP:

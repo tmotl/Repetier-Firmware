@@ -317,14 +317,14 @@ void GCode::executeFString(FSTRINGPARAM(cmd))
     char    buf[80];
     uint8_t buflen;
     char    c = 0;
+    DEBUG_MEMORY
     GCode   code;
-
-
+    DEBUG_MEMORY
     do
     {
         // Wait for a free place in command buffer
         // Scan next command from string
-        uint8_t comment=0;
+        uint8_t comment = 0;
         buflen = 0;
         do
         {
@@ -334,26 +334,27 @@ void GCode::executeFString(FSTRINGPARAM(cmd))
             if(comment) continue;
             buf[buflen++] = c;
 
-        }while(buflen<79);
-
+        }
+        while(buflen<79);
         if(buflen==0)   // empty line ignore
         {
+            if(!c) return; // Special case \n0
             continue;
         }
-
-        // Send command into command buffer
         buf[buflen]=0;
+        // Send command into command buffer
         if(code.parseAscii((char *)buf) && (code.params & 518))   // Success
         {
 #ifdef DEBUG_PRINT
             debugWaitLoop = 7;
 #endif // DEBUG_PRINT
+
+    code.echoCommand();
             Commands::executeGCode(&code);
             Printer::defaultLoopActions();
         }
     }
     while(c);
-
 } // executeFString
 
 

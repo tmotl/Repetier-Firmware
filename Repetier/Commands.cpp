@@ -1165,8 +1165,8 @@ void Commands::executeGCode(GCode *com)
                     if(com->hasT() && com->T<NUM_EXTRUDER) actExtruder = &extruder[com->T];
                     if (com->hasS()) Extruder::setTemperatureForExtruder(com->S,actExtruder->id,com->hasF() && com->F>0);
 
-#if defined (SKIP_M109_IF_WITHIN) && SKIP_M109_IF_WITHIN>0
-                    if(abs(actExtruder->tempControl.currentTemperatureC - actExtruder->tempControl.targetTemperatureC)<(SKIP_M109_IF_WITHIN))
+#if defined (TEMP_TOLERANCE) && TEMP_TOLERANCE>0
+                    if(abs(actExtruder->tempControl.currentTemperatureC - actExtruder->tempControl.targetTemperatureC)<(TEMP_TOLERANCE))
                     {
                         // we are already in range
 
@@ -1176,7 +1176,7 @@ void Commands::executeGCode(GCode *com)
 
                         break;
                     }
-#endif // (SKIP_M109_IF_WITHIN) && SKIP_M109_IF_WITHIN>0
+#endif // (TEMP_TOLERANCE) && TEMP_TOLERANCE>0
 
                     bool        dirRising   = actExtruder->tempControl.targetTemperature > actExtruder->tempControl.currentTemperature;
                     millis_t    printedTime = HAL::timeInMilliseconds();
