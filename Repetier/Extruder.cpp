@@ -25,9 +25,8 @@
 
 
 uint8_t             manageMonitor = 255; ///< Temp. we want to monitor with our host. 1+NUM_EXTRUDER is heated bed
-unsigned int        counterPeriodical = 0;
 volatile uint8_t    executePeriodical = 0;
-uint8_t             counter250ms=25;
+uint8_t             counter500ms=50; //das ist nur INIT! nachher immer auf 5 runterzählend.
 
 #if FEATURE_DITTO_PRINTING
 uint8_t             Extruder::dittoMode = 0;
@@ -92,11 +91,12 @@ void Extruder::manageTemperatures()
     uint8_t errorDetected = 0;
     for(uint8_t controller=0; controller<NUM_TEMPERATURE_LOOPS; controller++)
     {
-        if(controller == autotuneIndex) continue;
         TemperatureController *act = tempController[controller];
 
         // Get Temperature
         act->updateCurrentTemperature();
+        if(controller == autotuneIndex) continue;  // Ignore heater we are currently testing
+
         if(controller<NUM_EXTRUDER)
         {
 #if NUM_EXTRUDER>=2 && EXT0_EXTRUDER_COOLER_PIN==EXT1_EXTRUDER_COOLER_PIN && EXT0_EXTRUDER_COOLER_PIN>=0
@@ -114,6 +114,7 @@ void Extruder::manageTemperatures()
                 else
                     extruder[controller].coolerPWM = extruder[controller].coolerSpeed;
         }
+
         if(!Printer::isAnyTempsensorDefect() && (act->currentTemperatureC < MIN_DEFECT_TEMPERATURE || act->currentTemperatureC > MAX_DEFECT_TEMPERATURE))   // no temp sensor or short in sensor, disable heater
         {
             extruderTempErrors++;
@@ -1333,7 +1334,7 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
         Com::printInfoFLN(Com::tPIDAutotuneStart);
     }
 
-    Extruder::disableAllHeater(); // switch off all heaters.
+    //Extruder::disableAllHeater(); // switch off all heaters. https://github.com/repetier/Repetier-Firmware/commit/241c550ac004023842d6886c6e0db15a1f6b56d7
     autotuneIndex = controllerId;
     pwm_pos[pwmIndex] = pidMax;
     if(controllerId<NUM_EXTRUDER)
@@ -1345,9 +1346,9 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
     for(;;)
     {
 #if FEATURE_WATCHDOG
-        HAL::pingWatchdog();
+        //HAL::pingWatchdog(); -> Commands::checkForPeriodicalActions();
 #endif // FEATURE_WATCHDOG
-
+        Commands::checkForPeriodicalActions(); // update heaters etc. https://github.com/repetier/Repetier-Firmware/commit/241c550ac004023842d6886c6e0db15a1f6b56d7
         GCode::keepAlive( WaitHeater );
         updateCurrentTemperature();
         currentTemp = currentTemperatureC;
@@ -1418,7 +1419,7 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
                 minTemp=temp;
             }
         }
-        if(currentTemp > (temp + 20))
+        if(currentTemp > (temp + 40))
         {
             if( Printer::debugErrors() )
             {
@@ -1426,7 +1427,8 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
             }
 
             showError( (void*)ui_text_autodetect_pid, (void*)ui_text_temperature_wrong );
-            Extruder::disableAllHeater();
+            //Extruder::disableAllHeater();
+            autotuneIndex = 255;
             return;
         }
         if(time - temp_millis > 1000)
@@ -1440,8 +1442,8 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
             {
                 Com::printErrorFLN(Com::tAPIDFailedTimeout);
             }
-            Extruder::disableAllHeater();
-
+            //Extruder::disableAllHeater();
+            autotuneIndex = 255;
             showError( (void*)ui_text_autodetect_pid, (void*)ui_text_timeout );
             return;
         }
@@ -1454,7 +1456,8 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
 
             UI_STATUS_UPD( UI_TEXT_AUTODETECT_PID_DONE );
 
-            Extruder::disableAllHeater();
+            //Extruder::disableAllHeater();
+            autotuneIndex = 255;
             if(storeValues)
             {
                 pidPGain = Kp;

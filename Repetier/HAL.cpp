@@ -1044,9 +1044,10 @@ ISR(PWM_TIMER_VECTOR)
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
     HAL::allowInterrupts();
-    
+
+    static unsigned int counterPeriodical = 0;
     counterPeriodical++; // Approximate a 100ms timer
-    if(counterPeriodical>=(int)(F_CPU/40960))
+    if(counterPeriodical>=(int)(F_CPU/40960)) //Nibbels: gibt 390,625 ?? -> https://github.com/repetier/Repetier-Firmware/blob/development/src/ArduinoAVR/Repetier/HAL.cpp#L810 3906 times per second.
     {
         counterPeriodical=0;
         executePeriodical=1;
@@ -1056,7 +1057,6 @@ ISR(PWM_TIMER_VECTOR)
     if( (HAL::timeInMilliseconds() - Printer::RGBLightLastChange) > RGB_LIGHT_COLOR_CHANGE_SPEED )
     {
         char    change = 0;
-
 
         Printer::RGBLightLastChange = HAL::timeInMilliseconds();
             

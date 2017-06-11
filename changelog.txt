@@ -1,3 +1,13 @@
+still investigating for "the bug"
+
+V RF.01.37m4.TDMod (2017-06-10)
+- removed some interrupt-blocking in order to accidently unblock them afterwards. there is some bug in this firmware somewhere after 01.37k2 I am now investigating closely.
+
+V RF.01.37m3.TDMod (2017-06-10)
+- did some cleanup
+- tested some stuff
+- changed autotunePID a bit, according to https://github.com/repetier/Repetier-Firmware/commit/241c550ac004023842d6886c6e0db15a1f6b56d7 . Temperatures not unmonitored/unprinted while testing anymore.
+
 V RF.01.37m2.TDMod (2017-05-19)
 - Tested and fixed some stuff: monitor temp possible overflow
 - changed UI_ACTION_TOPMENU to avoid mod menü when jumping back. commented UI_ACTION_TOPMENU at definition.

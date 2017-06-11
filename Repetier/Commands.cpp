@@ -70,16 +70,17 @@ void Commands::checkForPeriodicalActions()
 {
     doZCompensation();
 
-    if(!executePeriodical) return;
+    if(!executePeriodical) return; //nur ca. jede 100ms fällt der hier durch. Teiler durch Timer0.
     executePeriodical=0;
 
-    g_uLastCommandLoop = HAL::timeInMilliseconds();
-
+    g_uLastCommandLoop = HAL::timeInMilliseconds();    
+  
     Extruder::manageTemperatures();
-    if(--counter250ms==0) //Nibbels: executePeriodical limitiert diese abfrage: das ist ein zusätzlicher teiler!
+
+    if(--counter500ms==0) //Nibbels: executePeriodical limitiert diese abfrage: das ist ein zusätzlicher teiler!
     {
         if( Printer::debugInfo() ) writeMonitor();
-        counter250ms=5;
+        counter500ms=5; //Teilt die 100ms durch 5.
     }
     UI_SLOW;
     loopRF();
@@ -151,7 +152,7 @@ void Commands::checkForPeriodicalActions()
         }
     }
 #endif // FEATURE_PAUSE_PRINTING
-
+    
 } // checkForPeriodicalActions
 
 
@@ -858,13 +859,13 @@ void Commands::executeGCode(GCode *com)
                 if( Printer::relativeCoordinateMode )
                 {
                     // move to the position of the (to be drilled) hole
-                    strcpy( szTemp, "G1 X" );
+                    strcpy( szTemp, PSTR("G1 X") );
                     addFloat( szTemp, com->hasX() ? com->X : 0, 3 );
-                    strcat( szTemp, " Y" );
+                    strcat( szTemp, PSTR(" Y") );
                     addFloat( szTemp, com->hasY() ? com->Y : 0, 3 );
-                    strcat( szTemp, " Z" );
+                    strcat( szTemp, PSTR(" Z") );
                     addFloat( szTemp, com->hasR() ? com->R : 0, 3 );
-                    strcat( szTemp, " F" );
+                    strcat( szTemp, PSTR(" F") );
                     addFloat( szTemp, Printer::maxFeedrate[X_AXIS], 3 );
                     GCode::executeString( szTemp );
 
@@ -874,23 +875,23 @@ void Commands::executeGCode(GCode *com)
                 else
                 {
                     // move to the position of the (to be drilled) hole
-                    strcpy( szTemp, "G1" );
+                    strcpy( szTemp, PSTR("G1") );
                     if( com->hasX() )
                     {
-                        strcat( szTemp, " X" );
+                        strcat( szTemp, PSTR(" X") );
                         addFloat( szTemp, com->X, 3 );
                     }
                     if( com->hasY() )
                     {
-                        strcat( szTemp, " Y" );
+                        strcat( szTemp, PSTR(" Y") );
                         addFloat( szTemp, com->Y, 3 );
                     }
                     if( com->hasR() )
                     {
-                        strcat( szTemp, " Z" );
+                        strcat( szTemp, PSTR(" Z") );
                         addFloat( szTemp, com->R, 3 );
                     }
-                    strcat( szTemp, " F" );
+                    strcat( szTemp, PSTR(" F") );
                     addFloat( szTemp, Printer::maxFeedrate[X_AXIS], 3 );
                     GCode::executeString( szTemp );
 
@@ -899,17 +900,17 @@ void Commands::executeGCode(GCode *com)
                 }
 
                 // drill the hole
-                strcpy( szTemp, "G1 Z" );
+                strcpy( szTemp, PSTR("G1 Z") );
                 addFloat( szTemp, com->hasZ() ? com->Z : Printer::drillZDepth, 3 );
-                strcat( szTemp, " F" );
+                strcat( szTemp, PSTR(" F") );
                 addFloat( szTemp, com->hasF() ? com->F : Printer::drillFeedrate, 3 );
 
                 GCode::executeString( szTemp );
 
                 // get out of the hole
-                strcpy( szTemp, "G1 Z" );
+                strcpy( szTemp, PSTR("G1 Z") );
                 addFloat( szTemp, exitZ, 3 );
-                strcat( szTemp, " F" );
+                strcat( szTemp, PSTR(" F") );
                 addFloat( szTemp, Printer::maxFeedrate[Z_AXIS], 3 );
 
                 GCode::executeString( szTemp );

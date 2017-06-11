@@ -85,7 +85,6 @@ PrintLine *PrintLine::cur = 0;                          // Current printing line
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 PrintLine           PrintLine::direct;                          // direct movement
-unsigned long       g_uLastDirectStepTime = 0;
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
 uint8_t             PrintLine::linesWritePos    = 0;    // Position where we write the next cached line move.
@@ -1707,6 +1706,7 @@ long PrintLine::performDirectMove()
 
 void PrintLine::performDirectSteps( void )
 {
+    static unsigned long g_uLastDirectStepTime = 0;
     if( (HAL::timeInMilliseconds() - g_uLastDirectStepTime) >= MANUAL_MOVE_INTERVAL )
     {
         bool    bDone = 0;

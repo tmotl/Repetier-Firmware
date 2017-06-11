@@ -331,7 +331,7 @@ void initStrainGauge( void )
 } // initStrainGauge
 
 
-short readStrainGauge( unsigned char uAddress )
+short readStrainGauge( unsigned char uAddress ) //readStrainGauge dauert etwas unter einer Millisekunde!
 {
     unsigned char   Register;
     short           Result;
@@ -352,7 +352,6 @@ short readStrainGauge( unsigned char uAddress )
     static long g_nSensibleCompensationSum    = 0;
     static char g_nSensibleCompensationChecks = 0;
     if(Printer::doHeatBedZCompensation){ 
-        HAL::forbidInterrupts();
         //wenn ein retract stattfindet und das nicht echtzeit-schnell funktioniert, könnte es leichte probleme geben, aber prinzipiell wäre dann der Einfluss nicht so schädlich, wie ständig die digitabsenkung zu ignorieren.
         g_nSensibleCompensationSum     += Result;
         g_nSensibleCompensationChecks  += 1;
@@ -363,7 +362,6 @@ short readStrainGauge( unsigned char uAddress )
         }else{
             g_nSensibleCompensationDigits = (float)(Result); //startwert / failwert
         }
-        HAL::allowInterrupts();
     }
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
@@ -2937,14 +2935,13 @@ void doHeatBedZCompensation( void )
         nNeededZCompensation = g_offsetZCompensationSteps + g_staticZSteps + (long)(0.01 * Printer::axisStepsPerMM[Z_AXIS]);
     }
 
-    long nNeededDigitCompensationSteps = 0;
 #if FEATURE_DIGIT_Z_COMPENSATION
     //Etwa 5500 digits verursachen 0.055 mm tiefere nozzle: ca. 0.00001 = 1/100.000 mm pro digit.
     //0.00001 ist vermutlich konservativ bis ok.
     //Je höher die Kraft nach unten, desto mehr muss das Bett ausweichen: Z nach oben/+.
     
     //VORSICHT: Die Messzellen könnten falsch verbaut sein, darum Digits immer positiv nutzen. Negative Digits würden sowieso in die falsche Richtung tunen. Ein kleiner Versatz der Nullposition wäre beim Druck egal.
-    nNeededDigitCompensationSteps = (long)(abs(g_nSensibleCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
+    long nNeededDigitCompensationSteps = (long)(fabs(g_nSensibleCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 
@@ -2970,7 +2967,11 @@ void doHeatBedZCompensation( void )
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION
 
     HAL::forbidInterrupts();
+#if FEATURE_DIGIT_Z_COMPENSATION
     Printer::compensatedPositionTargetStepsZ = nNeededZCompensation + nNeededDigitCompensationSteps;
+#else
+    Printer::compensatedPositionTargetStepsZ = nNeededZCompensation;
+#endif // FEATURE_DIGIT_Z_COMPENSATION
     HAL::allowInterrupts();
 
     return;
@@ -5838,17 +5839,6 @@ void loopRF( void )
         }
     }
  
-    if( g_uStartOfIdle )
-    {
-        if( (uTime - g_uStartOfIdle) > MINIMAL_IDLE_TIME )
-        {
-            // show that we are idle for a while already
-            showIdle();
-            g_uStartOfIdle  = 0;
-            g_nPrinterReady = 1;
-        }
-    }
-
 #if FEATURE_CASE_FAN && !CASE_FAN_ALWAYS_ON
     if( Printer::prepareFanOff )
     {
@@ -5864,8 +5854,7 @@ void loopRF( void )
 #if FEATURE_MILLING_MODE
 
     if( Printer::operatingMode == OPERATING_MODE_PRINT )
-    {
-        
+    {        
 #if FEATURE_HEAT_BED_Z_COMPENSATION
         if( g_nHeatBedScanStatus )
         {
@@ -5876,7 +5865,6 @@ void loopRF( void )
             searchZOScan();
         }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
     }
     else
     {
@@ -5985,13 +5973,39 @@ void loopRF( void )
     }
 #endif // FEATURE_PAUSE_PRINTING
 
-
+/* Change: 09_06_2017 Never read straingauge twice in a row: test if this helps avoiding my watchdog problem
+           Thatwhy I bring the statics up and preread the value for both FEATURE_EMERGENCY_PAUSE and FEATURE_EMERGENCY_STOP_ALL */
+#if FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
+    bool i_need_strain_value = 0;
+#endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
 #if FEATURE_EMERGENCY_PAUSE
-
     static unsigned long   g_uLastPressureTime         = 0;
     static long            g_nPressureSum              = 0;
     static char            g_nPressureChecks           = 0;
+    if( (uTime - g_uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
+    {
+        i_need_strain_value = 1;
+    }
+#endif // FEATURE_EMERGENCY_PAUSE
 
+#if FEATURE_EMERGENCY_STOP_ALL
+    static unsigned long   g_uLastZPressureTime        = 0;
+    static long            g_nZPressureSum             = 0;
+    static char            g_nZPressureChecks          = 0;
+    if( (uTime - g_uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
+    {
+        i_need_strain_value = 1;
+    }
+#endif // FEATURE_EMERGENCY_STOP_ALL
+
+#if FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
+    static short pressure = 0;
+    if( i_need_strain_value ){
+        pressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
+    }
+#endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
+
+#if FEATURE_EMERGENCY_PAUSE
     if( g_nEmergencyPauseDigitsMin || g_nEmergencyPauseDigitsMax )
     {
         if( (uTime - g_uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
@@ -6001,7 +6015,7 @@ void loopRF( void )
             if( (g_pauseStatus == PAUSE_STATUS_NONE || g_pauseStatus == PAUSE_STATUS_WAIT_FOR_QUEUE_MOVE) && PrintLine::linesCount > 5 )
             {
                 // this check shall be done only during the printing (for example, it shall not be done in case filament is extruded manually)
-                short pressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
+                //short pressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
                 g_nPressureSum    += pressure;
                 g_nPressureChecks += 1;
                 
@@ -6106,10 +6120,6 @@ void loopRF( void )
                 if( g_nPressureChecks == EMERGENCY_PAUSE_CHECKS )
                 {
                     nPressure        = (short)(g_nPressureSum / g_nPressureChecks);
-
-    //              Com::printF( PSTR( "loopRF(): average = " ), nPressure );
-    //              Com::printFLN( PSTR( " / " ), g_nPressureChecks );
-
                     g_nPressureSum    = 0;
                     g_nPressureChecks = 0;
 
@@ -6146,9 +6156,6 @@ void loopRF( void )
 #endif // FEATURE_EMERGENCY_PAUSE
 
 #if FEATURE_EMERGENCY_STOP_ALL
-    static unsigned long   g_uLastZPressureTime        = 0;
-    static long            g_nZPressureSum             = 0;
-    static char            g_nZPressureChecks          = 0;
     if( (uTime - g_uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
     {
         g_uLastZPressureTime = uTime;
@@ -6156,7 +6163,7 @@ void loopRF( void )
         if( Printer::stepperDirection[Z_AXIS] && !Extruder::current->stepperDirection )
         {
             // this check shall be done only when there is some moving into z-direction in progress and the extruder is not doing anything
-            g_nZPressureSum    += readStrainGauge( ACTIVE_STRAIN_GAUGE );
+            g_nZPressureSum    += pressure; //readStrainGauge( ACTIVE_STRAIN_GAUGE );
             g_nZPressureChecks += 1;
 
             if( g_nZPressureChecks == EMERGENCY_STOP_CHECKS )
@@ -10987,10 +10994,19 @@ void processCommand( GCode* pCommand )
                 act->updateCurrentTemperature();                
                 Com::printFLN( PSTR( "Opt Temp: " ) , act->currentTemperatureC , 2 );           
                 //Com::printFLN( PSTR( "M3941 Ended!" ) );
+                break;
             }
-            break;
 #endif // RESERVE_ANALOG_INPUTS
 
+            case 3949:
+            {
+                uint32_t test = HAL::timeInMilliseconds();
+                for(int i=0; i<100; i++){
+                  readStrainGauge( ACTIVE_STRAIN_GAUGE );
+                }
+                Com::printFLN( PSTR( "TESTTIME: " ) , (uint32_t)(HAL::timeInMilliseconds() - test) );   
+                break;   
+            }
         }       
     }
 
@@ -11047,17 +11063,15 @@ extern void processButton( int nAction )
                 long nTemp = Printer::ZOffset; //um --> mm*1000 
                 nTemp += Z_OFFSET_BUTTON_STEPS;
                 //beim Überschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
-                if(nTemp < Z_OFFSET_BUTTON_STEPS && nTemp > 0) nTemp = 0;                
-                HAL::forbidInterrupts();                            
+                if(nTemp < Z_OFFSET_BUTTON_STEPS && nTemp > 0) nTemp = 0;
                 if( nTemp < -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = -(HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
-                if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);                
+                if( nTemp > (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000) ) nTemp = (HEAT_BED_Z_COMPENSATION_MAX_MM * 1000);
                 Printer::ZOffset = nTemp;
         #if FEATURE_SENSIBLE_PRESSURE
                 g_staticZSteps = long(( (Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
         #else
                 g_staticZSteps = long(( Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
         #endif //FEATURE_SENSIBLE_PRESSURE
-                HAL::allowInterrupts();
                 if( Printer::debugInfo() )
                 {
                     Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
@@ -11090,7 +11104,6 @@ extern void processButton( int nAction )
                 nTemp -= Z_OFFSET_BUTTON_STEPS;
                 //beim Unterschreiten von 0, soll 0 erreicht werden, sodass man nicht mit krummen Zahlen rumhantieren muss.
                 if(nTemp < 0 && nTemp > -Z_OFFSET_BUTTON_STEPS) nTemp = 0;
-                HAL::forbidInterrupts();
         #if FEATURE_SENSIBLE_PRESSURE
                 /* IDEE: Wenn automatisches Offset und wir korrigieren dagegen, soll erst dieses abgebaut werden */
                 if(g_nSensiblePressureOffset > 0){ //aus: dann 0, an: dann > 0
@@ -11114,7 +11127,6 @@ extern void processButton( int nAction )
         #else
                 g_staticZSteps = long(( Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS] ) / 1000);
         #endif //FEATURE_SENSIBLE_PRESSURE
-                HAL::allowInterrupts();
                 if( Printer::debugInfo() )
                 {
                     Com::printF( PSTR( "ModMenue: new static z-offset: " ), Printer::ZOffset );
