@@ -61,10 +61,36 @@ All known arduino boards use 64. This value is needed for the extruder timing. *
 extern  unsigned char   g_bPingWatchdog;
 #endif // FEATURE_WATCHDOG
 
+// #define BEGIN_INTERRUPT_PROTECTED {uint8_t sreg=SREG;__asm volatile( "cli" ::: "memory" );
+// #define END_INTERRUPT_PROTECTED SREG=sreg;}
+// #define ESCAPE_INTERRUPT_PROTECTED SREG=sreg;
 
-#define BEGIN_INTERRUPT_PROTECTED {uint8_t sreg=SREG;__asm volatile( "cli" ::: "memory" );
-#define END_INTERRUPT_PROTECTED SREG=sreg;}
-#define ESCAPE_INTERRUPT_PROTECTED SREG=sreg;
+class InterruptProtectedBlock
+{
+    uint8_t sreg;
+public:
+    inline void protect()
+    {
+        cli();
+    }
+
+    inline void unprotect()
+    {
+        SREG = sreg;
+    }
+
+    inline InterruptProtectedBlock(bool later = false)
+    {
+        sreg = SREG;
+        if(!later)
+            cli();
+    }
+
+    inline ~InterruptProtectedBlock()
+    {
+        SREG = sreg;
+    }
+};
 
 #define EEPROM_OFFSET               0
 #define SECONDS_TO_TICKS(s)         (unsigned long)(s*(float)F_CPU)
@@ -191,6 +217,7 @@ extern RFHardwareSerial RFSerial;
 #define OUT_ERROR_P_LN(p)   {Com::printErrorF(PSTR(p));Com::println();}
 #define OUT(v)              Com::print(v)
 #define OUT_LN              Com::println()
+
 
 
 class HAL
@@ -451,10 +478,11 @@ public:
     static inline void delayMicroseconds(unsigned int delayUs)
     {
 #if FEATURE_WATCHDOG
-        if(delayUs < WATCHDOG_TIMEOUT*1000){
+        if(delayUs < WATCHDOG_TIMEOUT*1000){ 
 #endif // FEATURE_WATCHDOG
             pingWatchdog();
             ::delayMicroseconds(delayUs);
+            //if(delayUs > 100) pingWatchdog(); ? bringts was?
 #if FEATURE_WATCHDOG
         }else{
             // external watchdog
@@ -827,10 +855,11 @@ public:
         startWatchdog();
 
         // force the watchdog to fire
-        HAL::forbidInterrupts();
+        InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
         while( 1 )
         {
         }
+        noInts.unprotect(); //Davor ist ende bin mir aber wegen destruct nicht ganz sicher und optimierungen.
 
     } // testWatchdog
 

@@ -193,7 +193,7 @@ char            g_nSilentMode               = 0;
 #endif // FEATURE_SILENT_MODE
 
 #if FEATURE_SENSIBLE_PRESSURE
-/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
+/* brief: This is for correcting too close Z at first layer, see FEATURE_SENSIBLE_PRESSURE // Idee Wessix, coded by Nibbels  */
 long            g_nSensiblePressureSum      = 0;
 char            g_nSensiblePressureChecks   = 0;
 short           g_nSensiblePressureDigits   = 0;
@@ -204,11 +204,11 @@ char            g_nSensiblePressure1stMarke = 0; //sagt, ob regelung aktiv oder 
 #endif // FEATURE_SENSIBLE_PRESSURE
 
 #if FEATURE_DIGIT_Z_COMPENSATION
-float           g_nSensibleCompensationDigits = 0;
+float           g_nSensibleCompensationDigits = 0.0f;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_EMERGENCY_STOP_ALL
-unsigned long   g_uLastZPressureTime_IgnoreUntil = 0;
+unsigned long   uLastZPressureTime_IgnoreUntil = 0;
 #endif // FEATURE_EMERGENCY_STOP_ALL
 
 #if FEATURE_FIND_Z_ORIGIN
@@ -349,18 +349,23 @@ short readStrainGauge( unsigned char uAddress ) //readStrainGauge dauert etwas u
 
 /* brief: This is for correcting sinking hotends at high digit values because of DMS-Sensor by Nibbels  */
 #if FEATURE_DIGIT_Z_COMPENSATION
-    static long g_nSensibleCompensationSum    = 0;
-    static char g_nSensibleCompensationChecks = 0;
+    static long nSensibleCompensationSum    = 0;
+    static char nSensibleCompensationChecks = 0;
     if(Printer::doHeatBedZCompensation){ 
         //wenn ein retract stattfindet und das nicht echtzeit-schnell funktioniert, könnte es leichte probleme geben, aber prinzipiell wäre dann der Einfluss nicht so schädlich, wie ständig die digitabsenkung zu ignorieren.
-        g_nSensibleCompensationSum     += Result;
-        g_nSensibleCompensationChecks  += 1;
-        if( g_nSensibleCompensationChecks == 4 ){
-            g_nSensibleCompensationDigits = (float)(g_nSensibleCompensationSum >> 2); //*0.25
-            g_nSensibleCompensationSum = (g_nSensibleCompensationSum >> 1) + (g_nSensibleCompensationSum >> 2); //*0.75
-            g_nSensibleCompensationChecks = 3; //*=0.75 bei 4 ist 3
+        //das folgende sammelt immer 4 messwerte, schreibt den mittelwert raus und minimiert sammelwert und zähler auf 75%, dann den vierten wert neu in den topf..
+        nSensibleCompensationSum     += Result;
+        nSensibleCompensationChecks  += 1;
+        if( nSensibleCompensationChecks == 4 ){
+            InterruptProtectedBlock noInts;
+            g_nSensibleCompensationDigits = (float)(nSensibleCompensationSum / 4); //*0.25, nachkommsstellen sind egal.
+            noInts.unprotect();
+            nSensibleCompensationSum = (long)g_nSensibleCompensationDigits * 3; //(nSensibleCompensationSum >> 1) + (nSensibleCompensationSum >> 2);--> sign-extension?? //nSensibleCompensationSum*0.75 
+            nSensibleCompensationChecks -= 1; //*=0.75 bei 4 ist 3
         }else{
-            g_nSensibleCompensationDigits = (float)(Result); //startwert / failwert
+            InterruptProtectedBlock noInts;
+            g_nSensibleCompensationDigits = (float)Result; //startwert / failwert
+            noInts.unprotect();
         }
     }
 #endif // FEATURE_DIGIT_Z_COMPENSATION
@@ -2812,7 +2817,7 @@ void doHeatBedZCompensation( void )
         return;
     }
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     nCurrentPositionSteps[X_AXIS] = Printer::queuePositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] = Printer::queuePositionCurrentSteps[Y_AXIS];
     nCurrentPositionSteps[Z_AXIS] = Printer::queuePositionCurrentSteps[Z_AXIS];
@@ -2822,8 +2827,7 @@ void doHeatBedZCompensation( void )
     nCurrentPositionSteps[Y_AXIS] += Printer::directPositionCurrentSteps[Y_AXIS];
     nCurrentPositionSteps[Z_AXIS] += Printer::directPositionCurrentSteps[Z_AXIS];
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 #if DEBUG_HEAT_BED_Z_COMPENSATION
     g_nLastZCompensationPositionSteps[X_AXIS] = nCurrentPositionSteps[X_AXIS];
@@ -2932,16 +2936,21 @@ void doHeatBedZCompensation( void )
         // Das Verhalten ist ziemlich bescheuert, der soll wen möglich immer, wenn Z-Compensation Aktiv ist auf mindestens den höchsten Punkt der Z-Matrix anheben, weil er sonst gegen das Bett crashen könnte.
         // after the first layers, only the static offset to the surface must be compensated
         //Dann evtl. lieber über dem Zenit bleiben + kleines Offset?? 29.05.2017
-        nNeededZCompensation = g_offsetZCompensationSteps + g_staticZSteps + (long)(0.01 * Printer::axisStepsPerMM[Z_AXIS]);
+        nNeededZCompensation = g_offsetZCompensationSteps + g_staticZSteps + (long)(0.1 * Printer::axisStepsPerMM[Z_AXIS]);
     }
 
 #if FEATURE_DIGIT_Z_COMPENSATION
-    //Etwa 5500 digits verursachen 0.055 mm tiefere nozzle: ca. 0.00001 = 1/100.000 mm pro digit.
+    //Etwa 5500 digits verursachen 0.05 mm tiefere nozzle: ca. 0.00001 = 1/100.000 mm pro digit.
     //0.00001 ist vermutlich konservativ bis ok.
     //Je höher die Kraft nach unten, desto mehr muss das Bett ausweichen: Z nach oben/+.
     
     //VORSICHT: Die Messzellen könnten falsch verbaut sein, darum Digits immer positiv nutzen. Negative Digits würden sowieso in die falsche Richtung tunen. Ein kleiner Versatz der Nullposition wäre beim Druck egal.
-    long nNeededDigitCompensationSteps = (long)(fabs(g_nSensibleCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
+    //long nNeededDigitCompensationSteps = (long)(fabs(g_nSensibleCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
+    long nNeededDigitCompensationSteps = abs((long)(g_nSensibleCompensationDigits * (float)Printer::axisStepsPerMM[Z_AXIS])); 
+    nNeededDigitCompensationSteps >>= 17; // geteilt durch 131072 statt errechnet ca. 110000 .. wäre 18% überkompensiert aber verdammt schnell gerechnet. evtl. ist überkompensation nicht so schlecht... höhere digits höhere schwankungen, das ist sowieso nur eine ganz grob vermessene kompensation, etwas mehr platz kann für die digits eine dämpfende wirkung haben.
+    //sign-extension kann hier, da positiv kein problem sein.: unsigned(x) >> y
+    //g_nSensibleCompensationDigits -> max. 32768, axisStepsPerMM[Z_AXIS] -> ca. 2560, also passts in long. -> ca. max 640 steps.
+    nNeededDigitCompensationSteps = constrain(nNeededDigitCompensationSteps, 0, 600);
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 
@@ -2966,13 +2975,13 @@ void doHeatBedZCompensation( void )
     }
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION
 
-    HAL::forbidInterrupts();
+    noInts.protect(); //HAL::forbidInterrupts();
 #if FEATURE_DIGIT_Z_COMPENSATION
     Printer::compensatedPositionTargetStepsZ = nNeededZCompensation + nNeededDigitCompensationSteps;
 #else
     Printer::compensatedPositionTargetStepsZ = nNeededZCompensation;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
     return;
 
@@ -3008,7 +3017,7 @@ long getHeatBedOffset( void )
         return 0; //vermerk Nibbels: Beim HBS -> adjustCompensationMatrix -> short  deltaZ  = nZ - nOffset; -> mit offset ist das verfälscht!! --> return 0
     }
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     nCurrentPositionSteps[X_AXIS] = Printer::queuePositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] = Printer::queuePositionCurrentSteps[Y_AXIS];
 
@@ -3016,7 +3025,7 @@ long getHeatBedOffset( void )
     nCurrentPositionSteps[X_AXIS] += Printer::directPositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] += Printer::directPositionCurrentSteps[Y_AXIS];
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
     // find the rectangle which covers the current position of the extruder
     nXLeftIndex = 1;
@@ -4021,7 +4030,7 @@ void doWorkPartZCompensation( void )
         return;
     }
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     nCurrentPositionSteps[X_AXIS] = Printer::queuePositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] = Printer::queuePositionCurrentSteps[Y_AXIS];
     nCurrentPositionSteps[Z_AXIS] = Printer::queuePositionCurrentSteps[Z_AXIS];
@@ -4030,7 +4039,7 @@ void doWorkPartZCompensation( void )
     nCurrentPositionSteps[X_AXIS] += Printer::directPositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] += Printer::directPositionCurrentSteps[Y_AXIS];
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 #if DEBUG_WORK_PART_Z_COMPENSATION
     g_nLastZCompensationPositionSteps[X_AXIS] = nCurrentPositionSteps[X_AXIS];
@@ -4138,9 +4147,9 @@ void doWorkPartZCompensation( void )
     }
 #endif // DEBUG_WORK_PART_Z_COMPENSATION
 
-    HAL::forbidInterrupts();
+    noInts.protect(); //HAL::forbidInterrupts();
     Printer::compensatedPositionTargetStepsZ = nNeededZCompensation;
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
     return;
 
@@ -4175,7 +4184,7 @@ long getWorkPartOffset( void )
         return 0;
     }
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     nCurrentPositionSteps[X_AXIS] = Printer::queuePositionCurrentSteps[X_AXIS] + Printer::directPositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] = Printer::queuePositionCurrentSteps[Y_AXIS] + Printer::directPositionCurrentSteps[Y_AXIS];
 
@@ -4183,7 +4192,7 @@ long getWorkPartOffset( void )
     nCurrentPositionSteps[X_AXIS] += Printer::directPositionCurrentSteps[X_AXIS];
     nCurrentPositionSteps[Y_AXIS] += Printer::directPositionCurrentSteps[Y_AXIS];
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
     // find the rectangle which covers the current position of the miller
     nXLeftIndex = 1;
@@ -5979,20 +5988,20 @@ void loopRF( void )
     bool i_need_strain_value = 0;
 #endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
 #if FEATURE_EMERGENCY_PAUSE
-    static unsigned long   g_uLastPressureTime         = 0;
-    static long            g_nPressureSum              = 0;
-    static char            g_nPressureChecks           = 0;
-    if( (uTime - g_uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
+    static unsigned long   uLastPressureTime         = 0;
+    static long            nPressureSum              = 0;
+    static char            nPressureChecks           = 0;
+    if( (uTime - uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
     {
         i_need_strain_value = 1;
     }
 #endif // FEATURE_EMERGENCY_PAUSE
 
 #if FEATURE_EMERGENCY_STOP_ALL
-    static unsigned long   g_uLastZPressureTime        = 0;
-    static long            g_nZPressureSum             = 0;
-    static char            g_nZPressureChecks          = 0;
-    if( (uTime - g_uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
+    static unsigned long   uLastZPressureTime        = 0;
+    static long            nZPressureSum             = 0;
+    static char            nZPressureChecks          = 0;
+    if( (uTime - uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
     {
         i_need_strain_value = 1;
     }
@@ -6008,18 +6017,18 @@ void loopRF( void )
 #if FEATURE_EMERGENCY_PAUSE
     if( g_nEmergencyPauseDigitsMin || g_nEmergencyPauseDigitsMax )
     {
-        if( (uTime - g_uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
+        if( (uTime - uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
         {
-            g_uLastPressureTime = uTime;
+            uLastPressureTime = uTime;
 
             if( (g_pauseStatus == PAUSE_STATUS_NONE || g_pauseStatus == PAUSE_STATUS_WAIT_FOR_QUEUE_MOVE) && PrintLine::linesCount > 5 )
             {
                 // this check shall be done only during the printing (for example, it shall not be done in case filament is extruded manually)
                 //short pressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
-                g_nPressureSum    += pressure;
-                g_nPressureChecks += 1;
+                nPressureSum    += pressure;
+                nPressureChecks += 1;
                 
-/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
+/* brief: This is for correcting too close Z at first layer // Idee Wessix, coded by Nibbels  */
 #if FEATURE_SENSIBLE_PRESSURE
 
                 //check: "only at printing" -> here the condition is already valid
@@ -6034,8 +6043,8 @@ void loopRF( void )
                         //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
                         g_nSensiblePressureSum += pressure;
                         g_nSensiblePressureChecks += 1;
-                        //jede 1 sekunden, bzw 0.5sekunden. => 100ms * SENSIBLE_PRESSURE_DIGIT_CHECKS ::
-                        if( g_nSensiblePressureChecks >= SENSIBLE_PRESSURE_DIGIT_CHECKS ){ 
+                        //jede 1 sekunden, bzw 0.5sekunden. => 100ms * 10 ::
+                        if( g_nSensiblePressureChecks >= 10 ){ 
                             
                             nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
                             
@@ -6117,11 +6126,11 @@ void loopRF( void )
                 }
 #endif // FEATURE_SENSIBLE_PRESSURE
                 
-                if( g_nPressureChecks == EMERGENCY_PAUSE_CHECKS )
+                if( nPressureChecks == EMERGENCY_PAUSE_CHECKS )
                 {
-                    nPressure        = (short)(g_nPressureSum / g_nPressureChecks);
-                    g_nPressureSum    = 0;
-                    g_nPressureChecks = 0;
+                    nPressure        = (short)(nPressureSum / nPressureChecks);
+                    nPressureSum    = 0;
+                    nPressureChecks = 0;
 
                     if( (nPressure < g_nEmergencyPauseDigitsMin) ||
                         (nPressure > g_nEmergencyPauseDigitsMax) )
@@ -6140,8 +6149,8 @@ void loopRF( void )
             }
             else
             {
-                g_nPressureSum    = 0;
-                g_nPressureChecks = 0;
+                nPressureSum    = 0;
+                nPressureChecks = 0;
                 
 #if FEATURE_SENSIBLE_PRESSURE               
                 //if not printing:
@@ -6156,24 +6165,24 @@ void loopRF( void )
 #endif // FEATURE_EMERGENCY_PAUSE
 
 #if FEATURE_EMERGENCY_STOP_ALL
-    if( (uTime - g_uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
+    if( (uTime - uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
     {
-        g_uLastZPressureTime = uTime;
+        uLastZPressureTime = uTime;
 
         if( Printer::stepperDirection[Z_AXIS] && !Extruder::current->stepperDirection )
         {
             // this check shall be done only when there is some moving into z-direction in progress and the extruder is not doing anything
-            g_nZPressureSum    += pressure; //readStrainGauge( ACTIVE_STRAIN_GAUGE );
-            g_nZPressureChecks += 1;
+            nZPressureSum    += pressure; //readStrainGauge( ACTIVE_STRAIN_GAUGE );
+            nZPressureChecks += 1;
 
-            if( g_nZPressureChecks == EMERGENCY_STOP_CHECKS )
+            if( nZPressureChecks == EMERGENCY_STOP_CHECKS )
             {
-                nPressure        = (short)(g_nZPressureSum / g_nZPressureChecks);
+                nPressure        = (short)(nZPressureSum / nZPressureChecks);
 
-                g_nZPressureSum    = 0;
-                g_nZPressureChecks = 0;
+                nZPressureSum    = 0;
+                nZPressureChecks = 0;
                 
-                if(g_uLastZPressureTime_IgnoreUntil < uTime){
+                if(uLastZPressureTime_IgnoreUntil < uTime){
                     if( (nPressure < EMERGENCY_STOP_DIGITS_MIN) ||
                         (nPressure > EMERGENCY_STOP_DIGITS_MAX) )
                     {
@@ -6182,7 +6191,7 @@ void loopRF( void )
                     }
                 }else{
                     //Manchmal ist es bescheuert, wenn man das 5000er Limit hat. OutputObject z.B. bei einem Druck der mit kleiner Nozzle und Digits ~ 5000...9000
-                    //  g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds() + 1000; setzt diese scharfe prüfung z.b. für 1s ausser kraft und lässt mehr zu.
+                    //  uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds() + 1000; setzt diese scharfe prüfung z.b. für 1s ausser kraft und lässt mehr zu.
                     //Das ist besser als Nutzer, die das Limit über die Config voll aushebeln.
                     if( (nPressure < EMERGENCY_PAUSE_DIGITS_MIN) ||
                         (nPressure > EMERGENCY_PAUSE_DIGITS_MAX) )
@@ -6196,8 +6205,8 @@ void loopRF( void )
         }
         else
         {
-            g_nZPressureSum    = 0;
-            g_nZPressureChecks = 0;
+            nZPressureSum    = 0;
+            nZPressureChecks = 0;
         }
     }
 #endif // FEATURE_EMERGENCY_STOP_ALL
@@ -6237,7 +6246,7 @@ void loopRF( void )
         }
     }
 
-    if( g_uBlockSDCommands> 1 )
+    if( g_uBlockSDCommands > 1 )
     {
         if( (uTime - g_uBlockSDCommands) > COMMAND_BLOCK_DELAY )
         {
@@ -6870,7 +6879,7 @@ void outputObject( void )
 
     Commands::printCurrentPosition();
 
-    g_uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+10000L;
+    uLastZPressureTime_IgnoreUntil = HAL::timeInMilliseconds()+10000L;
     
 #if FEATURE_MILLING_MODE
     if( Printer::operatingMode == OPERATING_MODE_MILL )
@@ -6911,7 +6920,7 @@ void outputObject( void )
 
     Commands::waitUntilEndOfAllMoves();
     
-    g_uLastZPressureTime_IgnoreUntil = 0;
+    uLastZPressureTime_IgnoreUntil = 0;
     
     Commands::printCurrentPosition();
     
@@ -7056,13 +7065,13 @@ void pausePrint( void )
     if( g_pauseMode == PAUSE_MODE_PAUSED )
     {
         // in case the print is paused already, we move the printer head to the pause position
-        HAL::forbidInterrupts();
+        InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
         g_pauseMode   = PAUSE_MODE_PAUSED_AND_MOVED;
         g_pauseStatus = PAUSE_STATUS_PREPARE_PAUSE_2;
 
         determinePausePosition();
         PrintLine::prepareDirectMove();
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
 
         UI_STATUS( UI_TEXT_PAUSING );
 
@@ -7171,7 +7180,7 @@ void continuePrint( void )
             }
 #endif // EXTRUDER_CURRENT_PAUSE_DELAY
 
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             if( nPrinting )
             {
                 if( g_nContinueSteps[X_AXIS] )      Printer::directPositionTargetSteps[X_AXIS] += g_nContinueSteps[X_AXIS];
@@ -7186,7 +7195,7 @@ void continuePrint( void )
                 if( g_nContinueSteps[Y_AXIS] )      Printer::directPositionTargetSteps[Y_AXIS] += g_nContinueSteps[Y_AXIS];
             }
             PrintLine::prepareDirectMove();
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
 
             // wait until the continue position has been reached
             if( Printer::debugInfo() )
@@ -7246,10 +7255,10 @@ void continuePrint( void )
                 #endif // FEATURE_SILENT_MODE
 #endif // EXTRUDER_CURRENT_PAUSE_DELAY
 
-                HAL::forbidInterrupts();
+                InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
                 if( g_nContinueSteps[E_AXIS] )  Printer::directPositionTargetSteps[E_AXIS] += g_nContinueSteps[E_AXIS];
                 PrintLine::prepareDirectMove();
-                HAL::allowInterrupts();
+                noInts.unprotect(); //HAL::allowInterrupts();
 
                 // wait until the continue position has been reached
                 if( Printer::debugInfo() )
@@ -7552,7 +7561,7 @@ void setExtruderCurrent( unsigned short level )
 
     if( Printer::debugInfo() )
     {
-        Com::printFLN( PSTR( "setExtruderCurrent(): new extruder current level: " ), (int32_t)level );
+        Com::printFLN( PSTR( "setExtruderCurrent(): new extruder current level: " ), (uint32_t)level );
     }
     return;
 
@@ -10997,16 +11006,6 @@ void processCommand( GCode* pCommand )
                 break;
             }
 #endif // RESERVE_ANALOG_INPUTS
-
-            case 3949:
-            {
-                uint32_t test = HAL::timeInMilliseconds();
-                for(int i=0; i<100; i++){
-                  readStrainGauge( ACTIVE_STRAIN_GAUGE );
-                }
-                Com::printFLN( PSTR( "TESTTIME: " ) , (uint32_t)(HAL::timeInMilliseconds() - test) );   
-                break;   
-            }
         }       
     }
 
@@ -11182,10 +11181,10 @@ extern void processButton( int nAction )
                         Com::printF( PSTR( "processButton(): extruder output: " ), (int)g_nManualSteps[E_AXIS] );
                         Com::printFLN( PSTR( " [steps]" ) );
                     }
-                    HAL::forbidInterrupts();
+                    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
                     Extruder::enable();
                     Printer::directPositionTargetSteps[E_AXIS] += g_nManualSteps[E_AXIS];
-                    HAL::allowInterrupts();
+                    noInts.unprotect(); //HAL::allowInterrupts();
 
                     if( Printer::debugInfo() )
                     {
@@ -11234,10 +11233,10 @@ extern void processButton( int nAction )
                         Com::printFLN( PSTR( " [steps]" ) );
                     }
 
-                    HAL::forbidInterrupts();
+                    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
                     Extruder::enable();
                     Printer::directPositionTargetSteps[E_AXIS] -= g_nManualSteps[E_AXIS];
-                    HAL::allowInterrupts();
+                    noInts.unprotect(); //HAL::allowInterrupts();
 
                     if( Printer::debugInfo() )
                     {
@@ -11421,11 +11420,11 @@ void nextPreviousXAction( int8_t increment )
 
             steps = g_nManualSteps[X_AXIS] * increment;
 
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             Temp =  Printer::directPositionTargetSteps[X_AXIS] + steps;
             Temp += Printer::queuePositionCurrentSteps[X_AXIS];
 
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
             if( increment < 0 && Temp < 0 )
             {
                 // do not allow to drive the head against the left border
@@ -11442,13 +11441,13 @@ void nextPreviousXAction( int8_t increment )
                 Printer::unsetAllSteppersDisabled();
                 Printer::enableXStepper();
 
-                HAL::forbidInterrupts();
+                noInts.protect(); //HAL::forbidInterrupts();
                 Printer::directPositionTargetSteps[X_AXIS] += steps;
                 /*if( Printer::directPositionTargetSteps[Z_AXIS] < EXTENDED_BUTTONS_Z_MIN )
                 {
                     Printer::directPositionTargetSteps[Z_AXIS] = EXTENDED_BUTTONS_Z_MIN;
                 }*/
-                HAL::allowInterrupts();
+                noInts.unprotect(); //HAL::allowInterrupts();
 
                 if( Printer::debugInfo() )
                 {
@@ -11472,14 +11471,14 @@ void nextPreviousXAction( int8_t increment )
             if( increment < 0 ) steps = -(long)((Printer::lengthMM[X_AXIS] + 5) * Printer::axisStepsPerMM[X_AXIS]);
             else                steps =  (long)((Printer::lengthMM[X_AXIS] + 5) * Printer::axisStepsPerMM[X_AXIS]);
 
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             Printer::directPositionTargetSteps[X_AXIS] = Printer::directPositionCurrentSteps[X_AXIS] + steps;
             Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS];
             Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 
             PrintLine::prepareDirectMove();
             PrintLine::direct.task = TASK_MOVE_FROM_BUTTON;
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
             break;
         }
         case MOVE_MODE_1_MM:
@@ -11578,11 +11577,11 @@ void nextPreviousYAction( int8_t increment )
 
             steps = g_nManualSteps[Y_AXIS] * increment;
 
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             Temp =  Printer::directPositionTargetSteps[Y_AXIS] + steps;
             Temp += Printer::queuePositionCurrentSteps[Y_AXIS];
 
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
             if( increment < 0 && Temp < 0 )
             {
                 // do not allow to drive the bed against the back border
@@ -11599,13 +11598,13 @@ void nextPreviousYAction( int8_t increment )
                 Printer::unsetAllSteppersDisabled();
                 Printer::enableYStepper();
 
-                HAL::forbidInterrupts();
+                noInts.protect(); //HAL::forbidInterrupts();
                 Printer::directPositionTargetSteps[Y_AXIS] += steps;
                 /*if( Printer::directPositionTargetSteps[Z_AXIS] < EXTENDED_BUTTONS_Z_MIN )
                 {
                     Printer::directPositionTargetSteps[Z_AXIS] = EXTENDED_BUTTONS_Z_MIN;
                 }*/
-                HAL::allowInterrupts();
+                noInts.unprotect(); //HAL::allowInterrupts();
 
                 if( Printer::debugInfo() )
                 {
@@ -11629,14 +11628,14 @@ void nextPreviousYAction( int8_t increment )
             if( increment < 0 ) steps = -(long)((Printer::lengthMM[Y_AXIS] + 5) * Printer::axisStepsPerMM[Y_AXIS]);
             else                steps =  (long)((Printer::lengthMM[Y_AXIS] + 5) * Printer::axisStepsPerMM[Y_AXIS]);
 
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             Printer::directPositionTargetSteps[X_AXIS] = Printer::directPositionCurrentSteps[X_AXIS];
             Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS] + steps;
             Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS];
 
             PrintLine::prepareDirectMove();
             PrintLine::direct.task = TASK_MOVE_FROM_BUTTON;
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
             break;
         }
         case MOVE_MODE_1_MM:
@@ -11773,7 +11772,7 @@ void nextPreviousZAction( int8_t increment )
             steps = g_nManualSteps[Z_AXIS] * increment;
 
 #if FEATURE_ENABLE_Z_SAFETY
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             Temp =  Printer::directPositionTargetSteps[Z_AXIS] + steps;
             Temp += Printer::queuePositionCurrentSteps[Z_AXIS];
 
@@ -11781,7 +11780,7 @@ void nextPreviousZAction( int8_t increment )
             Temp += Printer::compensatedPositionCurrentStepsZ;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
             if( increment < 0 && Temp < -Z_OVERRIDE_MAX && Printer::isZMinEndstopHit() )
             {
                 // do not allow to drive the bed into the extruder
@@ -11795,7 +11794,7 @@ void nextPreviousZAction( int8_t increment )
                 Printer::unsetAllSteppersDisabled();
                 Printer::enableZStepper();
 
-                HAL::forbidInterrupts();
+                noInts.protect(); //HAL::forbidInterrupts();
                 Printer::directPositionTargetSteps[Z_AXIS] += steps;
                 
                 //Nibbels: Diese Eingrenzung scheint mir völlig sinnlos und fehl am Platz:
@@ -11821,7 +11820,7 @@ void nextPreviousZAction( int8_t increment )
                     }
                     showError( (void*)ui_text_z_axis, (void*)ui_text_max_reached );
                 }*/
-                HAL::allowInterrupts();
+                noInts.unprotect(); //HAL::allowInterrupts();
 
                 if( Printer::debugInfo() )
                 {
@@ -11857,14 +11856,14 @@ void nextPreviousZAction( int8_t increment )
             if( increment < 0 ) steps = -(long)((Printer::lengthMM[Z_AXIS] + 5) * Printer::axisStepsPerMM[Z_AXIS]);
             else                steps =  (long)((Printer::lengthMM[Z_AXIS] + 5) * Printer::axisStepsPerMM[Z_AXIS]);
 
-            HAL::forbidInterrupts();
+            InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
             Printer::directPositionTargetSteps[X_AXIS] = Printer::directPositionCurrentSteps[X_AXIS];
             Printer::directPositionTargetSteps[Y_AXIS] = Printer::directPositionCurrentSteps[Y_AXIS];
             Printer::directPositionTargetSteps[Z_AXIS] = Printer::directPositionCurrentSteps[Z_AXIS] + steps;
 
             PrintLine::prepareDirectMove();
             PrintLine::direct.task = TASK_MOVE_FROM_BUTTON;
-            HAL::allowInterrupts();
+            noInts.unprotect(); //HAL::allowInterrupts();
             break;
         }
         case MOVE_MODE_1_MM:
@@ -11976,7 +11975,7 @@ void drv8711Transmit( unsigned short command )
 
 
     // transfer the command (= direction, address and data)
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     for( i=15; i>=0; i-- )
     {
         WRITE( DRV_SDATI, command & (0x01 << i));
@@ -11985,7 +11984,7 @@ void drv8711Transmit( unsigned short command )
         HAL::delayMicroseconds( 5 );
         WRITE( DRV_SCLK, 0 );
     }
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 } // drv8711Transmit
 
@@ -12004,7 +12003,7 @@ unsigned short drv8711Receive( unsigned char address )
     acknowledge |= 0x8000;
 
     // transfer the read request plus the register address (4 bits)
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     for( i=15; i>=12; i-- )
     {
         WRITE( DRV_SDATI, acknowledge & (0x01 << i));
@@ -12026,7 +12025,7 @@ unsigned short drv8711Receive( unsigned char address )
         WRITE( DRV_SCLK, 0 );
         HAL::delayMicroseconds( 25 );
     }
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
     return acknowledge;
 
@@ -12237,7 +12236,7 @@ void motorCurrentControlInit( void )
 
 void cleanupXPositions( void )
 {
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
     Printer::queuePositionCurrentSteps[X_AXIS] =
     Printer::queuePositionLastSteps[X_AXIS]    =
@@ -12258,14 +12257,14 @@ void cleanupXPositions( void )
     g_pauseBeepDone          = 0;
 #endif // FEATURE_PAUSE_PRINTING
 
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 } // cleanupXPositions
 
 
 void cleanupYPositions( void )
 {
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
     Printer::queuePositionCurrentSteps[Y_AXIS] =
     Printer::queuePositionLastSteps[Y_AXIS]    =
@@ -12286,7 +12285,7 @@ void cleanupYPositions( void )
     g_pauseBeepDone          = 0;
 #endif // FEATURE_PAUSE_PRINTING
 
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 } // cleanupYPositions
 
@@ -12295,7 +12294,7 @@ void cleanupZPositions( void )
 {
     //Com::printFLN( PSTR( "cleanupZPositions()" ) );
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
     Printer::doHeatBedZCompensation = 0;
@@ -12343,14 +12342,14 @@ void cleanupZPositions( void )
     g_pauseBeepDone          = 0;
 #endif // FEATURE_PAUSE_PRINTING
 
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 } // cleanupZPositions
 
 
 void cleanupEPositions( void )
 {
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
 #if FEATURE_EXTENDED_BUTTONS
     Printer::directPositionTargetSteps[E_AXIS]  =
@@ -12365,7 +12364,7 @@ void cleanupEPositions( void )
     g_pauseBeepDone          = 0;
 #endif // FEATURE_PAUSE_PRINTING
 
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
 } // cleanupEPositions
 
@@ -13700,7 +13699,7 @@ void resetZCompensation( void )
 {
     if(g_ZOSScanStatus == 0) Com::printFLN( PSTR( "resetZCompensation()" ) ); //nur melden, wenn es ausserhalb dem scan stattfindet.
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
     // disable and reset the z-compensation
 
@@ -13719,7 +13718,7 @@ void resetZCompensation( void )
     Printer::endZCompensationStep             = 0;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
     return;
 
 } // resetZCompensation
@@ -14373,7 +14372,7 @@ void doEmergencyStop( char reason )
         Com::printFLN( PSTR( " (Z-Block)" ) );
     }
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     moveZ( int(Printer::axisStepsPerMM[Z_AXIS] *5) );
 
     // block any further movement
@@ -14382,7 +14381,7 @@ void doEmergencyStop( char reason )
     Printer::stepperDirection[Y_AXIS] = 0;
     Printer::stepperDirection[Z_AXIS] = 0;
     //Printer::stepperDirection[E_AXIS] = 0; //No: this was out of bounds :) Nibbels
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 
     // we are not going to perform any further operations until the restart of the firmware
     if( sd.sdmode )

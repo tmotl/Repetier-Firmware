@@ -180,7 +180,7 @@ void SDCard::abortPrint()
 
     HAL::delayMilliseconds( 250 );
 
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
     sdmode   = false;
     sdpos    = 0;
@@ -221,7 +221,7 @@ void SDCard::abortPrint()
     g_debugCounter[2] = 0;
     g_debugCounter[3] = 0;
     g_debugCounter[4] = 0;
-*/  HAL::allowInterrupts();
+*/  noInts.unprotect(); //HAL::allowInterrupts();
 
     BEEP_ABORT_PRINTING
 
@@ -229,7 +229,7 @@ void SDCard::abortPrint()
     if( g_pauseStatus != PAUSE_STATUS_NONE )
     {
         // the printing is paused at the moment
-        HAL::forbidInterrupts();
+        noInts.protect(); //HAL::forbidInterrupts();
 
         g_uPauseTime  = 0;
         g_pauseStatus = PAUSE_STATUS_NONE;
@@ -240,7 +240,7 @@ void SDCard::abortPrint()
         g_nContinueSteps[Z_AXIS] = 0;
         g_nContinueSteps[E_AXIS] = 0;
 
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
     }
 #endif // FEATURE_PAUSE_PRINTING
 

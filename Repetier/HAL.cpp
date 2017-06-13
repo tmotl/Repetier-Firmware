@@ -358,13 +358,13 @@ void HAL::showStartReason()
 int HAL::getFreeRam()
 {
     int freeram = 0;
-    BEGIN_INTERRUPT_PROTECTED
+    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
     uint8_t * heapptr, * stackptr;
     heapptr = (uint8_t *)malloc(4);         // get heap pointer
     free(heapptr);                          // free up the memory again (sets heapptr to 0)
     stackptr =  (uint8_t *)(SP);            // save value of stack pointer
     freeram = (int)stackptr-(int)heapptr;
-    END_INTERRUPT_PROTECTED
+    //END_INTERRUPT_PROTECTED
     return freeram;
 
 } // getFreeRam
@@ -767,10 +767,14 @@ long __attribute__((used)) stepperWait  = 0;
 ISR(TIMER1_COMPA_vect)
 {
 #if FEATURE_WATCHDOG
+    //unsigned long start = HAL::timeInMilliseconds();
+    //bool pinged = false;
+
     if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
     {
         // ping the watchdog only in case the mainloop is still being called
         HAL::pingWatchdog();
+        //pinged = true; //allow reping
     }
 #endif // FEATURE_WATCHDOG
 
@@ -810,12 +814,23 @@ ISR(TIMER1_COMPA_vect)
     Printer::performZCompensation();
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
+//gemessen bis return: max 26ms. watchdog bei ~25ms .. blöd evtl. darum nachpingen? bringts was?
+    /*if(pinged && HAL::timeInMilliseconds() - start > 1){
+        HAL::pingWatchdog();
+        start = HAL::timeInMilliseconds();
+    }*/
+
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
     if( Printer::allowDirectSteps() )
     {
         PrintLine::performDirectSteps();
     }
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
+
+//gemessen bis return: max 26ms. watchdog bei 25ms .. blöd evtl. darum nachpingen? bringts was?
+   /* if(pinged && HAL::timeInMilliseconds() - start > 1){
+        HAL::pingWatchdog();
+    }*/
 
     if(Printer::allowQueueMove())
     {
@@ -830,7 +845,7 @@ ISR(TIMER1_COMPA_vect)
     if(Printer::allowDirectMove())
     {
         setTimer(PrintLine::performDirectMove());
-        
+
         DEBUG_MEMORY;
         insideTimer1 = 0;
         return;
@@ -1047,7 +1062,7 @@ ISR(PWM_TIMER_VECTOR)
 
     static unsigned int counterPeriodical = 0;
     counterPeriodical++; // Approximate a 100ms timer
-    if(counterPeriodical>=(int)(F_CPU/40960)) //Nibbels: gibt 390,625 ?? -> https://github.com/repetier/Repetier-Firmware/blob/development/src/ArduinoAVR/Repetier/HAL.cpp#L810 3906 times per second.
+    if(counterPeriodical >= 390) //  (int)(F_CPU/40960)) //Nibbels: gibt 390,625 ?? -> https://github.com/repetier/Repetier-Firmware/blob/development/src/ArduinoAVR/Repetier/HAL.cpp#L810 3906 times per second.
     {
         counterPeriodical=0;
         executePeriodical=1;
@@ -1121,7 +1136,6 @@ ISR(PWM_TIMER_VECTOR)
 
     pwm_count_cooler += COOLER_PWM_STEP;
     pwm_count_heater += HEATER_PWM_STEP;
-
     (void)pwm_cooler_pos_set;
 } // ISR(PWM_TIMER_VECTOR)
 

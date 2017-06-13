@@ -1782,6 +1782,16 @@ void Printer::performZCompensation( void )
         }
     }
 
+/* 17_06_12 könnte das folgende hier fehlen? siehe bug mit dem verzählen. ... test irgendwann später mal.
+    if( PrintLine::direct )
+    {
+        if( PrintLine::direct->isZMove() )
+        {
+            // do not peform any compensation while there is a direct-move into z-direction
+            return;
+        }
+    }*/
+
     if( endZCompensationStep )
     {
 #if STEPPER_HIGH_DELAY>0

@@ -81,6 +81,8 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 
 /** \brief Allows to pause the processing of G-Codes */
 #define FEATURE_PAUSE_PRINTING              1                                                   // 1 = on, 0 = off
+   /** \brief The Firmwares E-Retract within PAUSE */
+   #define Z_PAUSE_RETRACT_MM               1
 
 /** \brief Enables/diables the emergency pause in case of too high pressure ... the emergency pause can be turned on only in case the general pause functionality is available */
 #if FEATURE_PAUSE_PRINTING
@@ -100,28 +102,24 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 /** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
 #if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 // 1 = on, 0 = off
-#define FEATURE_SENSIBLE_PRESSURE       1
-// Max lift in [um]; Standard: 150um=0,15mm, darf nie 0 sein!! größer 0.2 macht normal keinen Sinn.
+
+/** \brief Specifies if you want to see the pressure digits within the repetier-server/repetier-host temperature message */
 #define FEATURE_PRINT_PRESSURE          1
-                                                    
+                                           
+#define FEATURE_SENSIBLE_PRESSURE       1     
 #if FEATURE_SENSIBLE_PRESSURE
-    #define SENSIBLE_PRESSURE_DIGIT_CHECKS              10                                      // MAximal auf 127 stellen, denn das wird mit char verglichen!!
-    //nachfolgend soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
+    // mittels SENSIBLE_PRESSURE soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
+    // Max lift in [um]; Standard: 180um=0,18mm, darf nie 0 sein!! größer 0.2 macht normalerweise keinen Sinn.
+    // Läuft dieser Wert ins Limit ist die Düse nicht in Ordnung, die Digit-Begrenzung zu niedrig oder das Z-Offset falsch justiert.
     #define SENSIBLE_PRESSURE_MAX_OFFSET                180     
 #endif // FEATURE_SENSIBLE_PRESSURE
 
-#define FEATURE_DIGIT_Z_COMPENSATION           1
-#if FEATURE_DIGIT_Z_COMPENSATION
-   
-#endif // FEATURE_DIGIT_Z_COMPENSATION
+#define FEATURE_DIGIT_Z_COMPENSATION           1                                                 // 1 = on, 0 = off
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
 
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
 #define Z_OFFSET_BUTTON_STEPS               5
-
-/** \brief The Firmwares E-Retract within PAUSE */
-#define Z_FIRMWARE_RETRACT_MM               1
 
 /** \brief The Firmwares disalowes movement before you at least: pressed a printers button, set a temperature, homed once 
 If you did not do this, a previous watchdog reset is assumed and fail-drive against some border without homing is blocked thatway. 
@@ -857,7 +855,7 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 #define ALLOW_EXTENDED_COMMUNICATION        2                                                   // 0 = do not allow, 1 = allow "Wait", 2 = allow "Wait" and debug outputs
 
 /** \brief Configures the delay between the stop of a print and the clean-up like disabling of heaters, disabling of steppers and the outputting of the object */
-#define CLEAN_UP_DELAY_AFTER_STOP_PRINT     2000                                                // [ms]
+#define CLEAN_UP_DELAY_AFTER_STOP_PRINT     1000                                                // [ms]
 
 /** \brief Configures the duration for which the processing of commands shall be blocked. */
 #define COMMAND_BLOCK_DELAY                 1000                                                // [ms]

@@ -890,13 +890,13 @@ Overridden if EEPROM activated. */
 /** \brief Number of moves we can cache in advance.
 This number of moves can be cached in advance. If you wan't to cache more, increase this. Especially on
 many very short moves the cache may go empty. The minimum value is 5. */
-#define MOVE_CACHE_SIZE                     13
+#define MOVE_CACHE_SIZE                     14
 
 /** \brief Low filled cache size.
 If the cache contains less then MOVE_CACHE_LOW segments, the time per segment is limited to LOW_TICKS_PER_MOVE clock cycles.
 If a move would be shorter, the feedrate will be reduced. This should prevent buffer underflows. Set this to 0 if you
 don't care about empty buffers during print. */
-#define MOVE_CACHE_LOW                      8
+#define MOVE_CACHE_LOW                      10
 
 /** \brief Cycles per move, if move cache is low.
 This value must be high enough, that the buffer has time to fill up. The problem only occurs at the beginning of a print or
@@ -1128,7 +1128,7 @@ Above this value the z compensation will distribute the roughness of the surface
 #define DEFAULT_PAUSE_STEPS_X               (XAXIS_STEPS_PER_MM *50)
 #define DEFAULT_PAUSE_STEPS_Y               (YAXIS_STEPS_PER_MM *50)
 #define DEFAULT_PAUSE_STEPS_Z               (ZAXIS_STEPS_PER_MM *2)
-#define DEFAULT_PAUSE_STEPS_EXTRUDER        (EXT0_STEPS_PER_MM * Z_FIRMWARE_RETRACT_MM)
+#define DEFAULT_PAUSE_STEPS_EXTRUDER        (EXT0_STEPS_PER_MM * Z_PAUSE_RETRACT_MM)
 
 #define PAUSE_X_MIN                         (XAXIS_STEPS_PER_MM *5)
 #define PAUSE_Y_MIN                         (YAXIS_STEPS_PER_MM *5)

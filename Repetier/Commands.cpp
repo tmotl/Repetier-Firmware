@@ -368,8 +368,8 @@ void Commands::printTemperatures(bool showRaw)
 #if FEATURE_PRINT_PRESSURE
     Com::printF(Com::tF);
 #if FEATURE_DIGIT_Z_COMPENSATION
-    if(Printer::doHeatBedZCompensation && g_nSensibleCompensationDigits != 0.0){ 
-        Com::printF(Com::tColon,(int)g_nSensibleCompensationDigits);
+    if(Printer::doHeatBedZCompensation && g_nSensibleCompensationDigits != 0.0f){ 
+        Com::printF(Com::tColon,g_nSensibleCompensationDigits,0);
     }else{
         Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
     }
@@ -377,6 +377,7 @@ void Commands::printTemperatures(bool showRaw)
     Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
 #endif //FEATURE_DIGIT_Z_COMPENSATION
 #endif //FEATURE_PRINT_PRESSURE
+
     Com::println();
 } // printTemperatures
 
@@ -859,13 +860,13 @@ void Commands::executeGCode(GCode *com)
                 if( Printer::relativeCoordinateMode )
                 {
                     // move to the position of the (to be drilled) hole
-                    strcpy( szTemp, PSTR("G1 X") );
+                    strcpy( szTemp, "G1 X" );
                     addFloat( szTemp, com->hasX() ? com->X : 0, 3 );
-                    strcat( szTemp, PSTR(" Y") );
+                    strcat( szTemp, " Y" );
                     addFloat( szTemp, com->hasY() ? com->Y : 0, 3 );
-                    strcat( szTemp, PSTR(" Z") );
+                    strcat( szTemp, " Z" );
                     addFloat( szTemp, com->hasR() ? com->R : 0, 3 );
-                    strcat( szTemp, PSTR(" F") );
+                    strcat( szTemp, " F" );
                     addFloat( szTemp, Printer::maxFeedrate[X_AXIS], 3 );
                     GCode::executeString( szTemp );
 
@@ -875,23 +876,23 @@ void Commands::executeGCode(GCode *com)
                 else
                 {
                     // move to the position of the (to be drilled) hole
-                    strcpy( szTemp, PSTR("G1") );
+                    strcpy( szTemp, "G1" );
                     if( com->hasX() )
                     {
-                        strcat( szTemp, PSTR(" X") );
+                        strcat( szTemp, " X" );
                         addFloat( szTemp, com->X, 3 );
                     }
                     if( com->hasY() )
                     {
-                        strcat( szTemp, PSTR(" Y") );
+                        strcat( szTemp, " Y" );
                         addFloat( szTemp, com->Y, 3 );
                     }
                     if( com->hasR() )
                     {
-                        strcat( szTemp, PSTR(" Z") );
+                        strcat( szTemp, " Z" );
                         addFloat( szTemp, com->R, 3 );
                     }
-                    strcat( szTemp, PSTR(" F") );
+                    strcat( szTemp, " F" );
                     addFloat( szTemp, Printer::maxFeedrate[X_AXIS], 3 );
                     GCode::executeString( szTemp );
 
@@ -900,17 +901,17 @@ void Commands::executeGCode(GCode *com)
                 }
 
                 // drill the hole
-                strcpy( szTemp, PSTR("G1 Z") );
+                strcpy( szTemp, "G1 Z" );
                 addFloat( szTemp, com->hasZ() ? com->Z : Printer::drillZDepth, 3 );
-                strcat( szTemp, PSTR(" F") );
+                strcat( szTemp, " F" );
                 addFloat( szTemp, com->hasF() ? com->F : Printer::drillFeedrate, 3 );
 
                 GCode::executeString( szTemp );
 
                 // get out of the hole
-                strcpy( szTemp, PSTR("G1 Z") );
+                strcpy( szTemp, "G1 Z" );
                 addFloat( szTemp, exitZ, 3 );
-                strcat( szTemp, PSTR(" F") );
+                strcat( szTemp, " F" );
                 addFloat( szTemp, Printer::maxFeedrate[Z_AXIS], 3 );
 
                 GCode::executeString( szTemp );
@@ -1723,9 +1724,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if(com->hasS())
                 {
-                    BEGIN_INTERRUPT_PROTECTED
+                    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
                     Printer::extruderStepsNeeded += com->S;
-                    END_INTERRUPT_PROTECTED
+                    noInts.unprotect(); //END_INTERRUPT_PROTECTED
                 }
                 break;
             }
@@ -1981,7 +1982,7 @@ void Commands::emergencyStop()
 #if defined(KILL_METHOD) && KILL_METHOD==1
     HAL::resetHardware();
 #else
-    BEGIN_INTERRUPT_PROTECTED
+    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
     Printer::kill(false);
     Extruder::manageTemperatures();
 
@@ -2023,7 +2024,7 @@ void Commands::emergencyStop()
 #endif // HEATED_BED_HEATER_PIN>-1
 
     while(1) {}
-    END_INTERRUPT_PROTECTED
+    //noInts.unprotect(); //END_INTERRUPT_PROTECTED
 #endif // defined(KILL_METHOD) && KILL_METHOD==1
 
 } // emergencyStop

@@ -508,9 +508,9 @@ public:
         if(linesWritePos>=MOVE_CACHE_SIZE) linesWritePos = 0;
         Printer::setMenuMode(MENU_MODE_PRINTING,true);
         
-        BEGIN_INTERRUPT_PROTECTED
+        InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
         linesCount++;
-        END_INTERRUPT_PROTECTED
+        //END_INTERRUPT_PROTECTED
 
         g_uStartOfIdle = 0;
     } // pushLine
@@ -568,9 +568,9 @@ public:
         p->task = task;
   
         nextPlannerIndex( linesWritePos );
-        BEGIN_INTERRUPT_PROTECTED
+        InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
         linesCount++;
-        END_INTERRUPT_PROTECTED
+        //END_INTERRUPT_PROTECTED
         return;
     } // queueTask
 

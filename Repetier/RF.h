@@ -644,7 +644,7 @@ extern  volatile char   g_pauseBeepDone;
 #endif // FEATURE_PAUSE_PRINTING
 
 #if FEATURE_SENSIBLE_PRESSURE
-/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
+/* brief: This is for correcting too close Z at first layer, see FEATURE_SENSIBLE_PRESSURE // Idee Wessix, coded by Nibbels  */
 extern long             g_nSensiblePressureSum;
 extern char             g_nSensiblePressureChecks;
 extern short            g_nSensiblePressureDigits;

@@ -259,9 +259,9 @@ void createGenericTable(short table[GENERIC_THERM_NUM_ENTRIES][2],short minTemp,
     float delta = (maxTemp-minTemp) / (GENERIC_THERM_NUM_ENTRIES - 1.0f);
     for(uint8_t i = 0; i < GENERIC_THERM_NUM_ENTRIES; i++)
     {
-#if FEATURE_WATCHDOG
-        HAL::pingWatchdog();
-#endif // FEATURE_WATCHDOG
+//#if FEATURE_WATCHDOG
+        // HAL::pingWatchdog(); createGenericTable ist in initextruder und das wird gemacht bevor der watchdog überhaupt an ist!
+//#endif // FEATURE_WATCHDOG
         float t = maxTemp - i * delta;
         float r = exp(beta / (t + 272.65)) * k;
         float v = 4092 * r * vs / ((rs + r) * GENERIC_THERM_VREF);

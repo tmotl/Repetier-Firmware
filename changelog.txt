@@ -1,7 +1,7 @@
 still investigating for "the bug"
 
 V RF.01.37m4.TDMod (2017-06-10)
-- removed some interrupt-blocking in order to accidently unblock them afterwards. there is some bug in this firmware somewhere after 01.37k2 I am now investigating closely.
+- removed some interrupt-blocking in order to accidently unblock them afterwards. there is some bug in this firmware somewhere after 01.37k4 I am now investigating closely.
 
 V RF.01.37m3.TDMod (2017-06-10)
 - did some cleanup
@@ -12,7 +12,7 @@ V RF.01.37m2.TDMod (2017-05-19)
 - Tested and fixed some stuff: monitor temp possible overflow
 - changed UI_ACTION_TOPMENU to avoid mod menü when jumping back. commented UI_ACTION_TOPMENU at definition.
 - activated free ram debugging
-- removed Z_FIRMWARE_RETRACT_MM from Output-Object until I find out how to concat preprocessor strings, this doesnt really work as supposed since 1.37l2.
+- removed Z_PAUSE_RETRACT_MM from Output-Object until I find out how to concat preprocessor strings, this doesnt really work as supposed since 1.37l2.
 - Killed SKIP_M109_IF_WITHIN and put TEMP_TOLERANCE in that place to standarize that. 
 
 V RF.01.37m.TDMod (2017-05-19)
@@ -33,8 +33,8 @@ V RF.01.37l3.TDMod (2017-05-19)
 
 V RF.01.37l2.TDMod (2017-05-18)
 - Pause continues without E if Extrude/Retract-Buttons are used manually. This should prevent those Emergency-Blocks @Coniniue()
-- Added a configuration #define Z_FIRMWARE_RETRACT_MM to have one place to specify the retraction mm of the firmwares functions
-- linked Pause and outputObject to the Z_FIRMWARE_RETRACT_MMs value
+- Added a configuration #define Z_PAUSE_RETRACT_MM to have one place to specify the retraction mm of the firmwares functions
+- linked Pause and outputObject to the Z_PAUSE_RETRACT_MMs value
 
 V RF.01.37l.TDMod (2017-05-17)
 - Testversion for automatic digit-compensation. The more force on the extruder, the more it will decrease in Z. This ist approx. 0.01mm / 1000 digits.

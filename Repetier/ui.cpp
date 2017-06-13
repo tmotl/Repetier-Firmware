@@ -4753,11 +4753,11 @@ void UIDisplay::slowAction()
 
 #if UI_HAS_KEYS==1
     // Update key buffer
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     if((flags & 9)==0)
     {
         flags|=UI_FLAG_KEY_TEST_RUNNING;
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
 
         int nextAction = 0;
         ui_check_slow_keys(nextAction);  //Nibbels: Das macht garnix.
@@ -4765,23 +4765,25 @@ void UIDisplay::slowAction()
         {
             lastButtonStart = time;
             lastButtonAction = nextAction;
-            HAL::forbidInterrupts();
+            noInts.protect(); //HAL::forbidInterrupts();
             flags|=UI_FLAG_SLOW_KEY_ACTION;
+        }else{
+            noInts.protect(); //HAL::forbidInterrupts();
         }
-        HAL::forbidInterrupts();
         flags-=UI_FLAG_KEY_TEST_RUNNING;
+    }else{
+      noInts.protect(); //HAL::forbidInterrupts();
     }
-    HAL::forbidInterrupts();
 
     if((flags & UI_FLAG_SLOW_ACTION_RUNNING)==0)
     {
         flags |= UI_FLAG_SLOW_ACTION_RUNNING;
         
         // Reset click encoder
-        HAL::forbidInterrupts();
+        //HAL::forbidInterrupts(); //_-> Ist schon protected!! in jedem aller fälle. entweder ist das mist oder vorher n bug.
         int8_t epos = encoderPos;
         encoderPos=0;
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
         if(epos)
         {
             nextPreviousAction(epos); //Nibbels: Funktion, die rechts links auswertet oder Errors wegklicken lässt. abhängig von this->encoderPos .. sonst verwendet mit -1 oder 1
@@ -4796,13 +4798,8 @@ void UIDisplay::slowAction()
 #endif //FEATURE_UNLOCK_MOVEMENT
             if(lastButtonAction==0)
             {
-/*              if(lastAction>=2000 && lastAction<3000)
-                {
-                    statusMsg[0] = 0;
-                }
-*/              
                 lastAction = 0;
-                HAL::forbidInterrupts();
+                noInts.protect(); //HAL::forbidInterrupts();
                 flags &= ~3;
             }
             else if(time-lastButtonStart>UI_KEY_BOUNCETIME)     // New key pressed
@@ -4823,10 +4820,10 @@ void UIDisplay::slowAction()
                 nextRepeat = time+repeatDuration;
             }
         }
-        HAL::forbidInterrupts();
+        noInts.protect(); //HAL::forbidInterrupts();
         flags -= UI_FLAG_SLOW_ACTION_RUNNING;
     }
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 #endif // UI_HAS_KEYS==1
 
 #if UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
@@ -4889,12 +4886,12 @@ void UIDisplay::fastAction()
 {
 #if UI_HAS_KEYS==1
     // Check keys
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
     if((flags & 10)==0)
     {
         flags |= UI_FLAG_KEY_TEST_RUNNING;
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
         int nextAction = 0;
         ui_check_keys(nextAction);
 
@@ -4902,7 +4899,7 @@ void UIDisplay::fastAction()
         {
             lastButtonStart = HAL::timeInMilliseconds();
             lastButtonAction = nextAction;
-            HAL::forbidInterrupts();
+            noInts.protect(); //HAL::forbidInterrupts();
             flags|=UI_FLAG_FAST_KEY_ACTION;
             if( nextAction == UI_ACTION_RF_CONTINUE )
             {
@@ -4920,10 +4917,10 @@ void UIDisplay::fastAction()
             }
         }
   
-        HAL::forbidInterrupts();
+        noInts.protect(); //HAL::forbidInterrupts();
         flags-=UI_FLAG_KEY_TEST_RUNNING;
     }
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 #endif //  UI_HAS_KEYS==1
 
 } // fastAction
