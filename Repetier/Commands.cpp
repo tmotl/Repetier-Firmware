@@ -68,22 +68,35 @@ void Commands::commandLoop()
 
 void Commands::checkForPeriodicalActions()
 {
-    doZCompensation();
+    bool didchecktemps = false;
+    if(execute16msPeriodical){ //set by internal Watchdog-Timer
+      execute16msPeriodical = 0;
 
-    if(!executePeriodical) return; //nur ca. jede 100ms fällt der hier durch. Teiler durch Timer0.
-    executePeriodical=0;
+      doZCompensation();
 
-    HAL::tellWatchdogOk();  
-  
-    Extruder::manageTemperatures();
+      Extruder::manageTemperatures(); didchecktemps = true;
 
-    if(--counter500ms==0) //Nibbels: executePeriodical limitiert diese abfrage: das ist ein zusätzlicher teiler!
-    {
-        if( Printer::debugInfo() ) Commands::printTemperatures();
-        counter500ms=5; //Teilt die 100ms von executePeriodical durch 5.
     }
-    UI_SLOW;
-    loopRF();
+
+    if(execute100msPeriodical){ //set by PWM-Timer
+      execute100msPeriodical=0;
+
+      HAL::tellWatchdogOk();  //dieses freigabesignal sollte aus dem PWM-Timer kommen, denn dann ist klar, dass auch der noch läuft. Dann laufen für den Watchdogreset der Timer und checkForPeriodicalActions().
+
+      if(!didchecktemps) Extruder::manageTemperatures();
+
+      UI_SLOW;
+
+      loopRF();
+
+      static uint8_t counter500ms = 50;  //das ist nur init! nachher immer auf 5 runterzählend.
+      if(--counter500ms==0) //Nibbels: execute100msPeriodical limitiert diese abfrage: das ist ein zusätzlicher teiler!
+      {
+        counter500ms=5; //Teilt die 100ms von execute100msPeriodical durch 5.
+
+        if( Printer::debugInfo() ) Commands::printTemperatures();
+      }
+    }
 } // checkForPeriodicalActions
 
 
@@ -298,19 +311,10 @@ void Commands::printTemperatures(bool showRaw)
 
 #if FEATURE_PRINT_PRESSURE
     Com::printF(Com::tF);
-#if FEATURE_DIGIT_Z_COMPENSATION
-    if(Printer::doHeatBedZCompensation && g_nSensibleCompensationDigits != 0.0f){ 
-        Com::printF(Com::tColon,g_nSensibleCompensationDigits,0);
-    }else{
-        Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
-    }
-#else
-    Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
-#endif //FEATURE_DIGIT_Z_COMPENSATION
+    Com::printF(Com::tColon,(int)g_nLastDigits);
 #endif //FEATURE_PRINT_PRESSURE
 
-    Com::printF(Com::tSpaceAtColon);
-    Com::printF(Com::tComma,maT);
+    Com::printF(Com::tSpaceAtColon,maT);
     Com::printF(Com::tComma,miT);
     Com::printF(Com::tComma,maCoLo);
 

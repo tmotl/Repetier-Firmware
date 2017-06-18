@@ -734,6 +734,8 @@ ISR(WDT_vect)
     #endif // FEATURE_WATCHDOG
 
     WDTCSR |= (1<<WDIE); //Nibbels: nächstes mal kein Reset durch internen Watchdog, sondern wieder dieser interrupt.
+    
+    execute16msPeriodical = 1; //Tell commandloop that 16ms have passed 
 
 	unsigned long T = HAL::timeInMilliseconds();
 	if(laT > 0) {
@@ -1082,7 +1084,7 @@ ISR(PWM_TIMER_VECTOR)
     if(++counterPeriodical >= 391) //(int)(F_CPU/40960))
     {
         counterPeriodical = 0;
-        executePeriodical = 1;
+        execute100msPeriodical = 1;
     }
 
     HAL::allowInterrupts();

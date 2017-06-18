@@ -166,9 +166,8 @@ extern volatile uint osAnalogInputValues[OS_ANALOG_INPUTS];
 
 #include "HAL.h"
 
-extern volatile uint8_t     executePeriodical;
-extern uint8_t              counter500ms;
-
+extern volatile uint8_t     execute100msPeriodical;
+extern volatile uint8_t     execute16msPeriodical;
 
 extern void writeMonitor();
 

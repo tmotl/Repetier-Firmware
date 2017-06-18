@@ -25,8 +25,8 @@
 
 
 uint8_t             manageMonitor = 255; ///< Temp. we want to monitor with our host. 1+NUM_EXTRUDER is heated bed
-volatile uint8_t    executePeriodical = 0;
-uint8_t             counter500ms=50; //das ist nur INIT! nachher immer auf 5 runterzählend.
+volatile uint8_t    execute100msPeriodical = 0;
+volatile uint8_t    execute16msPeriodical = 0;
 
 #if FEATURE_DITTO_PRINTING
 uint8_t             Extruder::dittoMode = 0;

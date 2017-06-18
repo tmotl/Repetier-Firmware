@@ -1,4 +1,6 @@
-still investigating for "the bug"
+V RF.01.37n.TDMod (2017-06-18)
+- major cleanup
+- still investigating for "the bug" -> I guess it is gone but I am still testing.
 
 V RF.01.37m5.TDMod (2017-06-18)
 - tempered a whole lot with interruptstuff and watchdog

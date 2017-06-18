@@ -44,7 +44,7 @@ To override EEPROM settings with config settings, set EEPROM_MODE 0 */
 
 /** \brief Define the type of your device */
 //#define MOTHERBOARD                         DEVICE_TYPE_RF1000
-#define MOTHERBOARD                         DEVICE_TYPE_RF2000
+//#define MOTHERBOARD                         DEVICE_TYPE_RF2000
 #define PROTOTYPE_PCB                       0                                                   // 1 = first PCB's / 0 = Final
 
 #ifndef MOTHERBOARD
@@ -81,42 +81,37 @@ IMPORTANT: With mode <>0 some changes in Configuration.h are not set any more, a
 
 /** \brief Allows to pause the processing of G-Codes */
 #define FEATURE_PAUSE_PRINTING              1                                                   // 1 = on, 0 = off
-   /** \brief The Firmwares E-Retract within PAUSE */
-   #define Z_PAUSE_RETRACT_MM               1
+
+/** \brief Specifies if you want to see the pressure digits within the repetier-server/repetier-host temperature message */
+#define FEATURE_PRINT_PRESSURE              1                                                   // 1 = on, 0 = off
 
 /** \brief Enables/diables the emergency pause in case of too high pressure ... the emergency pause can be turned on only in case the general pause functionality is available */
 #if FEATURE_PAUSE_PRINTING
 
-#define FEATURE_EMERGENCY_PAUSE             1                                                   // 1 = on, 0 = off
+  #define Z_PAUSE_RETRACT_MM                1                                                     //The Firmwares E-Retract within PAUSE */
+  #define FEATURE_EMERGENCY_PAUSE           1                                                     // 1 = on, 0 = off
 
 #endif // FEATURE_PAUSE_PRINTING
 
 /** \brief Enables the precise heat bed scan */
 #if FEATURE_HEAT_BED_Z_COMPENSATION
 
-// 1 = on, 0 = off
-#define FEATURE_PRECISE_HEAT_BED_SCAN       1
+  #define FEATURE_PRECISE_HEAT_BED_SCAN       1                                                   // 1 = on, 0 = off
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 /** \brief Specifies the number of pressure values which shall be averaged for inprint live z-adjustment */
-#if FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
-// 1 = on, 0 = off
-
-/** \brief Specifies if you want to see the pressure digits within the repetier-server/repetier-host temperature message */
-#define FEATURE_PRINT_PRESSURE          1
-                                           
-#define FEATURE_SENSIBLE_PRESSURE       1     
-#if FEATURE_SENSIBLE_PRESSURE
+#if FEATURE_HEAT_BED_Z_COMPENSATION
+  #define FEATURE_DIGIT_Z_COMPENSATION           1                                                 // 1 = on, 0 = off
+  #define FEATURE_SENSIBLE_PRESSURE       1                                                       // 1 = on, 0 = off
+  #if FEATURE_SENSIBLE_PRESSURE
     // mittels SENSIBLE_PRESSURE soll im grunde ausschließlich die wärmeausdehnung in einem perfekt kalibrierten system (HBS,mhier) kompensiert werden:
     // Max lift in [um]; Standard: 180um=0,18mm, darf nie 0 sein!! größer 0.2 macht normalerweise keinen Sinn.
     // Läuft dieser Wert ins Limit ist die Düse nicht in Ordnung, die Digit-Begrenzung zu niedrig oder das Z-Offset falsch justiert.
     #define SENSIBLE_PRESSURE_MAX_OFFSET                180     
-#endif // FEATURE_SENSIBLE_PRESSURE
-
-#define FEATURE_DIGIT_Z_COMPENSATION           1                                                 // 1 = on, 0 = off
-
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_EMERGENCY_PAUSE
+    #define SENSIBLE_PRESSURE_INTERVAL                  100 //weniger macht keinen sinn. ob diese einschränkung sinn macht, aber sie bleibt vorerst mal da!
+  #endif // FEATURE_SENSIBLE_PRESSURE
+#endif // FEATURE_HEAT_BED_Z_COMPENSATION
 
 /** \brief Allows to change the amount of Z-Offset which is changed by a push of the Z-Up or Z-Down button ONLY within the Mod Menu Page 2 */
 #define Z_OFFSET_BUTTON_STEPS               5
@@ -861,10 +856,10 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 #define COMMAND_BLOCK_DELAY                 1000                                                // [ms]
 
 /** \brief Configuration of the external watchdog
-The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it was triggered, the value of WATCHDOG_TIMEOUT should be less than half of this time. http://pdf1.alldatasheet.com/datasheet-pdf/view/29215/TI/TPS3820-50DBVT.html 
-Edit Nibbels: not right sure about those 25ms: t_tout is watchdog time out: min 112, typ 200, max 310ms. t_d is delay time: how long reset is triggered after timeout: 15...25...37ms for TPS3820.
+The TPS3820 of the RF1000/RF2000 resets about [t_tout is watchdog time out: min 112, typ 200, max 310ms] after the last time when it was triggered
+http://pdf1.alldatasheet.com/datasheet-pdf/view/29215/TI/TPS3820-50DBVT.html 
+t_d in datasheet is delay time: how long reset is triggered after timeout: 15...25...37ms for TPS3820.
 */
-//#define WATCHDOG_TIMEOUT                    50                                                  // [ms]
 #define WATCHDOG_MAIN_LOOP_TIMEOUT          20000UL                                             // [ms] -> uhrzeit intern scheint nicht immer zu stimmen!
 
 /** \brief Longer-lasting operations shall call our periodical actions at least each defined time interval */

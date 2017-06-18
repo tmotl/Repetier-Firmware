@@ -644,15 +644,15 @@ extern  volatile char   g_pauseBeepDone;
 
 #if FEATURE_SENSIBLE_PRESSURE
 /* brief: This is for correcting too close Z at first layer, see FEATURE_SENSIBLE_PRESSURE // Idee Wessix, coded by Nibbels  */
-extern long             g_nSensiblePressureSum;
-extern char             g_nSensiblePressureChecks;
+extern long             nSensiblePressureSum;
+extern char             nSensiblePressureChecks;
 extern short            g_nSensiblePressureDigits;
 extern short            g_nSensiblePressureOffsetMax;
 extern short            g_nSensiblePressureOffset;
-extern short            g_nSensibleLastPressure;
 extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
+extern short              g_nLastDigits;
 #if FEATURE_DIGIT_Z_COMPENSATION
 extern float            g_nSensibleCompensationDigits;
 #endif // FEATURE_DIGIT_Z_COMPENSATION

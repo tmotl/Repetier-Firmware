@@ -193,15 +193,13 @@ char            g_nSilentMode               = 0;
 
 #if FEATURE_SENSIBLE_PRESSURE
 /* brief: This is for correcting too close Z at first layer, see FEATURE_SENSIBLE_PRESSURE // Idee Wessix, coded by Nibbels  */
-long            g_nSensiblePressureSum      = 0;
-char            g_nSensiblePressureChecks   = 0;
 short           g_nSensiblePressureDigits   = 0;
 short           g_nSensiblePressureOffsetMax = SENSIBLE_PRESSURE_MAX_OFFSET;
 short           g_nSensiblePressureOffset   = 0;
-short           g_nSensibleLastPressure     = 0;
 char            g_nSensiblePressure1stMarke = 0; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
 
+short           g_nLastDigits = 0;
 #if FEATURE_DIGIT_Z_COMPENSATION
 float           g_nSensibleCompensationDigits = 0.0f;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
@@ -366,7 +364,12 @@ short readStrainGauge( unsigned char uAddress ) //readStrainGauge dauert etwas u
             g_nSensibleCompensationDigits = (float)Result; //startwert / failwert
             noInts.unprotect();
         }
+        g_nLastDigits = (short)g_nSensibleCompensationDigits;
+    }else{
+        g_nLastDigits = Result;
     }
+#else
+    g_nLastDigits = Result;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
     return Result;
@@ -5822,7 +5825,7 @@ void doZCompensation( void )
 } // doZCompensation
 
 
-void loopRF( void )
+void loopRF( void ) //wird so aufgerufen, dass es ein ~100ms takt sein sollte.
 {
     static char     nEntered = 0;
     unsigned long   uTime;
@@ -5838,7 +5841,7 @@ void loopRF( void )
     uTime = HAL::timeInMilliseconds();
     if( g_uStartOfIdle )
     {
-        if( (uTime - g_uStartOfIdle) > MINIMAL_IDLE_TIME )
+        if( (uTime - g_uStartOfIdle) > MINIMAL_IDLE_TIME ) //500ms wäre standard nach config
         {
             // show that we are idle for a while already
             showIdle();
@@ -5850,7 +5853,7 @@ void loopRF( void )
 #if FEATURE_CASE_FAN && !CASE_FAN_ALWAYS_ON
     if( Printer::prepareFanOff )
     {
-        if( (uTime - Printer::prepareFanOff) > Printer::fanOffDelay )
+        if( (uTime - Printer::prepareFanOff) > Printer::fanOffDelay ) //60s wäre standard nach config
         {
             // it is time to turn the case fan off
             Printer::prepareFanOff = 0;
@@ -5917,7 +5920,7 @@ void loopRF( void )
     if( g_pauseMode != PAUSE_MODE_NONE )
     {
         // show that we are paused
-        GCode::keepAlive( Paused );
+        GCode::keepAlive( Paused ); //keepAlive limitiert seine Ausführzeit selbst: alle 2s, darunter wird geskipped.
     }
 
     if( g_uPauseTime )
@@ -5931,7 +5934,7 @@ void loopRF( void )
         if( g_pauseStatus == PAUSE_STATUS_PAUSED )
         {
 #if EXTRUDER_CURRENT_PAUSE_DELAY
-            if( (uTime - g_uPauseTime) > EXTRUDER_CURRENT_PAUSE_DELAY )
+            if( (uTime - g_uPauseTime) > EXTRUDER_CURRENT_PAUSE_DELAY ) //das sind alle 5s 
             {
                 char    nProcessExtruder = 0;
 #if FEATURE_MILLING_MODE
@@ -5965,32 +5968,27 @@ void loopRF( void )
     }
 #endif // FEATURE_PAUSE_PRINTING
 
-#if FEATURE_SENSIBLE_PRESSURE
-    //ohne Z-Kompensation kein SensiblePressure!
-    if(g_nSensiblePressureDigits && !Printer::doHeatBedZCompensation){
-        g_nSensiblePressureDigits = 0;
-        g_nSensiblePressureSum = 0;  //close down counters if function deactivated.
-        g_nSensiblePressureChecks = 0;
-        if(g_nSensiblePressureOffset){
-            Com::printF( PSTR( "SensiblePressure(): offset reverted from " ), g_nSensiblePressureOffset );
-            Com::printFLN( PSTR( " [um] to 0 [um] " ) );
-            g_nSensiblePressureOffset = 0; //OFFSET-RESET nur in SAFE-Zustand!! -> Wenn z-Compensation sowieso deaktiviert. oder per G-Code.
-            g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-        }
-        Com::printFLN( PSTR( "SensiblePressure(): is now disabled because of no z-compensation. " ), g_nSensiblePressureOffset );
-    }
-#endif // FEATURE_PAUSE_PRINTING
-
 /* Change: 09_06_2017 Never read straingauge twice in a row: test if this helps avoiding my watchdog problem
            Thatwhy I bring the statics up and preread the value for both FEATURE_EMERGENCY_PAUSE and FEATURE_EMERGENCY_STOP_ALL */
 #if FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
     bool i_need_strain_value = 0;
 #endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
+
+#if FEATURE_SENSIBLE_PRESSURE
+    static unsigned long   nSensiblePressureTime   = 0;
+    static long            nSensiblePressureSum    = 0;
+    static char            nSensiblePressureChecks = 0;
+    if( (uTime - nSensiblePressureTime) > SENSIBLE_PRESSURE_INTERVAL ) //jede 100ms -> das macht hier drin wenig sinn. 
+    {
+        i_need_strain_value = 1;
+    }
+#endif // FEATURE_SENSIBLE_PRESSURE
+
 #if FEATURE_EMERGENCY_PAUSE
     static unsigned long   uLastPressureTime         = 0;
     static long            nPressureSum              = 0;
     static char            nPressureChecks           = 0;
-    if( (uTime - uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
+    if( (uTime - uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL ) //jede 100ms -> das macht hier drin wenig sinn.
     {
         i_need_strain_value = 1;
     }
@@ -6000,23 +5998,137 @@ void loopRF( void )
     static unsigned long   uLastZPressureTime        = 0;
     static long            nZPressureSum             = 0;
     static char            nZPressureChecks          = 0;
-    if( (uTime - uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
+    if( (uTime - uLastZPressureTime) > EMERGENCY_STOP_INTERVAL ) //jede 10ms -> das macht hier drin überhaupt garkeinen sinn. : kurz, das heißt "absolut immer" jede 100ms.
     {
         i_need_strain_value = 1;
     }
 #endif // FEATURE_EMERGENCY_STOP_ALL
 
-#if FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
+#if FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL || FEATURE_SENSIBLE_PRESSURE
     static short pressure = 0;
     if( i_need_strain_value ){
         pressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
     }
-#endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
+#endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL || FEATURE_SENSIBLE_PRESSURE
+
+#if FEATURE_SENSIBLE_PRESSURE
+    //ohne Z-Kompensation kein SensiblePressure!
+    if( g_nSensiblePressureDigits && !Printer::doHeatBedZCompensation ){
+
+        g_nSensiblePressureDigits = 0;
+        nSensiblePressureSum = 0;  //close down counters if function deactivated.
+        nSensiblePressureChecks = 0;
+        if(g_nSensiblePressureOffset){
+            Com::printF( PSTR( "SensiblePressure(): offset reverted from " ), g_nSensiblePressureOffset );
+            Com::printFLN( PSTR( " [um] to 0 [um] " ) );
+            //OFFSET-RESET nur in SAFE-Zustand!! -> Wenn z-Compensation sowieso deaktiviert. oder per G-Code.
+            g_nSensiblePressureOffset = 0;
+            g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+        }
+        Com::printFLN( PSTR( "SensiblePressure(): is now disabled because of no z-compensation. " ), g_nSensiblePressureOffset );
+
+    }
+
+    if( (uTime - nSensiblePressureTime) > SENSIBLE_PRESSURE_INTERVAL ) 
+    {
+        nSensiblePressureTime = uTime;
+        /* brief: This is for correcting too close Z at first layer // Idee Wessix, coded by Nibbels  */
+
+        if(g_nSensiblePressureDigits && Printer::doHeatBedZCompensation){ //activate feature with G-Code.
+
+            if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) //das zOffset des extruders ist negativ und in Steps.
+            {
+                g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
+                //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
+                nSensiblePressureSum += pressure;
+                nSensiblePressureChecks += 1;
+                //jede 1 sekunden, bzw 0.5sekunden. => 100ms * 10 ::
+                if( nSensiblePressureChecks >= 10 ){ 
+
+                    nPressure = (short)(nSensiblePressureSum / nSensiblePressureChecks);
+
+                    static short g_nSensibleLastPressure = 0;
+                    //half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5                         
+                    nSensiblePressureSum *= 0.5; 
+                    nSensiblePressureChecks *= 0.5;
+
+                    //größer, kleiner, falls Messzellen falschrum eingebaut. -> abs() // später einfacher zu verrechnen.
+                    nPressure = abs(nPressure);
+                    if( (nPressure > g_nSensiblePressureDigits) )
+                    {
+                        /* here the action is defined if digits are > g_nSensiblePressureDigits while printing */
+
+                        /*
+                        Z-OFFSETs :: Mir sind aktuell folgende Offsets in Z bekannt:
+                            long Printer::ZOffset;                                                          == OFFSET IN MENÜ / M3006 in [um]  
+                            g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;   == OFFSET-STEPS errechnet aus Printer::ZOffset -> Und NEU zusätzlich aus SenseOffset
+                            g_offsetZCompensationSteps                                                      == OFFSET AUS zMATRIX (Minimaler Bett-Hotend-Abstand)
+                            nNeededZCompensation                                                            == In der Z-Compensations-Funktion: Das ist der Matrixanteil an exaktem Punkt x/y
+                            
+                            Strategie: Wir haben unser eigenes Sensible-Offset "g_nSensiblePressureOffset" mit Beschränkung und rechnen g_staticZSteps neu aus.
+                            g_nSensiblePressureOffset
+                        */                              
+
+                        //wie stark reagieren?
+                        //PID -Regler wollen wir uns aber sparen...
+                        unsigned char step = 1; //0..255!! standardincrement
+                        float inc = 0.0;
+                        //mehr offsetincrement je höher digits oberhalb limit. linear
+                        if(nPressure > g_nSensiblePressureDigits*1.1){
+                            //je größer der Fehler, desto beschränkt größer der step
+                            inc =   (float)nPressure / (float)g_nSensiblePressureDigits - 1; //0.1 ... riesig
+                            if(inc > 2.0) inc = 2.0;
+                            inc *= 12; // 1,2..24,0
+                            step += (short)inc;
+                        }
+
+                        if(g_nSensibleLastPressure - nPressure > 0){
+                            //digits sinken gerade -> egal wie hoch, regelspeed raus!
+                            step = 1;
+                        }else{
+                            //digits steigen gerade -> je höher mein aktuelles zusätzliches offset, desto weniger regelspeed.
+                            inc = (float)g_nSensiblePressureOffset / (float)g_nSensiblePressureOffsetMax; //0.25 .. 1
+                            if( inc >= 0.25 ) { 
+                                step = step - (short)(inc * (step - 1)); //über der viertel offsetstrecke, das zusätzliche offset stark ausbremsen.
+                            }
+                            if( inc >= 0.33){
+                                if(nPressure < g_nSensiblePressureDigits*1.1) step = 0; //wenn schon etwas offset da und die kräfte nur um +10% rumpendeln, dann nicht weiter erhöhen.
+                            }
+                        }       
+
+                        if (step > 0) { 
+                            //um == mikrometer -> Offsetbereich beschränkt auf 0..0,10mm
+                            if(g_nSensiblePressureOffset+step <= (long)g_nSensiblePressureOffsetMax){
+                                g_nSensiblePressureOffset += step;
+                            }else{
+                                g_nSensiblePressureOffset = (long)g_nSensiblePressureOffsetMax;
+                            }
+                            g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
+                        }
+                    }else{
+                        //kleinere digits sind natürlich zugelassen, runtergeregelt wird nicht wegen kleinerer digits bei z.B. retracts
+                    }
+                    g_nSensibleLastPressure = nPressure; //save last pressure.
+                }
+            }else{
+                g_nSensiblePressure1stMarke = 0; //marker für display: auf dieser Höhe regeln wir nichts mehr oder noch nichts.
+                // if sensible not active 
+                // if z-compensation not active
+                if(nSensiblePressureSum > 0){
+                    nSensiblePressureSum = 0;  //close down counters if function deactivated.
+                    nSensiblePressureChecks = 0;
+                }
+                //offset muss bleiben! g_nSensiblePressureOffset != 0
+            }               
+        }
+    }
+#endif // FEATURE_SENSIBLE_PRESSURE
+
 
 #if FEATURE_EMERGENCY_PAUSE
     if( g_nEmergencyPauseDigitsMin || g_nEmergencyPauseDigitsMax )
     {
-        if( (uTime - uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL )
+        if( (uTime - uLastPressureTime) > EMERGENCY_PAUSE_INTERVAL ) //jede 100ms -> das macht hier drin wenig sinn.
         {
             uLastPressureTime = uTime;
 
@@ -6025,106 +6137,8 @@ void loopRF( void )
                 // this check shall be done only during the printing (for example, it shall not be done in case filament is extruded manually)
                 //short pressure = readStrainGauge( ACTIVE_STRAIN_GAUGE );
                 nPressureSum    += pressure;
-                nPressureChecks += 1;
-                
-/* brief: This is for correcting too close Z at first layer // Idee Wessix, coded by Nibbels  */
-#if FEATURE_SENSIBLE_PRESSURE
+                nPressureChecks += 1;                
 
-                //check: "only at printing" -> here the condition is already valid
-                //check: "only when z-compensation is active" -> yes
-                //check: "only when close to surface" -> yes                
-
-                if(g_nSensiblePressureDigits && Printer::doHeatBedZCompensation){ //activate feature with G-Code.
-                        
-                    if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) //das zOffset des extruders ist negativ und in Steps.
-                    {
-                        g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
-                        //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
-                        g_nSensiblePressureSum += pressure;
-                        g_nSensiblePressureChecks += 1;
-                        //jede 1 sekunden, bzw 0.5sekunden. => 100ms * 10 ::
-                        if( g_nSensiblePressureChecks >= 10 ){ 
-                            
-                            nPressure = (short)(g_nSensiblePressureSum / g_nSensiblePressureChecks);
-                            
-                            //half interval, remember old values 50% -> gibt etwas value-trägheit in den regler -> aber verursacht doppelte schrittgeschwindigkeit bei 0,5                         
-                            g_nSensiblePressureSum *= 0.5; 
-                            g_nSensiblePressureChecks *= 0.5;
-                            
-                            //größer, kleiner, falls Messzellen falschrum eingebaut. -> abs() // später einfacher zu verrechnen.
-                            nPressure = abs(nPressure);
-                            if( (nPressure > g_nSensiblePressureDigits) )
-                            {
-                                /* here the action is defined if digits are > g_nSensiblePressureDigits while printing */
-                                
-                                /*
-                                Z-OFFSETs :: Mir sind aktuell folgende Offsets in Z bekannt:
-                                    long Printer::ZOffset;                                                          == OFFSET IN MENÜ / M3006 in [um]  
-                                    g_staticZSteps = (Printer::ZOffset * Printer::axisStepsPerMM[Z_AXIS]) / 1000;   == OFFSET-STEPS errechnet aus Printer::ZOffset -> Und NEU zusätzlich aus SenseOffset
-                                    g_offsetZCompensationSteps                                                      == OFFSET AUS zMATRIX (Minimaler Bett-Hotend-Abstand)
-                                    nNeededZCompensation                                                            == In der Z-Compensations-Funktion: Das ist der Matrixanteil an exaktem Punkt x/y
-                                    
-                                    Strategie: Wir haben unser eigenes Sensible-Offset "g_nSensiblePressureOffset" mit Beschränkung und rechnen g_staticZSteps neu aus.
-                                    g_nSensiblePressureOffset
-                                */                              
-                                
-                                //wie stark reagieren?
-                                //PID -Regler wollen wir uns aber sparen...
-                                unsigned char step = 1; //0..255!! standardincrement
-                                float inc = 0.0;
-                                //mehr offsetincrement je höher digits oberhalb limit. linear
-                                if(nPressure > g_nSensiblePressureDigits*1.1){
-                                    //je größer der Fehler, desto beschränkt größer der step
-                                    inc =   (float)nPressure / (float)g_nSensiblePressureDigits - 1; //0.1 ... riesig
-                                    if(inc > 2.0) inc = 2.0;
-                                    inc *= 12; // 1,2..24,0
-                                    step += (short)inc;
-                                }
-
-                                if(g_nSensibleLastPressure - nPressure > 0){
-                                    //digits sinken gerade -> egal wie hoch, regelspeed raus!
-                                    step = 1;
-                                }else{
-                                    //digits steigen gerade -> je höher mein aktuelles zusätzliches offset, desto weniger regelspeed.
-                                    inc = (float)g_nSensiblePressureOffset / (float)g_nSensiblePressureOffsetMax; //0.25 .. 1
-                                    if( inc >= 0.25 ) { 
-                                        step = step - (short)(inc * (step - 1)); //über der viertel offsetstrecke, das zusätzliche offset stark ausbremsen.
-                                    }
-                                    if( inc >= 0.33){
-                                        if(nPressure < g_nSensiblePressureDigits*1.1) step = 0; //wenn schon etwas offset da und die kräfte nur um +10% rumpendeln, dann nicht weiter erhöhen.
-                                    }
-                                }       
-                                
-                                
-                                if (step > 0) { 
-                                    //um == mikrometer -> Offsetbereich beschränkt auf 0..0,10mm
-                                    if(g_nSensiblePressureOffset+step <= (long)g_nSensiblePressureOffsetMax){
-                                        g_nSensiblePressureOffset += step;
-                                    }else{
-                                        g_nSensiblePressureOffset = (long)g_nSensiblePressureOffsetMax;
-                                    }
-                                    g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;
-                                }
-                            }else{
-                                
-                            }
-                                                        
-                            g_nSensibleLastPressure = nPressure; //save last pressure.
-                        }
-                    }else{
-                        g_nSensiblePressure1stMarke = 0; //marker für display: auf dieser Höhe regeln wir nichts mehr oder noch nichts.
-                        // if sensible not active 
-                        // if z-compensation not active
-                        if(g_nSensiblePressureSum > 0){
-                            g_nSensiblePressureSum = 0;  //close down counters if function deactivated.
-                            g_nSensiblePressureChecks = 0;
-                            //Com::printFLN( PSTR( "SensiblePressure(): Sleep :: Offset stays @" ), g_nSensiblePressureOffset );
-                        }
-                        //offset muss bleiben! g_nSensiblePressureOffset != 0
-                    }               
-                }
-#endif // FEATURE_SENSIBLE_PRESSURE
-                
                 if( nPressureChecks == EMERGENCY_PAUSE_CHECKS )
                 {
                     nPressure        = (short)(nPressureSum / nPressureChecks);
@@ -6150,21 +6164,14 @@ void loopRF( void )
             {
                 nPressureSum    = 0;
                 nPressureChecks = 0;
-                
-#if FEATURE_SENSIBLE_PRESSURE               
-                //if not printing:
-                g_nSensiblePressureSum = 0;  //close down counters if function deactivated.
-                g_nSensiblePressureChecks = 0;
-                //offset muss bleiben! g_nSensiblePressureOffset != 0
-#endif // FEATURE_SENSIBLE_PRESSURE 
-                
             }
         }
     }
 #endif // FEATURE_EMERGENCY_PAUSE
 
+
 #if FEATURE_EMERGENCY_STOP_ALL
-    if( (uTime - uLastZPressureTime) > EMERGENCY_STOP_INTERVAL )
+    if( (uTime - uLastZPressureTime) > EMERGENCY_STOP_INTERVAL ) //jede 10ms -> das macht hier drin überhaupt garkeinen sinn.
     {
         uLastZPressureTime = uTime;
 
@@ -6212,7 +6219,7 @@ void loopRF( void )
 
     if( g_uStopTime )
     {
-        if( (uTime - g_uStopTime) > CLEAN_UP_DELAY_AFTER_STOP_PRINT )
+        if( (uTime - g_uStopTime) > CLEAN_UP_DELAY_AFTER_STOP_PRINT ) //jede 1 sekunden  wäre standard nach config
         {
             // we have stopped the printing a few moments ago, output the object now
             if( PrintLine::linesCount )
@@ -6247,7 +6254,7 @@ void loopRF( void )
 
     if( g_uBlockSDCommands > 1 )
     {
-        if( (uTime - g_uBlockSDCommands) > COMMAND_BLOCK_DELAY )
+        if( (uTime - g_uBlockSDCommands) > COMMAND_BLOCK_DELAY ) //jede 1 sekunden wäre standard nach config
         {
 #if FEATURE_OUTPUT_FINISHED_OBJECT
             // output the object
@@ -6286,497 +6293,12 @@ void loopRF( void )
     }
 #endif // FEATURE_ABORT_PRINT_AFTER_TEMPERATURE_ERROR
 
-    if( (uTime - g_lastTime) > LOOP_INTERVAL )
-    {
-        // it is time for another processing
-        g_lastTime = uTime;
-
-/*      if( g_debugLog == 4 )
-        {
-            Com::printFLN( PSTR( "Calls=" ), (int)g_debugUInt16 );
-            g_debugUInt16 = 0;
-            g_debugLog = 0;
-        }       
-*/
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-//      if( g_debugLevel && Printer::debugInfo() )
-        if( g_debugLevel && Printer::debugInfo() && PrintLine::linesCount )
-        {
-#if DEBUG_HEAT_BED_Z_COMPENSATION
-            switch( g_debugLevel )
-            {
-                case 1:
-                {
-                    Com::printF( PSTR( "tcZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( ";ccZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    break;
-                }
-                case 2:
-                {
-                    Com::printF( PSTR( "tpsZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";cpsZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    break;
-                }
-                case 4:
-                {
-                    Com::printF( PSTR( "tpsX;" ), Printer::directPositionTargetSteps[X_AXIS] );
-                    Com::printF( PSTR( ";cpsX;" ), Printer::directPositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( ";tpsY;" ), Printer::directPositionTargetSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";cpsY;" ), Printer::directPositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";tpsZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";cpsZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";tpsE;" ), Printer::directPositionTargetSteps[E_AXIS] );
-                    Com::printF( PSTR( ";cpsE;" ), Printer::directPositionCurrentSteps[E_AXIS] );
-                    break;
-                }
-                case 5:
-                {
-                    Com::printF( PSTR( "nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( ";nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";t Z;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( ";c Z;" ), Printer::compensatedPositionCurrentStepsZ );
-                    Com::printF( PSTR( ";tPS Z;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";cPS Z;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";DirZ;" ), Printer::stepperDirection[Z_AXIS] );
-                    break;
-                }
-                case 6:
-                {
-                    Com::printF( PSTR( "nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( "; nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( "; nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; MDZ;" ), Printer::stepperDirection[Z_AXIS] );
-                    Com::printF( PSTR( "; tCZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    Com::printF( PSTR( "; tPSZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cPSZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; dZ;" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-//                  Com::printF( PSTR( "; Int32;" ), g_debugInt32 );
-//                  Com::printF( PSTR( "; Int16;" ), g_debugInt16 );
-                    Com::printF( PSTR( "; RAM;" ), Commands::lowestRAMValue );
-                    Com::printF( PSTR( "; doZC;" ), Printer::doHeatBedZCompensation );
-                    break;
-                }
-                case 10:
-                {
-                    Com::printF( PSTR( "Start;" ), g_nZCompensationUpdates );
-                    Com::printF( PSTR( "; nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[X_AXIS] );
-                    Com::printF( PSTR( "; nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Y_AXIS] );
-                    Com::printF( PSTR( "; nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; tCZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    Com::printF( PSTR( "; tPSZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; dZ;" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; doZC;" ), Printer::doHeatBedZCompensation );
-                    Com::printF( PSTR( "; Delta;" ), g_nDelta[X_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nDelta[Y_AXIS] );
-                    Com::printF( PSTR( "; StepSize;" ), g_nStepSize[X_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nStepSize[Y_AXIS] );
-                    Com::printF( PSTR( "; TempX;" ), g_nTempXFront );
-                    Com::printF( PSTR( ";" ), g_nTempXBack );
-                    Com::printF( PSTR( "; NeededZ;" ), g_nNeededZ );
-                    Com::printF( PSTR( "; Index;" ), g_uIndex[0] );
-                    Com::printF( PSTR( ";" ), g_uIndex[1] );
-                    Com::printF( PSTR( ";" ), g_uIndex[2] );
-                    Com::printF( PSTR( ";" ), g_uIndex[3] );
-                    Com::printF( PSTR( "; Matrix;" ), g_nMatrix[0] );
-                    Com::printF( PSTR( ";" ), g_nMatrix[1] );
-                    Com::printF( PSTR( ";" ), g_nMatrix[2] );
-                    Com::printF( PSTR( ";" ), g_nMatrix[3] );
-                    Com::printF( PSTR( "; Z Delta Min;" ), g_nZDeltaMin );
-                    Com::printF( PSTR( "; Z Delta Max;" ), g_nZDeltaMax );
-                    Com::printF( PSTR( "; Z Delay Max;" ), g_nZCompensationDelayMax );
-                    Com::printF( PSTR( "; Too fast;" ), g_nTooFast );
-                    Com::printF( PSTR( "; End;" ), g_nZCompensationUpdates );
-
-                    g_nZDeltaMin             = 100000;
-                    g_nZDeltaMax             = -100000;
-                    g_nZCompensationDelayMax = 0;
-                    g_nTooFast               = 0;
-                    break;
-                }
-                case 17:
-                {
-                    Commands::printCurrentPosition();
-
-                    // output in [steps]
-/*                  Com::printF( PSTR( "nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-                    Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    Com::printF( PSTR( "; sZP;" ), g_nZScanZPosition );
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-
-#if FEATURE_FIND_Z_ORIGIN
-                    Com::printF( PSTR( "; oZ;" ), g_nZOriginPosition[Z_AXIS] );
-#endif // FEATURE_FIND_Z_ORIGIN
-
-#if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-                    Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-#endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-                    Com::printF( PSTR( "; hbO;" ), getHeatBedOffset() );
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#if FEATURE_WORK_PART_Z_COMPENSATION
-                    Com::printF( PSTR( "; wpO;" ), getWorkPartOffset() );
-#endif // FEATURE_WORK_PART_Z_COMPENSATION
-
-                    Com::printFLN( PSTR( "" ) );
-*/
-                    // output in [mm]
-                    Com::printF( PSTR( "nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] / Printer::axisStepsPerMM[Z_AXIS] );
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-                    Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ / Printer::axisStepsPerMM[Z_AXIS] );
-                    Com::printF( PSTR( "; sZP;" ), g_nZScanZPosition / Printer::axisStepsPerMM[Z_AXIS] );
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-
-#if FEATURE_FIND_Z_ORIGIN
-                    Com::printF( PSTR( "; oZ;" ), g_nZOriginPosition[Z_AXIS] / Printer::axisStepsPerMM[Z_AXIS] );
-#endif // FEATURE_FIND_Z_ORIGIN
-
-#if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-                    Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] / Printer::axisStepsPerMM[Z_AXIS] );
-#endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
-#if FEATURE_HEAT_BED_Z_COMPENSATION
-                    Com::printF( PSTR( "; hbO;" ), getHeatBedOffset() / Printer::axisStepsPerMM[Z_AXIS] );
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#if FEATURE_WORK_PART_Z_COMPENSATION
-                    Com::printF( PSTR( "; wpO;" ), getWorkPartOffset() / Printer::axisStepsPerMM[Z_AXIS] );
-#endif // FEATURE_WORK_PART_Z_COMPENSATION
-
-                    Com::printFLN( PSTR( "" ) );
-                    break;
-                }
-
-                default:
-                {
-                    Com::printF( PSTR( "unsupported debug level: " ), g_debugLevel );
-                    break;
-                }
-            }
-            Com::printFLN( PSTR( " " ) );
-
-#endif // DEBUG_HEAT_BED_Z_COMPENSATION
-        }
-#endif // FEATURE_HEAT_BED_Z_COMPENSATION
-
-#if FEATURE_WORK_PART_Z_COMPENSATION
-        if( g_debugLevel && Printer::debugInfo() && PrintLine::linesCount )
-        {
-#if DEBUG_WORK_PART_Z_COMPENSATION
-            switch( g_debugLevel )
-            {
-                case 1:
-                {
-                    Com::printF( PSTR( "tcZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( ";ccZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    break;
-                }
-                case 2:
-                {
-                    Com::printF( PSTR( "tpsZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";cpsZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    break;
-                }
-                case 4:
-                {
-                    Com::printF( PSTR( "tpsX;" ), Printer::directPositionTargetSteps[X_AXIS] );
-                    Com::printF( PSTR( ";cpsX;" ), Printer::directPositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( ";tpsY;" ), Printer::directPositionTargetSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";cpsY;" ), Printer::directPositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";tpsZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";cpsZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";tpsE;" ), Printer::directPositionTargetSteps[E_AXIS] );
-                    Com::printF( PSTR( ";cpsE;" ), Printer::directPositionCurrentSteps[E_AXIS] );
-                    break;
-                }
-                case 5:
-                {
-                    Com::printF( PSTR( "X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( "; Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( "; Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; tZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( "; cZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    break;
-                }
-                case 6:
-                {
-                    Com::printF( PSTR( "nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( "; nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( "; nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; tCZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    Com::printF( PSTR( "; tPSZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; dZ;" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-//                  Com::printF( PSTR( "; Int32;" ), g_debugInt32 );
-                    Com::printF( PSTR( "; RAM;" ), Commands::lowestRAMValue );
-                    break;
-                }
-                case 10:
-                {
-                    Com::printF( PSTR( "Start;" ), g_nZCompensationUpdates );
-                    Com::printF( PSTR( "; nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[X_AXIS] );
-                    Com::printF( PSTR( "; nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Y_AXIS] );
-                    Com::printF( PSTR( "; nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; tCZ;" ), Printer::compensatedPositionTargetStepsZ );
-                    Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                    Com::printF( PSTR( "; tPSZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; dZ;" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; cZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-                    Com::printF( PSTR( "; doZC;" ), Printer::doHeatBedZCompensation );
-                    Com::printF( PSTR( "; Delta;" ), g_nDelta[X_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nDelta[Y_AXIS] );
-                    Com::printF( PSTR( "; StepSize;" ), g_nStepSize[X_AXIS] );
-                    Com::printF( PSTR( ";" ), g_nStepSize[Y_AXIS] );
-                    Com::printF( PSTR( "; TempX;" ), g_nTempXFront );
-                    Com::printF( PSTR( ";" ), g_nTempXBack );
-                    Com::printF( PSTR( "; NeededZ;" ), g_nNeededZ );
-                    Com::printF( PSTR( "; Index;" ), g_uIndex[0] );
-                    Com::printF( PSTR( ";" ), g_uIndex[1] );
-                    Com::printF( PSTR( ";" ), g_uIndex[2] );
-                    Com::printF( PSTR( ";" ), g_uIndex[3] );
-                    Com::printF( PSTR( "; Matrix;" ), g_nMatrix[0] );
-                    Com::printF( PSTR( ";" ), g_nMatrix[1] );
-                    Com::printF( PSTR( ";" ), g_nMatrix[2] );
-                    Com::printF( PSTR( ";" ), g_nMatrix[3] );
-                    Com::printF( PSTR( "; Z Delta Min;" ), g_nZDeltaMin );
-                    Com::printF( PSTR( "; Z Delta Max;" ), g_nZDeltaMax );
-                    Com::printF( PSTR( "; Z Delay Max;" ), g_nZCompensationDelayMax );
-                    Com::printF( PSTR( "; Too fast;" ), g_nTooFast );
-                    Com::printF( PSTR( "; End;" ), g_nZCompensationUpdates );
-
-                    g_nZDeltaMin             = 100000;
-                    g_nZDeltaMax             = -100000;
-                    g_nZCompensationDelayMax = 0;
-                    g_nTooFast               = 0;
-                    break;
-                }
-
-                default:
-                {
-                    Com::printF( PSTR( "unsupported debug level: " ), g_debugLevel );
-                    break;
-                }
-            }
-            Com::printFLN( PSTR( " " ) );
-#endif // DEBUG_WORK_PART_Z_COMPENSATION
-        }
-#endif // FEATURE_WORK_PART_Z_COMPENSATION
-
-#if FEATURE_FIND_Z_ORIGIN
-        if( g_debugLevel && Printer::debugInfo() && g_nFindZOriginStatus )
-        {
-#if DEBUG_FIND_Z_ORIGIN
-            switch( g_debugLevel )
-            {
-                case 5:
-                {
-                    Com::printF( PSTR( "OriginZ;" ), g_nZOriginPosition[Z_AXIS] );
-                    Com::printF( PSTR( "; Dir;" ), READ( Z_DIR_PIN ) );
-                    Com::printF( PSTR( "; TempDir;" ), g_nTempDirectionZ );
-                    Com::printF( PSTR( "; Status;" ), g_nFindZOriginStatus );
-                    //Com::printF( PSTR( "; Pressure;" ), g_debugInt16 );
-                    break;
-                }
-
-                default:
-                {
-                    Com::printF( PSTR( "unsupported debug level: " ), g_debugLevel );
-                    break;
-                }
-            }
-            Com::printFLN( PSTR( " " ) );
-#endif // DEBUG_FIND_Z_ORIGIN
-        }
-#endif // FEATURE_FIND_Z_ORIGIN
-
-#if FEATURE_TEST_STRAIN_GAUGE
-        if( g_debugLevel && Printer::debugInfo() && g_nTestStrainGaugeStatus )
-        {
-#if DEBUG_TEST_STRAIN_GAUGE
-            switch( g_debugLevel )
-            {
-                case 5:
-                {
-                    Com::printF( PSTR( "Status;" ), g_nTestStrainGaugeStatus );
-                    break;
-                }
-
-                default:
-                {
-                    Com::printF( PSTR( "unsupported debug level: " ), g_debugLevel );
-                    break;
-                }
-            }
-            Com::printFLN( PSTR( " " ) );
-#endif // DEBUG_TEST_STRAIN_GAUGE
-        }
-#endif // FEATURE_TEST_STRAIN_GAUGE
-
-#if FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
-        Com::printF( PSTR( "Z endstop type= "), Printer::ZEndstopType );
-        Com::printF( PSTR( ", Z-Min= "), Printer::isZMinEndstopHit() );
-        Com::printF( PSTR( ", Z-Max= "), Printer::isZMaxEndstopHit() );
-        Com::printF( PSTR( ", lastZDirection= "), Printer::lastZDirection );
-        Com::printF( PSTR( ", endstopZMinHit= "), Printer::endstopZMinHit );
-        Com::printF( PSTR( ", endstopZMaxHit= "), Printer::endstopZMaxHit );
-        Com::printF( PSTR( ", ZEndstopUnknown= "), Printer::ZEndstopUnknown );
-        Com::printFLN( PSTR( "") );
-#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS && DEBUG_CONFIGURABLE_Z_ENDSTOPS
-    }
-
-    if( g_debugLog )
-    {
-        switch( g_debugLog )
-        {
-#if FEATURE_FIND_Z_ORIGIN
-
-            case 1:
-            {
-                Com::printF( PSTR( "Z-Origin;X;" ), g_nZOriginPosition[X_AXIS] );
-                Com::printF( PSTR( ";Y;" ), g_nZOriginPosition[Y_AXIS] );
-                Com::printFLN( PSTR( ";Z;" ), Printer::staticCompensationZ );
-                break;
-            }
-
-#endif // FEATURE_FIND_Z_ORIGIN
-
-#if DEBUG_HEAT_BED_Z_COMPENSATION
-
-            case 2:
-            {
-                Com::printF( PSTR( "Start;" ), g_nZCompensationUpdates );
-                Com::printF( PSTR( "; nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[X_AXIS] );
-                Com::printF( PSTR( "; nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Y_AXIS] );
-                Com::printF( PSTR( "; nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Z_AXIS] );
-                Com::printF( PSTR( "; tCZ;" ), Printer::compensatedPositionTargetStepsZ );
-                Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                Com::printF( PSTR( "; tPSZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                Com::printF( PSTR( "; dZ;" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-                Com::printF( PSTR( "; cZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-                Com::printF( PSTR( "; doZC;" ), Printer::doHeatBedZCompensation );
-                Com::printF( PSTR( "; Delta;" ), g_nDelta[X_AXIS] );
-                Com::printF( PSTR( ";" ), g_nDelta[Y_AXIS] );
-                Com::printF( PSTR( "; StepSize;" ), g_nStepSize[X_AXIS] );
-                Com::printF( PSTR( ";" ), g_nStepSize[Y_AXIS] );
-                Com::printF( PSTR( "; TempX;" ), g_nTempXFront );
-                Com::printF( PSTR( ";" ), g_nTempXBack );
-                Com::printF( PSTR( "; NeededZ;" ), g_nNeededZ );
-                Com::printF( PSTR( "; Index;" ), g_uIndex[0] );
-                Com::printF( PSTR( ";" ), g_uIndex[1] );
-                Com::printF( PSTR( ";" ), g_uIndex[2] );
-                Com::printF( PSTR( ";" ), g_uIndex[3] );
-                Com::printF( PSTR( "; Matrix;" ), g_nMatrix[0] );
-                Com::printF( PSTR( ";" ), g_nMatrix[1] );
-                Com::printF( PSTR( ";" ), g_nMatrix[2] );
-                Com::printF( PSTR( ";" ), g_nMatrix[3] );
-                Com::printF( PSTR( "; Z Delta Min;" ), g_nZDeltaMin );
-                Com::printF( PSTR( "; Z Delta Max;" ), g_nZDeltaMax );
-                Com::printF( PSTR( "; Z Delay Max;" ), g_nZCompensationDelayMax );
-                Com::printF( PSTR( "; Too fast;" ), g_nTooFast );
-                Com::printF( PSTR( "; End;" ), g_nZCompensationUpdates );
-                Com::printFLN( PSTR( "" ) );
-
-                g_nZDeltaMin             = 100000;
-                g_nZDeltaMax             = -100000;
-                g_nZCompensationDelayMax = 0;
-                g_nTooFast               = 0;
-                break;
-            }
-
-#endif // DEBUG_HEAT_BED_Z_COMPENSATION
-
-#if DEBUG_WORK_PART_Z_COMPENSATION
-
-            case 3:
-            {
-                Com::printF( PSTR( "Start;" ), g_nZCompensationUpdates );
-                Com::printF( PSTR( "; nCPS X;" ), Printer::queuePositionCurrentSteps[X_AXIS] );
-                Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[X_AXIS] );
-                Com::printF( PSTR( "; nCPS Y;" ), Printer::queuePositionCurrentSteps[Y_AXIS] );
-                Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Y_AXIS] );
-                Com::printF( PSTR( "; nCPS Z;" ), Printer::queuePositionCurrentSteps[Z_AXIS] );
-                Com::printF( PSTR( ";" ), g_nLastZCompensationPositionSteps[Z_AXIS] );
-                Com::printF( PSTR( "; tCZ;" ), Printer::compensatedPositionTargetStepsZ );
-                Com::printF( PSTR( "; cCZ;" ), Printer::compensatedPositionCurrentStepsZ );
-                Com::printF( PSTR( "; tPSZ;" ), Printer::directPositionTargetSteps[Z_AXIS] );
-                Com::printF( PSTR( "; cPSZ;" ), Printer::directPositionCurrentSteps[Z_AXIS] );
-                Com::printF( PSTR( "; dZ;" ), Printer::queuePositionTargetSteps[Z_AXIS] );
-                Com::printF( PSTR( "; cZ;" ), Printer::queuePositionLastSteps[Z_AXIS] );
-                Com::printF( PSTR( "; doZC;" ), Printer::doHeatBedZCompensation );
-                Com::printF( PSTR( "; Delta;" ), g_nDelta[X_AXIS] );
-                Com::printF( PSTR( ";" ), g_nDelta[Y_AXIS] );
-                Com::printF( PSTR( "; StepSize;" ), g_nStepSize[X_AXIS] );
-                Com::printF( PSTR( ";" ), g_nStepSize[Y_AXIS] );
-                Com::printF( PSTR( "; TempX;" ), g_nTempXFront );
-                Com::printF( PSTR( ";" ), g_nTempXBack );
-                Com::printF( PSTR( "; NeededZ;" ), g_nNeededZ );
-                Com::printF( PSTR( "; Index;" ), g_uIndex[0] );
-                Com::printF( PSTR( ";" ), g_uIndex[1] );
-                Com::printF( PSTR( ";" ), g_uIndex[2] );
-                Com::printF( PSTR( ";" ), g_uIndex[3] );
-                Com::printF( PSTR( "; Matrix;" ), g_nMatrix[0] );
-                Com::printF( PSTR( ";" ), g_nMatrix[1] );
-                Com::printF( PSTR( ";" ), g_nMatrix[2] );
-                Com::printF( PSTR( ";" ), g_nMatrix[3] );
-                Com::printF( PSTR( "; Z Delta Min;" ), g_nZDeltaMin );
-                Com::printF( PSTR( "; Z Delta Max;" ), g_nZDeltaMax );
-                Com::printF( PSTR( "; Z Delay Max;" ), g_nZCompensationDelayMax );
-                Com::printF( PSTR( "; Too fast;" ), g_nTooFast );
-                Com::printF( PSTR( "; End;" ), g_nZCompensationUpdates );
-                Com::printFLN( PSTR( "" ) );
-
-                g_nZDeltaMin             = 100000;
-                g_nZDeltaMax             = -100000;
-                g_nZCompensationDelayMax = 0;
-                g_nTooFast               = 0;
-                break;
-            }
-
-#endif // DEBUG_WORK_PART_Z_COMPENSATION
-
-/*          case 4:
-            {
-                Com::printFLN( PSTR( "Calls=" ), (int)g_debugUInt16 );
-                g_debugUInt16 = 0;
-                g_debugLog = 0;
-                break;
-            }
-*/      }
-
-        g_debugLog = 0;
-    }
-
 #if FEATURE_SERVICE_INTERVAL
     if ( !g_nEnteredService )
     {
         if ( ( HAL::timeInMilliseconds() - g_nlastServiceTime ) > 5000 )
         {
             char    mode = OPERATING_MODE_PRINT;
-
 
 #if FEATURE_MILLING_MODE
             mode = Printer::operatingMode;
@@ -10878,7 +10400,7 @@ void processCommand( GCode* pCommand )
             }
 #endif // FEATURE_BEDTEMP_DECREASE  
                             
-#if FEATURE_SENSIBLE_PRESSURE // auch: FEATURE_EMERGENCY_PAUSE && FEATURE_HEAT_BED_Z_COMPENSATION
+#if FEATURE_SENSIBLE_PRESSURE
             case 3909: // M3909 [P]PressureDigits - configure the sensible pressure value threshold || by Wessix and Nibbels
             {
                 if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
@@ -10890,16 +10412,12 @@ void processCommand( GCode* pCommand )
                         {
                             if(pCommand->P > 32767) pCommand->P = 32767;
                             g_nSensiblePressureDigits = pCommand->P;
-                            if(pCommand->P) Com::printFLN( PSTR( "M3909: SensiblePressure is now active") );
-                                else{
-                                    g_nSensiblePressureSum = 0;  //close down counters if function deactivated.
-                                    g_nSensiblePressureChecks = 0;                                  
-                                    if(g_nSensiblePressureOffset){
-                                        g_nSensiblePressureOffset = 0;                  
-                                        g_staticZSteps = ((Printer::ZOffset+g_nSensiblePressureOffset) * Printer::axisStepsPerMM[Z_AXIS]) / 1000;   
-                                    }   
-                                    Com::printFLN( PSTR( "M3909: SensiblePressure has been disabled") );
-                                } 
+                            if(g_nSensiblePressureDigits){
+                                Com::printFLN( PSTR( "M3909: SensiblePressure is now active") );
+                            }
+                            else{
+                                Com::printFLN( PSTR( "M3909: SensiblePressure has been disabled") );
+                            } 
                         }else{
                             Com::printFLN( PSTR( "M3909: ERROR Cannot set threshold -> Wrong Parameters for [P]") );
                         }
