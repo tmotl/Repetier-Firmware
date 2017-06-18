@@ -64,7 +64,6 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z2, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2 )
 FSTRINGVALUE( ui_text_saving_success, UI_TEXT_SAVING_SUCCESS )
 
 unsigned long   g_lastTime                 = 0;
-unsigned long   g_uLastCommandLoop         = 0;
 unsigned long   g_uStartOfIdle             = 0;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
@@ -2975,7 +2974,7 @@ void doHeatBedZCompensation( void )
     }
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION
 
-    noInts.protect(); //HAL::forbidInterrupts();
+    noInts.protect(true); //HAL::forbidInterrupts();
 #if FEATURE_DIGIT_Z_COMPENSATION
     Printer::compensatedPositionTargetStepsZ = nNeededZCompensation + nNeededDigitCompensationSteps;
 #else
@@ -6824,6 +6823,74 @@ void loopRF( void )
     }
 #endif // FEATURE_SERVICE_INTERVAL
 
+#if FEATURE_PAUSE_PRINTING
+    switch( g_pauseStatus )
+    {
+        case PAUSE_STATUS_PREPARE_PAUSE_1:
+        {
+            if( (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
+            {
+                // we have reached the pause position - nothing except the extruder can have been moved
+                g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+                Printer::stepperDirection[X_AXIS]   = 0;
+                Printer::stepperDirection[Y_AXIS]   = 0;
+                Printer::stepperDirection[Z_AXIS]   = 0;
+                Extruder::current->stepperDirection = 0;
+            }
+            break;
+        }
+        case PAUSE_STATUS_PREPARE_PAUSE_2:
+        {
+            if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
+                (Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
+                (Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
+                (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
+            {
+                // we have reached the pause position 1
+#if FEATURE_MILLING_MODE
+                if( Printer::operatingMode == OPERATING_MODE_MILL )
+                {
+                    // in operating mode mill, we have 2 pause positions because we have to leave the work part before we shall move into x/y direction
+                    g_pauseStatus = PAUSE_STATUS_PREPARE_PAUSE_3;
+
+                    determinePausePosition();
+                    PrintLine::prepareDirectMove();
+                }
+                else
+#endif // FEATURE_MILLING_MODE
+                {
+                    // in operating mode print, there is no need for a second pause position
+                    g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+                    Printer::stepperDirection[X_AXIS]   = 0;
+                    Printer::stepperDirection[Y_AXIS]   = 0;
+                    Printer::stepperDirection[Z_AXIS]   = 0;
+                    Extruder::current->stepperDirection = 0;
+                }
+            }
+            break;
+        }
+        case PAUSE_STATUS_PREPARE_PAUSE_3:
+        {
+            if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
+                (Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
+                (Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
+                (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
+            {
+                // we have reached the pause position 2
+                g_pauseStatus = PAUSE_STATUS_PAUSED;
+
+                Printer::stepperDirection[X_AXIS]   = 0;
+                Printer::stepperDirection[Y_AXIS]   = 0;
+                Printer::stepperDirection[Z_AXIS]   = 0;
+                Extruder::current->stepperDirection = 0;
+            }
+            break;
+        }
+    }
+#endif // FEATURE_PAUSE_PRINTING
+
 #if FEATURE_RGB_LIGHT_EFFECTS
     updateRGBLightStatus();
 #endif // FEATURE_RGB_LIGHT_EFFECTS
@@ -8674,12 +8741,34 @@ void processCommand( GCode* pCommand )
 #if FEATURE_WATCHDOG
             case 3090: // M3090 - test the watchdog (this command resets the firmware)
             {
-                if( Printer::debugInfo() )
+                if( pCommand->hasS() )
                 {
-                    Com::printFLN( PSTR( "M3090: the watchdog is going to reset the firmware" ) );
+                   if(pCommand->S == 666){
+                     if(g_bPingWatchdog){ 
+                      HAL::stopWatchdog(); 
+                      Com::printFLN( PSTR( "M3090: WARNING the watchdog is disabled now" ) );
+                     }
+                     else {
+                      HAL::startWatchdog(); 
+                      Com::printFLN( PSTR( "M3090: the watchdog has been activated" ) );
+                     }
+                   }
                 }
-                HAL::delayMilliseconds( 100 );
-                HAL::testWatchdog();
+                else if(pCommand->hasP()){
+                    HAL::delayMilliseconds(15000);
+                } 
+                else if(pCommand->hasT()){
+                    for(int iii = 0; iii < 1000; iii++) HAL::delayMicroseconds(15000);
+                } 
+                else
+                {
+                    if( Printer::debugInfo() )
+                    {
+                      Com::printFLN( PSTR( "M3090: the watchdog is going to reset the firmware" ) );
+                    }
+                    HAL::delayMilliseconds( 100 );
+                    HAL::testWatchdog();
+                }
                 break;
             }
 #endif // FEATURE_WATCHDOG

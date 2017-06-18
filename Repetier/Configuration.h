@@ -44,7 +44,7 @@ To override EEPROM settings with config settings, set EEPROM_MODE 0 */
 
 /** \brief Define the type of your device */
 //#define MOTHERBOARD                         DEVICE_TYPE_RF1000
-//#define MOTHERBOARD                         DEVICE_TYPE_RF2000
+#define MOTHERBOARD                         DEVICE_TYPE_RF2000
 #define PROTOTYPE_PCB                       0                                                   // 1 = first PCB's / 0 = Final
 
 #ifndef MOTHERBOARD
@@ -861,9 +861,11 @@ non-Repetier PC applications may fall over the debug outputs of the firmware. */
 #define COMMAND_BLOCK_DELAY                 1000                                                // [ms]
 
 /** \brief Configuration of the external watchdog
-The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it was triggered, the value of WATCHDOG_TIMEOUT should be less than half of this time. */
-#define WATCHDOG_TIMEOUT                    10                                                  // [ms]
-#define WATCHDOG_MAIN_LOOP_TIMEOUT          10000                                               // [ms]
+The TPS3820 of the RF1000/RF2000 resets about 25 ms after the last time when it was triggered, the value of WATCHDOG_TIMEOUT should be less than half of this time. http://pdf1.alldatasheet.com/datasheet-pdf/view/29215/TI/TPS3820-50DBVT.html 
+Edit Nibbels: not right sure about those 25ms: t_tout is watchdog time out: min 112, typ 200, max 310ms. t_d is delay time: how long reset is triggered after timeout: 15...25...37ms for TPS3820.
+*/
+//#define WATCHDOG_TIMEOUT                    50                                                  // [ms]
+#define WATCHDOG_MAIN_LOOP_TIMEOUT          20000UL                                             // [ms] -> uhrzeit intern scheint nicht immer zu stimmen!
 
 /** \brief Longer-lasting operations shall call our periodical actions at least each defined time interval */
 #define PERIODICAL_ACTIONS_CALL_INTERVAL    10                                                  // [ms]

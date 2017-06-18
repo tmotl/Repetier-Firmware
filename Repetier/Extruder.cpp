@@ -259,9 +259,6 @@ void createGenericTable(short table[GENERIC_THERM_NUM_ENTRIES][2],short minTemp,
     float delta = (maxTemp-minTemp) / (GENERIC_THERM_NUM_ENTRIES - 1.0f);
     for(uint8_t i = 0; i < GENERIC_THERM_NUM_ENTRIES; i++)
     {
-//#if FEATURE_WATCHDOG
-        // HAL::pingWatchdog(); createGenericTable ist in initextruder und das wird gemacht bevor der watchdog überhaupt an ist!
-//#endif // FEATURE_WATCHDOG
         float t = maxTemp - i * delta;
         float r = exp(beta / (t + 272.65)) * k;
         float v = 4092 * r * vs / ((rs + r) * GENERIC_THERM_VREF);
@@ -1345,9 +1342,6 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
 
     for(;;)
     {
-#if FEATURE_WATCHDOG
-        //HAL::pingWatchdog(); -> Commands::checkForPeriodicalActions();
-#endif // FEATURE_WATCHDOG
         Commands::checkForPeriodicalActions(); // update heaters etc. https://github.com/repetier/Repetier-Firmware/commit/241c550ac004023842d6886c6e0db15a1f6b56d7
         GCode::keepAlive( WaitHeater );
         updateCurrentTemperature();
@@ -1474,24 +1468,6 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
 
 } // autotunePID
 #endif // TEMP_PID
-
-
-/** \brief Writes monitored temperatures.
-This function is called every 250ms to write the monitored temperature. If monitoring is
-disabled, the function is not called.
-*/
-void writeMonitor()
-{
-    if(manageMonitor<NUM_TEMPERATURE_LOOPS)
-    {
-        TemperatureController *act = tempController[manageMonitor];
-        Com::printF(Com::tMTEMPColon,(long)HAL::timeInMilliseconds());
-        Com::printF(Com::tSpace,act->currentTemperatureC);
-        Com::printF(Com::tSpace,act->targetTemperatureC,0);
-        Com::printFLN(Com::tSpace,pwm_pos[act->pwmIndex]);
-    }
-} // writeMonitor
-
 
 bool reportTempsensorError()
 {

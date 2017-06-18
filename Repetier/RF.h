@@ -566,7 +566,6 @@ extern const char   ui_text_saving_success[]        PROGMEM;
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
 
-extern  unsigned long   g_uLastCommandLoop;
 extern  unsigned long   g_uStartOfIdle;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION

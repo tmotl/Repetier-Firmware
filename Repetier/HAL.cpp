@@ -21,7 +21,12 @@
 
 
 #if FEATURE_WATCHDOG
-unsigned char   g_bPingWatchdog     = 0;
+unsigned long g_uLastCommandLoop = 0;
+unsigned char g_bPingWatchdog    = 0;
+unsigned long maT = 0;
+unsigned long miT = 2147483864;
+unsigned long laT = 0;
+unsigned long maCoLo = 0;
 #endif // FEATURE_WATCHDOG
 
 
@@ -700,6 +705,46 @@ SIGNAL (TIMER3_COMPA_vect)
 #endif // defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__) || defined(__AVR_ATmega128__) ||defined(__AVR_ATmega1281__)||defined(__AVR_ATmega2561__)
 #endif // #if FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF1000
 
+//initialize watchdog
+void HAL::WDT_Init(void)
+{
+    // Just to be safe since we can not clear WDE if WDRF is set
+    MCUSR &= ~(1<<WDRF);
+    //disable interrupts
+    cli();
+    //reset watchdog
+    wdt_reset();
+    //set up WDT interrupt
+    WDTCSR = (1<<WDCE)|(1<<WDE);
+    // timeout in XXX millisecond, disable reset mode. Must be done in one operation --> S66  http://www.atmel.com/Images/Atmel-2549-8-bit-AVR-Microcontroller-ATmega640-1280-1281-2560-2561_datasheet.pdf
+    //WDTCSR = 1<<WDP0; //32ms
+    WDTCSR = 0; //16ms
+    //Enable global interrupts
+    sei();
+
+    // enable watchdog interrupt only mode 
+    WDTCSR |= _BV(WDIE);
+}
+
+//Watchdog timeout ISR
+ISR(WDT_vect)
+{
+    #if FEATURE_WATCHDOG
+    HAL::pingWatchdog();
+    #endif // FEATURE_WATCHDOG
+
+    WDTCSR |= (1<<WDIE); //Nibbels: nächstes mal kein Reset durch internen Watchdog, sondern wieder dieser interrupt.
+
+	unsigned long T = HAL::timeInMilliseconds();
+	if(laT > 0) {
+		unsigned long diff = T - laT;
+		if(diff < miT) miT = diff;
+		if(diff > maT) maT = diff;
+		diff = T - g_uLastCommandLoop;
+		if(diff > maCoLo) maCoLo = diff;
+	}
+	laT = T;
+}
 
 // ================== Interrupt handling ======================
 /** \brief Sets the timer 1 compare value to delay ticks.
@@ -710,7 +755,7 @@ inline void setTimer(uint32_t delay)
     __asm__ __volatile__ (
         "cli \n\t"
         "tst %C[delay] \n\t" //if(delay<65536) {
-        "brne else%= \n\t"
+        "brne else%= \n\t" // Still > 65535
         "cpi %B[delay],255 \n\t"
         "breq else%= \n\t" // delay <65280
         "sts stepperWait,r1 \n\t" // stepperWait = 0;
@@ -760,24 +805,12 @@ inline void setTimer(uint32_t delay)
 
 
 volatile uint8_t    insideTimer1 = 0;
-long __attribute__((used)) stepperWait  = 0;
+volatile long __attribute__((used)) stepperWait  = 0;
 
 /** \brief Timer interrupt routine to drive the stepper motors.
 */
 ISR(TIMER1_COMPA_vect)
 {
-#if FEATURE_WATCHDOG
-    //unsigned long start = HAL::timeInMilliseconds();
-    //bool pinged = false;
-
-    if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
-    {
-        // ping the watchdog only in case the mainloop is still being called
-        HAL::pingWatchdog();
-        //pinged = true; //allow reping
-    }
-#endif // FEATURE_WATCHDOG
-
     if(insideTimer1) return;
     uint8_t doExit;
     __asm__ __volatile__ (
@@ -811,31 +844,19 @@ ISR(TIMER1_COMPA_vect)
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-    Printer::performZCompensation();
+    Printer::performZCompensation(); //no interrupttempering
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-
-//gemessen bis return: max 26ms. watchdog bei ~25ms .. blöd evtl. darum nachpingen? bringts was?
-    /*if(pinged && HAL::timeInMilliseconds() - start > 1){
-        HAL::pingWatchdog();
-        start = HAL::timeInMilliseconds();
-    }*/
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
     if( Printer::allowDirectSteps() )
     {
-        PrintLine::performDirectSteps();
+        PrintLine::performDirectSteps(); //no interrupttempering
     }
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
-
-//gemessen bis return: max 26ms. watchdog bei 25ms .. blöd evtl. darum nachpingen? bringts was?
-   /* if(pinged && HAL::timeInMilliseconds() - start > 1){
-        HAL::pingWatchdog();
-    }*/
 
     if(Printer::allowQueueMove())
     {
         setTimer(PrintLine::performQueueMove()); //hier drin volatile markieren??
-
         DEBUG_MEMORY;
         insideTimer1 = 0;
         return;
@@ -845,7 +866,6 @@ ISR(TIMER1_COMPA_vect)
     if(Printer::allowDirectMove())
     {
         setTimer(PrintLine::performDirectMove());
-
         DEBUG_MEMORY;
         insideTimer1 = 0;
         return;
@@ -875,7 +895,7 @@ ISR(TIMER1_COMPA_vect)
     }
 
     stepperWait = 0;        // Important because of optimization in asm at begin
-    OCR1A = 1000;           // Wait for next move
+    OCR1A = 1000;        //65500   // Wait for next move
 
     DEBUG_MEMORY;
     insideTimer1 = 0;
@@ -1058,15 +1078,14 @@ ISR(PWM_TIMER_VECTOR)
     if(pwm_heater_pos_set[NUM_EXTRUDER] == pwm_count_heater && pwm_heater_pos_set[NUM_EXTRUDER]!=HEATER_PWM_MASK) WRITE(HEATED_BED_HEATER_PIN,HEATER_PINS_INVERTED);
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
-    HAL::allowInterrupts();
-
-    static unsigned int counterPeriodical = 0;
-    counterPeriodical++; // Approximate a 100ms timer
-    if(counterPeriodical >= 390) //  (int)(F_CPU/40960)) //Nibbels: gibt 390,625 ?? -> https://github.com/repetier/Repetier-Firmware/blob/development/src/ArduinoAVR/Repetier/HAL.cpp#L810 3906 times per second.
+    static int counterPeriodical = 0; // Approximate a 100ms timer :: blocks pingwatchdog s commandloop if not working
+    if(++counterPeriodical >= 391) //(int)(F_CPU/40960))
     {
-        counterPeriodical=0;
-        executePeriodical=1;
+        counterPeriodical = 0;
+        executePeriodical = 1;
     }
+
+    HAL::allowInterrupts();
 
 #if FEATURE_RGB_LIGHT_EFFECTS
     if( (HAL::timeInMilliseconds() - Printer::RGBLightLastChange) > RGB_LIGHT_COLOR_CHANGE_SPEED )
@@ -1136,6 +1155,7 @@ ISR(PWM_TIMER_VECTOR)
 
     pwm_count_cooler += COOLER_PWM_STEP;
     pwm_count_heater += HEATER_PWM_STEP;
+
     (void)pwm_cooler_pos_set;
 } // ISR(PWM_TIMER_VECTOR)
 

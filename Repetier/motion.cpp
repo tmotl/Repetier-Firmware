@@ -1629,6 +1629,7 @@ long PrintLine::performQueueMove()
         if(Printer::wasLastHalfstepping && cur->isFullstepping())   // Switch halfstepping -> full stepping
         {
             Printer::wasLastHalfstepping = 0;
+            //HAL::forbidInterrupts(); //##
             return Printer::interval+Printer::interval+Printer::interval; // Wait an other 150% from last half step to make the 100% full
         }
         else if(!Printer::wasLastHalfstepping && !cur->isFullstepping())     // Switch full to half stepping
@@ -1637,6 +1638,7 @@ long PrintLine::performQueueMove()
         }
         else
         {
+            //HAL::forbidInterrupts(); //##
             return Printer::interval; // Wait an other 50% from last step to make the 100% full
         }
     }
@@ -2235,6 +2237,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
         DEBUG_MEMORY;
     } // Do even
 
+	//HAL::forbidInterrupts(); //##
     return interval;
 
 } // performMove
