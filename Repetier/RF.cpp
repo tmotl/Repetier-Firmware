@@ -2490,16 +2490,11 @@ void startViscosityTest( int maxdigits = 10000, float maxfeedrate = 5.0f, float 
     //if [S,P] "go to temp" then do so...
     if(StartTemp > 0){
         Extruder::setTemperatureForExtruder((float)StartTemp,Extruder::current->id,true);
-        bool allReached = false;
-        millis_t codenum = HAL::timeInMilliseconds();
+        bool allReached = false;        
         while(!allReached)
         {
             allReached = true;
-            if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
-            {
-                Commands::printTemperatures();
-                codenum = HAL::timeInMilliseconds();
-            }
+            Commands::printTemperatures();
             Commands::checkForPeriodicalActions();
             GCode::keepAlive( WaitHeater );
 
@@ -2607,15 +2602,10 @@ void startViscosityTest( int maxdigits = 10000, float maxfeedrate = 5.0f, float 
             Extruder::setTemperatureForExtruder( T, Extruder::current->id, true );
             //Wait until all the Temperatures are reached and stable.
             bool allReached = false;
-            millis_t codenum = HAL::timeInMilliseconds();
             while(!allReached)
             {
                 allReached = true;
-                if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                {
-                    Commands::printTemperatures();
-                    codenum = HAL::timeInMilliseconds();
-                }
+                Commands::printTemperatures();
                 Commands::checkForPeriodicalActions();
                 GCode::keepAlive( WaitHeater );
 
@@ -5827,18 +5817,13 @@ void doZCompensation( void )
 
 void loopRF( void ) //wird so aufgerufen, dass es ein ~100ms takt sein sollte.
 {
-    static char     nEntered = 0;
-    unsigned long   uTime;
-    short           nPressure;
-    
-    if( nEntered )
-    {
-        // do not enter more than once
-        return;
-    }
+    static char     nEntered = 0;    
+    if( nEntered ) return; // do not enter more than once
     nEntered ++;
 
-    uTime = HAL::timeInMilliseconds();
+    unsigned long   uTime = HAL::timeInMilliseconds();
+    short           nPressure;
+
     if( g_uStartOfIdle )
     {
         if( (uTime - g_uStartOfIdle) > MINIMAL_IDLE_TIME ) //500ms wäre standard nach config
@@ -5970,6 +5955,7 @@ void loopRF( void ) //wird so aufgerufen, dass es ein ~100ms takt sein sollte.
 
 /* Change: 09_06_2017 Never read straingauge twice in a row: test if this helps avoiding my watchdog problem
            Thatwhy I bring the statics up and preread the value for both FEATURE_EMERGENCY_PAUSE and FEATURE_EMERGENCY_STOP_ALL */
+/* Update: 19_06_2017 This is really nice and clean but it has not been the problem. */
 #if FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
     bool i_need_strain_value = 0;
 #endif //FEATURE_EMERGENCY_PAUSE || FEATURE_EMERGENCY_STOP_ALL
@@ -6035,8 +6021,16 @@ void loopRF( void ) //wird so aufgerufen, dass es ein ~100ms takt sein sollte.
         /* brief: This is for correcting too close Z at first layer // Idee Wessix, coded by Nibbels  */
 
         if(g_nSensiblePressureDigits && Printer::doHeatBedZCompensation){ //activate feature with G-Code.
-
-            if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) //das zOffset des extruders ist negativ und in Steps.
+            /* 
+            Still testing: Gesucht ist ein Limit des der Abstands zum Druckbett, also die jeweils richtige Layerbegrenzung::
+			
+            #das zOffset_des_extruders ist negativ und in Steps. Ist ein Extruder weiter unten, per T1-Offset, muss das bedacht werden.
+			#Die Höhe über Grund, kompensiert sollte unterhalb g_maxZCompensationSteps sein.
+			# + compensatedPositionTargetStepsZ gehört hier glaube ich nicht rein.
+			#directPositionTargetStepsZ gehören hier nicht dazu.
+			#Normales Z-Offset??
+            */
+            if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) 
             {
                 g_nSensiblePressure1stMarke = 1; //marker für display: wir sind in regelhöhe
                 //wenn durch Gcode gefüllt, prüfe, ob Z-Korrektur (weg vom Bett) notwendig ist, in erstem Layer.
@@ -8277,10 +8271,10 @@ void processCommand( GCode* pCommand )
                    }
                 }
                 else if(pCommand->hasP()){
-                    HAL::delayMilliseconds(15000);
+                    HAL::delayMilliseconds(10000);
                 } 
                 else if(pCommand->hasT()){
-                    for(int iii = 0; iii < 1000; iii++) HAL::delayMicroseconds(15000);
+                    for(int iii = 0; iii < 1000; iii++) HAL::delayMicroseconds(10000);
                 } 
                 else
                 {

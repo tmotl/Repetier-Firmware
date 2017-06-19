@@ -72,8 +72,7 @@ void Commands::checkForPeriodicalActions()
     if(execute16msPeriodical){ //set by internal Watchdog-Timer
       execute16msPeriodical = 0;
 
-      doZCompensation();
-
+      doZCompensation();  //62x pro sekunde -> 100mm/s : jede 1,5mm Weg
       Extruder::manageTemperatures(); didchecktemps = true;
 
     }
@@ -82,20 +81,11 @@ void Commands::checkForPeriodicalActions()
       execute100msPeriodical=0;
 
       HAL::tellWatchdogOk();  //dieses freigabesignal sollte aus dem PWM-Timer kommen, denn dann ist klar, dass auch der noch läuft. Dann laufen für den Watchdogreset der Timer und checkForPeriodicalActions().
-
       if(!didchecktemps) Extruder::manageTemperatures();
-
+      Commands::printTemperatures(); //selfcontrolling timediff
       UI_SLOW;
-
       loopRF();
 
-      static uint8_t counter500ms = 50;  //das ist nur init! nachher immer auf 5 runterzählend.
-      if(--counter500ms==0) //Nibbels: execute100msPeriodical limitiert diese abfrage: das ist ein zusätzlicher teiler!
-      {
-        counter500ms=5; //Teilt die 100ms von execute100msPeriodical durch 5.
-
-        if( Printer::debugInfo() ) Commands::printTemperatures();
-      }
     }
 } // checkForPeriodicalActions
 
@@ -256,69 +246,74 @@ void Commands::printCurrentPosition()
 
 void Commands::printTemperatures(bool showRaw)
 {
-    float temp = Extruder::current->tempControl.currentTemperatureC;
+    static millis_t lastTemperatureSignal = 0;
+    millis_t now = HAL::timeInMilliseconds();
+    if( (now - lastTemperatureSignal) > 1000 ){
+        lastTemperatureSignal = now;
+        float temp = Extruder::current->tempControl.currentTemperatureC;
 
-#if HEATED_BED_SENSOR_TYPE==0
-    Com::printF(Com::tTColon,temp);
-    Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
-#else
-    Com::printF(Com::tTColon,temp);
-    Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
+    #if HEATED_BED_SENSOR_TYPE==0
+        Com::printF(Com::tTColon,temp);
+        Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
+    #else
+        Com::printF(Com::tTColon,temp);
+        Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
 
-#if HAVE_HEATED_BED
-    Com::printF(Com::tSpaceBColon,Extruder::getHeatedBedTemperature());
-    Com::printF(Com::tSpaceSlash,heatedBedController.targetTemperatureC,0);
-
-    if(showRaw)
-    {
-        Com::printF(Com::tSpaceRaw,(int)NUM_EXTRUDER);
-        Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-heatedBedController.currentTemperature);
-    }
-    Com::printF(Com::tSpaceBAtColon,(pwm_pos[heatedBedController.pwmIndex])); // Show output of autotune when tuning!
-#endif // HAVE_HEATED_BED
-#endif // HEATED_BED_SENSOR_TYPE==0
-
-#ifdef TEMP_PID
-    Com::printF(Com::tSpaceAtColon,(autotuneIndex==255?pwm_pos[Extruder::current->id]:pwm_pos[autotuneIndex])); // Show output of autotune when tuning!
-#endif // TEMP_PID
-
-#if NUM_EXTRUDER>1
-    for(uint8_t i=0; i<NUM_EXTRUDER; i++)
-    {
-        Com::printF(Com::tSpaceT,(int)i);
-        Com::printF(Com::tColon,extruder[i].tempControl.currentTemperatureC);
-        Com::printF(Com::tSpaceSlash,extruder[i].tempControl.targetTemperatureC,0);
-
-#ifdef TEMP_PID
-        Com::printF(Com::tSpaceAt,(int)i);
-        Com::printF(Com::tColon,(pwm_pos[extruder[i].tempControl.pwmIndex])); // Show output of autotune when tuning!
-#endif // TEMP_PID
+    #if HAVE_HEATED_BED
+        Com::printF(Com::tSpaceBColon,Extruder::getHeatedBedTemperature());
+        Com::printF(Com::tSpaceSlash,heatedBedController.targetTemperatureC,0);
 
         if(showRaw)
         {
-            Com::printF(Com::tSpaceRaw,(int)i);
-            Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-extruder[i].tempControl.currentTemperature);
+            Com::printF(Com::tSpaceRaw,(int)NUM_EXTRUDER);
+            Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-heatedBedController.currentTemperature);
         }
+        Com::printF(Com::tSpaceBAtColon,(pwm_pos[heatedBedController.pwmIndex])); // Show output of autotune when tuning!
+    #endif // HAVE_HEATED_BED
+    #endif // HEATED_BED_SENSOR_TYPE==0
+
+    #ifdef TEMP_PID
+        Com::printF(Com::tSpaceAtColon,(autotuneIndex==255?pwm_pos[Extruder::current->id]:pwm_pos[autotuneIndex])); // Show output of autotune when tuning!
+    #endif // TEMP_PID
+
+    #if NUM_EXTRUDER>1
+        for(uint8_t i=0; i<NUM_EXTRUDER; i++)
+        {
+            Com::printF(Com::tSpaceT,(int)i);
+            Com::printF(Com::tColon,extruder[i].tempControl.currentTemperatureC);
+            Com::printF(Com::tSpaceSlash,extruder[i].tempControl.targetTemperatureC,0);
+
+    #ifdef TEMP_PID
+            Com::printF(Com::tSpaceAt,(int)i);
+            Com::printF(Com::tColon,(pwm_pos[extruder[i].tempControl.pwmIndex])); // Show output of autotune when tuning!
+    #endif // TEMP_PID
+
+            if(showRaw)
+            {
+                Com::printF(Com::tSpaceRaw,(int)i);
+                Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-extruder[i].tempControl.currentTemperature);
+            }
+        }
+    #endif // NUM_EXTRUDER
+
+    #if RESERVE_ANALOG_INPUTS
+        TemperatureController* act = &optTempController;            
+        act->updateCurrentTemperature();
+        Com::printF(Com::tSpaceT, RESERVE_SENSOR_INDEX);            
+        Com::printF(Com::tColon,act->currentTemperatureC);  
+    #endif // RESERVE_ANALOG_INPUTS
+
+    #if FEATURE_PRINT_PRESSURE
+        Com::printF(Com::tF);
+        Com::printF(Com::tColon,(int)g_nLastDigits);
+    #endif //FEATURE_PRINT_PRESSURE
+
+        Com::printF(Com::tSpaceAtColon,maT);
+        Com::printF(Com::tComma,miT);
+        Com::printF(Com::tComma,maCoLo);
+
+        Com::println();
     }
-#endif // NUM_EXTRUDER
-
-#if RESERVE_ANALOG_INPUTS
-    TemperatureController* act = &optTempController;            
-    act->updateCurrentTemperature();
-    Com::printF(Com::tSpaceT, RESERVE_SENSOR_INDEX);            
-    Com::printF(Com::tColon,act->currentTemperatureC);  
-#endif // RESERVE_ANALOG_INPUTS
-
-#if FEATURE_PRINT_PRESSURE
-    Com::printF(Com::tF);
-    Com::printF(Com::tColon,(int)g_nLastDigits);
-#endif //FEATURE_PRINT_PRESSURE
-
-    Com::printF(Com::tSpaceAtColon,maT);
-    Com::printF(Com::tComma,miT);
-    Com::printF(Com::tComma,maCoLo);
-
-    Com::println();
 } // printTemperatures
 
 
@@ -1119,7 +1114,6 @@ void Commands::executeGCode(GCode *com)
                     }
 
                     bool        dirRising   = actExtruder->tempControl.targetTemperature > actExtruder->tempControl.currentTemperature;
-                    millis_t    printedTime = HAL::timeInMilliseconds();
                     millis_t    waituntil   = 0;
 
 #if RETRACT_DURING_HEATUP
@@ -1130,11 +1124,7 @@ void Commands::executeGCode(GCode *com)
                     do
                     {
                         currentTime = HAL::timeInMilliseconds();
-                        if( (currentTime - printedTime) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                        {
-                            printTemperatures();
-                            printedTime = currentTime;
-                        }
+                        Commands::printTemperatures();                       
                         Commands::checkForPeriodicalActions();
                         GCode::keepAlive( WaitHeater );
 #if RETRACT_DURING_HEATUP
@@ -1214,14 +1204,9 @@ void Commands::executeGCode(GCode *com)
                     }
 #endif // (SKIP_M190_IF_WITHIN) && SKIP_M190_IF_WITHIN>0
 
-                    codenum = HAL::timeInMilliseconds();
                     while(heatedBedController.currentTemperatureC+TEMP_TOLERANCE < heatedBedController.targetTemperatureC)
                     {
-                        if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                        {
-                            printTemperatures();
-                            codenum = HAL::timeInMilliseconds();
-                        }
+                        Commands::printTemperatures();
                         Commands::checkForPeriodicalActions();
                         GCode::keepAlive( WaitHeater );
                     }
@@ -1243,15 +1228,10 @@ void Commands::executeGCode(GCode *com)
                     if(Printer::debugDryrun()) break;
                     {
                         bool allReached = false;
-                        codenum = HAL::timeInMilliseconds();
                         while(!allReached)
                         {
                             allReached = true;
-                            if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                            {
-                                printTemperatures();
-                                codenum = HAL::timeInMilliseconds();
-                            }
+                            Commands::printTemperatures();
                             Commands::checkForPeriodicalActions();
                             GCode::keepAlive( WaitHeater );
 

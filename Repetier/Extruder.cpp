@@ -1425,11 +1425,9 @@ void TemperatureController::autotunePID(float temp,uint8_t controllerId,bool sto
             autotuneIndex = 255;
             return;
         }
-        if(time - temp_millis > 1000)
-        {
-            temp_millis = time;
-            Commands::printTemperatures();
-        }
+
+        Commands::printTemperatures();
+        
         if(((time - t1) + (time - t2)) > (10L*60L*1000L*2L))   // 20 Minutes
         {
             if( Printer::debugErrors() )
