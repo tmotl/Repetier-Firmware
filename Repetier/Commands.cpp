@@ -358,7 +358,7 @@ void Commands::setFanSpeed(int speed,bool wait)
     if( Printer::debugInfo() )
     {
         if(speed!=pwm_pos[NUM_EXTRUDER+2])
-            Com::printFLN(Com::tFanspeed,speed);
+            Com::printFLN(Com::tFanspeed,(speed == 1) ? 2 : speed ); //bei 1 zeigt repetierserver / repetierhost 0% an, was nicht stimmt. Das ist etwas Pfusch, aber nun funktionierts.
     }
 
     pwm_pos[NUM_EXTRUDER+2] = speed;

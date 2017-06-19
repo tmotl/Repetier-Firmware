@@ -1,3 +1,7 @@
+V RF.01.37n2.TDMod (2017-06-20)
+- Fanspeed of INT(1) is now 1% in Display (instead of 0%)
+- Fanspeed of INT(1) is now sent to Repetier-Server as INT(2) to produce 1% instead of 0%
+
 V RF.01.37n.TDMod (2017-06-18)
 - major cleanup
 - still investigating for "the bug" -> I guess it is gone but I am still testing.

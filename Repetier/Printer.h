@@ -1137,9 +1137,12 @@ public:
     static uint8_t setOrigin(float xOff,float yOff,float zOff);
     static bool isPositionAllowed(float x,float y,float z);
 
-    static inline int getFanSpeed()
+    static inline int getFanSpeed(bool percent = false)
     {
-        return (int)pwm_pos[NUM_EXTRUDER+2];
+        if(!percent) return (int)pwm_pos[NUM_EXTRUDER+2]; //int
+        if(!pwm_pos[NUM_EXTRUDER+2]) return (int)0; //%
+        if(pwm_pos[NUM_EXTRUDER+2] <= 3) return (int)1; //%
+        return (int)(pwm_pos[NUM_EXTRUDER+2]*100/255); //%
     } // getFanSpeed
 
 #if FEATURE_MEMORY_POSITION

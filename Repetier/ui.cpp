@@ -922,7 +922,7 @@ void UIDisplay::parse(char *txt,bool ram)
 #if FAN_PIN > -1
             case 'F': // FAN speed
             {
-                if(c2=='s') addInt(ceil(Printer::getFanSpeed()*100/255),3);                                   // %Fs : Fan speed
+                if(c2=='s') addInt(Printer::getFanSpeed(true),3);                                   // %Fs : Fan speed in Percent
                 break;
             }
 #endif // FAN_PIN > -1

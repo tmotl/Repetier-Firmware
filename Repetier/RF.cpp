@@ -63,7 +63,6 @@ FSTRINGVALUE( ui_text_heat_bed_zoffset_fix_z2, UI_TEXT_HEAT_BED_ZOFFSET_FIX_Z2 )
 
 FSTRINGVALUE( ui_text_saving_success, UI_TEXT_SAVING_SUCCESS )
 
-unsigned long   g_lastTime                 = 0;
 unsigned long   g_uStartOfIdle             = 0;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
