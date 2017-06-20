@@ -5132,8 +5132,8 @@ int moveZ( int nSteps )
         if( bBreak )
         {
             // do not continue here in case the current operation has been cancelled
-            if( nSteps > 0 )    nSteps = nMaxLoops;
-            else                nSteps = -nMaxLoops;
+            if( nSteps > 0 )    nSteps = i;
+            else                nSteps = -i;
             break;
         }
 
@@ -11251,6 +11251,7 @@ void processCommand( GCode* pCommand )
             {
                 if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
                 {
+                    Commands::waitUntilEndOfAllMoves();
                     //Statusänderung per M3909 P10000 (for 10000 [digits])
                     if (pCommand->hasP() ){                     
                         if ( pCommand->P >= 0 && pCommand->P < EMERGENCY_PAUSE_DIGITS_MAX )
