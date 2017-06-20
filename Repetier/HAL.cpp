@@ -1080,11 +1080,17 @@ ISR(PWM_TIMER_VECTOR)
     if(pwm_heater_pos_set[NUM_EXTRUDER] == pwm_count_heater && pwm_heater_pos_set[NUM_EXTRUDER]!=HEATER_PWM_MASK) WRITE(HEATED_BED_HEATER_PIN,HEATER_PINS_INVERTED);
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
-    static int counterPeriodical = 0; // Approximate a 100ms timer :: blocks pingwatchdog s commandloop if not working
-    if(++counterPeriodical >= 391) //(int)(F_CPU/40960))
+    static int counter100Periodical = 0; // Approximate a 100ms timer :: blocks pingwatchdog s commandloop if not working
+    if(++counter100Periodical >= 391) //(int)(F_CPU/40960))
     {
-        counterPeriodical = 0;
+        counter100Periodical = 0;
         execute100msPeriodical = 1;
+    }
+    static char counter10Periodical = 0; // Approximate a 10ms timer :: blocks pingwatchdog s commandloop if not working
+    if(++counter10Periodical >= 39) //(int)(F_CPU/40960))
+    {
+        counter10Periodical = 0;
+        execute10msPeriodical = 1;
     }
 
     HAL::allowInterrupts();

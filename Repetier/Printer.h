@@ -1054,12 +1054,12 @@ public:
     static inline long currentZPositionSteps()
     {
         // return all values in [steps]
-        long    value = queuePositionCurrentSteps[Z_AXIS];
+        long    value = queuePositionCurrentSteps[Z_AXIS] + Extruder::current->zOffset; //offset negativ, das ist hier uninteressant. also rausrechnen.
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
         // add the current z-compensation
-        value += Printer::compensatedPositionCurrentStepsZ;
+        value += Printer::compensatedPositionCurrentStepsZ; //da drin: zoffset + senseoffset + digitcompensation
         value += g_nZScanZPosition;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
@@ -1078,6 +1078,12 @@ public:
 
     static inline float currentZPosition()
     {
+        if (Printer::ZMode == Z_VALUE_MODE_LAYER)
+        {
+            // show the G-Code Commanded Z //offset negativ, das ist hier uninteressant.
+            return (queuePositionCurrentSteps[Z_AXIS] + Extruder::current->zOffset) * Printer::invAxisStepsPerMM[Z_AXIS];
+        }
+
         // return all values in [mm]
         float   fvalue = (float)currentZPositionSteps();
 

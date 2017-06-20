@@ -654,7 +654,7 @@ extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv o
 
 extern short              g_nLastDigits;
 #if FEATURE_DIGIT_Z_COMPENSATION
-extern float            g_nSensibleCompensationDigits;
+extern float            g_nDigitZCompensationDigits;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_FIND_Z_ORIGIN

@@ -774,6 +774,7 @@ UI_STRING(ui_text_z_single,UI_TEXT_Z_SINGLE)
 UI_STRING(ui_text_z_circuit,UI_TEXT_Z_CIRCUIT)
 UI_STRING(ui_text_z_mode_min,UI_TEXT_Z_MODE_MIN)
 UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE)
+UI_STRING(ui_text_z_mode_gcode,UI_TEXT_Z_MODE_GCODE)
 UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN)
 UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1)
 UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
@@ -1304,7 +1305,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     else
 #endif // FEATURE_MILLING_MODE
                     {
-                        addStringP(Printer::ZMode==Z_VALUE_MODE_Z_MIN?ui_text_z_mode_min:ui_text_z_mode_surface);
+                        addStringP(Printer::ZMode==Z_VALUE_MODE_Z_MIN ? ui_text_z_mode_min : (Printer::ZMode==Z_VALUE_MODE_SURFACE ? ui_text_z_mode_surface : ui_text_z_mode_gcode) );
                     }
                 }
                 break;
@@ -1521,7 +1522,7 @@ void UIDisplay::parse(char *txt,bool ram)
                 
                 if(c2=='1')                                                                             // %s1 : current value of the strain gauge
                 {
-                    addInt(readStrainGauge(I2C_ADDRESS_STRAIN_GAUGE),5);
+                    addInt(g_nLastDigits,5);
                 }
 
                 break;
@@ -4027,8 +4028,9 @@ void UIDisplay::executeAction(int action)
 
             case UI_ACTION_ZMODE:
             {
-                if( Printer::ZMode == 1 )   Printer::ZMode = 2;
-                else                        Printer::ZMode = 1;
+                if( Printer::ZMode == 1 )        Printer::ZMode = 2;
+                else if( Printer::ZMode == 2 )   Printer::ZMode = 3;
+                else                             Printer::ZMode = 1;
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
                 HAL::eprSetByte( EPR_RF_Z_MODE, Printer::ZMode );
                 EEPROM::updateChecksum();

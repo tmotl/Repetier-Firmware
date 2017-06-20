@@ -200,7 +200,7 @@ char            g_nSensiblePressure1stMarke = 0; //sagt, ob regelung aktiv oder 
 
 short           g_nLastDigits = 0;
 #if FEATURE_DIGIT_Z_COMPENSATION
-float           g_nSensibleCompensationDigits = 0.0f;
+float           g_nDigitZCompensationDigits = 0.0f;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_EMERGENCY_STOP_ALL
@@ -354,16 +354,16 @@ short readStrainGauge( unsigned char uAddress ) //readStrainGauge dauert etwas u
         nSensibleCompensationChecks  += 1;
         if( nSensibleCompensationChecks == 4 ){
             InterruptProtectedBlock noInts;
-            g_nSensibleCompensationDigits = (float)(nSensibleCompensationSum / 4); //*0.25, nachkommsstellen sind egal.
+            g_nDigitZCompensationDigits = (float)(nSensibleCompensationSum / 4); //*0.25, nachkommsstellen sind egal.
             noInts.unprotect();
-            nSensibleCompensationSum = (long)g_nSensibleCompensationDigits * 3; //(nSensibleCompensationSum >> 1) + (nSensibleCompensationSum >> 2);--> sign-extension?? //nSensibleCompensationSum*0.75 
+            nSensibleCompensationSum = (long)g_nDigitZCompensationDigits * 3; //(nSensibleCompensationSum >> 1) + (nSensibleCompensationSum >> 2);--> sign-extension?? //nSensibleCompensationSum*0.75 
             nSensibleCompensationChecks -= 1; //*=0.75 bei 4 ist 3
         }else{
             InterruptProtectedBlock noInts;
-            g_nSensibleCompensationDigits = (float)Result; //startwert / failwert
+            g_nDigitZCompensationDigits = (float)Result; //startwert / failwert
             noInts.unprotect();
         }
-        g_nLastDigits = (short)g_nSensibleCompensationDigits;
+        g_nLastDigits = (short)g_nDigitZCompensationDigits;
     }else{
         g_nLastDigits = Result;
     }
@@ -2927,7 +2927,7 @@ void doHeatBedZCompensation( void )
         // Das Verhalten ist ziemlich bescheuert, der soll wen möglich immer, wenn Z-Compensation Aktiv ist auf mindestens den höchsten Punkt der Z-Matrix anheben, weil er sonst gegen das Bett crashen könnte.
         // after the first layers, only the static offset to the surface must be compensated
         //Dann evtl. lieber über dem Zenit bleiben + kleines Offset?? 29.05.2017
-        nNeededZCompensation = g_offsetZCompensationSteps + g_staticZSteps + (long)(0.1 * Printer::axisStepsPerMM[Z_AXIS]);
+        nNeededZCompensation = g_offsetZCompensationSteps + g_staticZSteps + (long)(0.001 * Printer::axisStepsPerMM[Z_AXIS]);
     }
 
 #if FEATURE_DIGIT_Z_COMPENSATION
@@ -2936,12 +2936,14 @@ void doHeatBedZCompensation( void )
     //Je höher die Kraft nach unten, desto mehr muss das Bett ausweichen: Z nach oben/+.
     
     //VORSICHT: Die Messzellen könnten falsch verbaut sein, darum Digits immer positiv nutzen. Negative Digits würden sowieso in die falsche Richtung tunen. Ein kleiner Versatz der Nullposition wäre beim Druck egal.
-    //long nNeededDigitCompensationSteps = (long)(fabs(g_nSensibleCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
-    long nNeededDigitCompensationSteps = abs((long)(g_nSensibleCompensationDigits * (float)Printer::axisStepsPerMM[Z_AXIS])); 
-    nNeededDigitCompensationSteps >>= 17; // geteilt durch 131072 statt errechnet ca. 110000 .. wäre 18% überkompensiert aber verdammt schnell gerechnet. evtl. ist überkompensation nicht so schlecht... höhere digits höhere schwankungen, das ist sowieso nur eine ganz grob vermessene kompensation, etwas mehr platz kann für die digits eine dämpfende wirkung haben.
+    //long nNeededDigitZCompensationSteps = (long)(fabs(g_nDigitZCompensationDigits) * (float)Printer::axisStepsPerMM[Z_AXIS] * 0.00001f);
+    long nNeededDigitZCompensationSteps = abs((long)(g_nDigitZCompensationDigits * (float)Printer::axisStepsPerMM[Z_AXIS])); 
+    nNeededDigitZCompensationSteps >>= 17; // geteilt durch 131072 statt errechnet ca. 110000 .. wäre 18% überkompensiert aber verdammt schnell gerechnet. evtl. ist überkompensation nicht so schlecht... höhere digits höhere schwankungen, das ist sowieso nur eine ganz grob vermessene kompensation, etwas mehr platz kann für die digits eine dämpfende wirkung haben.
     //sign-extension kann hier, da positiv kein problem sein.: unsigned(x) >> y
-    //g_nSensibleCompensationDigits -> max. 32768, axisStepsPerMM[Z_AXIS] -> ca. 2560, also passts in long. -> ca. max 640 steps.
-    nNeededDigitCompensationSteps = constrain(nNeededDigitCompensationSteps, 0, 600);
+    //g_nDigitZCompensationDigits -> max. 32768, axisStepsPerMM[Z_AXIS] -> ca. 2560, also passts in long. -> ca. max 640 steps.
+    nNeededDigitZCompensationSteps = constrain(nNeededDigitZCompensationSteps, 0, 600);
+
+    nNeededZCompensation += nNeededDigitZCompensationSteps;
 #endif // FEATURE_DIGIT_Z_COMPENSATION
 
 
@@ -2967,11 +2969,7 @@ void doHeatBedZCompensation( void )
 #endif // DEBUG_HEAT_BED_Z_COMPENSATION
 
     noInts.protect(true); //HAL::forbidInterrupts();
-#if FEATURE_DIGIT_Z_COMPENSATION
-    Printer::compensatedPositionTargetStepsZ = nNeededZCompensation + nNeededDigitCompensationSteps;
-#else
     Printer::compensatedPositionTargetStepsZ = nNeededZCompensation;
-#endif // FEATURE_DIGIT_Z_COMPENSATION
     noInts.unprotect(); //HAL::allowInterrupts();
 
     return;
@@ -3065,7 +3063,7 @@ long getHeatBedOffset( void )
                   (g_ZCompensationMatrix[nXRightIndex][nYBackIndex] - g_ZCompensationMatrix[nXLeftIndex][nYBackIndex]) * nDeltaX / nStepSizeX;
     nOffset     = nTempXFront +
                   (nTempXBack - nTempXFront) * nDeltaY / nStepSizeY;
-
+    
     return nOffset;
 
 } // getHeatBedOffset
@@ -6023,11 +6021,9 @@ void loopRF( void ) //wird so aufgerufen, dass es ein ~100ms takt sein sollte.
             /* 
             Still testing: Gesucht ist ein Limit des der Abstands zum Druckbett, also die jeweils richtige Layerbegrenzung::
 			
-            #das zOffset_des_extruders ist negativ und in Steps. Ist ein Extruder weiter unten, per T1-Offset, muss das bedacht werden.
+            #das Extruder::current->zOffset ist negativ und in Steps. Ist ein Extruder weiter unten, per T1-Offset, muss das bedacht werden.
 			#Die Höhe über Grund, kompensiert sollte unterhalb g_maxZCompensationSteps sein.
-			# + compensatedPositionTargetStepsZ gehört hier glaube ich nicht rein.
-			#directPositionTargetStepsZ gehören hier nicht dazu.
-			#Normales Z-Offset??
+			#queuePositionCurrentSteps = Achsenziel + Achsenoffset, aber g_minZCompensationSteps/g_maxZCompensationSteps kennen das Achsenoffset nicht ohne Hilfe: Das gehört hier her, wenn man die Layerhöhe abgleichen will.
             */
             if( Printer::queuePositionCurrentSteps[Z_AXIS] <= g_minZCompensationSteps - Extruder::current->zOffset ) 
             {
@@ -10351,47 +10347,6 @@ void processCommand( GCode* pCommand )
                 break;
             }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION       
-            
-#if FEATURE_BEDTEMP_DECREASE    
-            case 3903: // 3903 [S]TempGoal [P]PausePerKelvin in seconds - configure the HeatBed Temp-Decreaser || by Nibbels
-            {
-                if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
-                {
-                    if (reportTempsensorError()) break;
-                    if (Printer::debugDryrun()) break;
-                    if (pCommand->hasS() && pCommand->hasP()){
-                        
-                        if ( pCommand->S >= HEATED_BED_MIN_TEMP && pCommand->S < HEATED_BED_MAX_TEMP && pCommand->P >= 1 && pCommand->P <= 255 )
-                        {
-                            Extruder::decreaseHeatedBedTimeStamp = HAL::timeInMilliseconds(); //erst Zeit stellen.
-                            Extruder::decreaseHeatedBedInterval = (uint8_t)pCommand->P; ///< Current Decrease Interval (0..255s)
-                            Extruder::decreaseHeatedBedMinimum = (float)pCommand->S;        ///< Minimal Temp -> Start
-                            Com::printFLN( PSTR( "M3903: STARTED") );
-                            Com::printFLN( PSTR( "M3903: INFO [S]Temp = "), Extruder::decreaseHeatedBedMinimum);
-                            Com::printF( PSTR( "M3903: INFO [P]PausePerKelvin = "), Extruder::decreaseHeatedBedInterval);
-                            Com::printFLN( PSTR( "s"));
-                        
-                        }else{
-                            Com::printFLN( PSTR( "M3903: ERROR Cannot start Decreaser -> Wrong Parameters for [P]PausePerKelvin and or [S]Temp ") );
-                        }
-                
-                    }else if(Extruder::decreaseHeatedBedMinimum > 0.0f){
-                        //läuft noch
-                        Extruder::decreaseHeatedBedMinimum = 0.0f; //STOP
-                        Extruder::decreaseHeatedBedTimeStamp = 0;
-                        Com::printFLN( PSTR( "M3903: STOPPED") );
-                        
-                    }else{                      
-                        Com::printFLN( PSTR( "M3903: INFO Decreaser not active!") );
-                    }               
-                    Com::printFLN( PSTR( "M3903: INFO [P]PausePerKelvin = {1..255}") );
-                    Com::printF( PSTR( "M3903: INFO [S]Temp = {"), HEATED_BED_MIN_TEMP);
-                    Com::printF( PSTR( ".."), HEATED_BED_MAX_TEMP);
-                    Com::printFLN( PSTR( "}") );
-                }
-                break;      
-            }
-#endif // FEATURE_BEDTEMP_DECREASE  
                             
 #if FEATURE_SENSIBLE_PRESSURE
             case 3909: // M3909 [P]PressureDigits - configure the sensible pressure value threshold || by Wessix and Nibbels

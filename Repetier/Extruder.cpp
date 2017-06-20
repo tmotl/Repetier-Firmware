@@ -27,6 +27,7 @@
 uint8_t             manageMonitor = 255; ///< Temp. we want to monitor with our host. 1+NUM_EXTRUDER is heated bed
 volatile uint8_t    execute100msPeriodical = 0;
 volatile uint8_t    execute16msPeriodical = 0;
+volatile uint8_t    execute10msPeriodical = 0;
 
 #if FEATURE_DITTO_PRINTING
 uint8_t             Extruder::dittoMode = 0;
@@ -50,36 +51,12 @@ short               temptable_generic2[GENERIC_THERM_NUM_ENTRIES][2];
 short               temptable_generic3[GENERIC_THERM_NUM_ENTRIES][2];
 #endif
 
-#if FEATURE_BEDTEMP_DECREASE
-uint8_t     Extruder::decreaseHeatedBedInterval = 5;    ///< Current Decrease Interval (0..255s)
-uint32_t    Extruder::decreaseHeatedBedTimeStamp = 0;       ///< Current Decrease last Timestamp
-float       Extruder::decreaseHeatedBedMinimum = 0.0;       ///< Minimal Temp
-#endif // FEATURE_BEDTEMP_DECREASE
-
 /** Makes updates to temperatures and heater state every call.
 Is called every 100ms.
 */
 static uint8_t extruderTempErrors = 0;
 void Extruder::manageTemperatures()
 {
-#if FEATURE_BEDTEMP_DECREASE
-    if(decreaseHeatedBedMinimum > 0.0){
-        //uninit: springt sofort rein.
-        uint32_t ttime = HAL::timeInMilliseconds();
-        if( decreaseHeatedBedInterval < 1 ) decreaseHeatedBedInterval = 1; //min. jede sekunde ... oder mehr.
-        if( decreaseHeatedBedTimeStamp + decreaseHeatedBedInterval*1000 < ttime || ttime < decreaseHeatedBedTimeStamp ){
-            //work
-            if(heatedBedController.targetTemperatureC > decreaseHeatedBedMinimum && decreaseHeatedBedMinimum >= HEATED_BED_MIN_TEMP){ 
-                Extruder::decreaseHeatedBedTemperature(decreaseHeatedBedMinimum);
-                decreaseHeatedBedTimeStamp = ttime;
-            }else{
-                decreaseHeatedBedMinimum = 0.0; //STOP
-                decreaseHeatedBedTimeStamp = 0;
-            }
-            //end work
-        }
-    }
-#endif // FEATURE_BEDTEMP_DECREASE
 #if FEATURE_MILLING_MODE
     if( Printer::operatingMode != OPERATING_MODE_PRINT )
     {
@@ -572,19 +549,6 @@ void Extruder::setHeatedBedTemperature(float temperatureInCelsius,bool beep)
 #endif // HAVE_HEATED_BED
 
 } // setHeatedBedTemperature
-
-#if FEATURE_BEDTEMP_DECREASE
-void Extruder::decreaseHeatedBedTemperature(float min_temperatureInCelsius)
-{
-#if HAVE_HEATED_BED
-    if(heatedBedController.targetTemperatureC > HEATED_BED_MIN_TEMP && heatedBedController.targetTemperatureC > min_temperatureInCelsius){
-        Extruder::setHeatedBedTemperature( heatedBedController.targetTemperatureC - 1, false );
-    } 
-#endif // HAVE_HEATED_BED
-    (void)min_temperatureInCelsius;
-return; 
-} // decreaseHeatedBedTemperature
-#endif // FEATURE_BEDTEMP_DECREASE
 
 float Extruder::getHeatedBedTemperature()
 {

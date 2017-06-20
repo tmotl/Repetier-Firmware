@@ -168,6 +168,7 @@ extern volatile uint osAnalogInputValues[OS_ANALOG_INPUTS];
 
 extern volatile uint8_t     execute100msPeriodical;
 extern volatile uint8_t     execute16msPeriodical;
+extern volatile uint8_t     execute10msPeriodical;
 
 extern void writeMonitor();
 

@@ -24,19 +24,11 @@
 #define UI_PRINTER_NAME                     "RF1000"
 
 // ##########################################################################################
-// ##   Nibbels Kram Config
-// ##########################################################################################
-
-#define FEATURE_BEDTEMP_DECREASE                1                                                   // 1 = on, 0 = off
-#define FEATURE_SILENT_MODE                     1                                                   // 1 = on, 0 = off activate with GCode -> Switch Stepper Current to Silent Profile
-
-// ##########################################################################################
 // ##   main hardware configuration
 // ##########################################################################################
 
 /** \brief Allows to use the device for milling */
 #define FEATURE_MILLING_MODE                1                                                   // 1 = on, 0 = off
-
 
 #if FEATURE_MILLING_MODE
 
@@ -59,7 +51,6 @@
 
 
 #endif // FEATURE_MILLING_MODE
-
 
 /** \brief Number of extruders */
 #define NUM_EXTRUDER                        1

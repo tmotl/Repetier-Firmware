@@ -69,10 +69,18 @@ void Commands::commandLoop()
 void Commands::checkForPeriodicalActions()
 {
     bool didchecktemps = false;
+
+    if(execute10msPeriodical){ //set by PWM-Timer
+      execute10msPeriodical=0;
+
+      HAL::tellWatchdogOk();  //dieses freigabesignal sollte aus dem PWM-Timer kommen, denn dann ist klar, dass auch der noch läuft. Dann laufen für den Watchdogreset der Timer und checkForPeriodicalActions().
+      doZCompensation();  //100x pro sekunde -> 100mm/s : jede 1mm Weg
+
+    }
+
     if(execute16msPeriodical){ //set by internal Watchdog-Timer
       execute16msPeriodical = 0;
 
-      doZCompensation();  //62x pro sekunde -> 100mm/s : jede 1,5mm Weg
       Extruder::manageTemperatures(); didchecktemps = true;
 
     }
@@ -80,8 +88,7 @@ void Commands::checkForPeriodicalActions()
     if(execute100msPeriodical){ //set by PWM-Timer
       execute100msPeriodical=0;
 
-      HAL::tellWatchdogOk();  //dieses freigabesignal sollte aus dem PWM-Timer kommen, denn dann ist klar, dass auch der noch läuft. Dann laufen für den Watchdogreset der Timer und checkForPeriodicalActions().
-      if(!didchecktemps) Extruder::manageTemperatures();
+      if(!didchecktemps) Extruder::manageTemperatures(); //fallback? bin übervorsichtig..
       Commands::printTemperatures(); //selfcontrolling timediff
       UI_SLOW;
       loopRF();
@@ -308,9 +315,7 @@ void Commands::printTemperatures(bool showRaw)
         Com::printF(Com::tColon,(int)g_nLastDigits);
     #endif //FEATURE_PRINT_PRESSURE
 
-        Com::printF(Com::tSpaceAtColon,maT);
-        Com::printF(Com::tComma,miT);
-        Com::printF(Com::tComma,maCoLo);
+        Com::printF(Com::tSpaceAtColon,maCoLo);
 
         Com::println();
     }
