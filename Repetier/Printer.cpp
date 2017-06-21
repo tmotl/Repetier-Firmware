@@ -86,7 +86,7 @@ int             Printer::feedrateMultiply;                              ///< Mul
 int             Printer::extrudeMultiply;                               ///< Flow multiplier in percdent (factor 1 = 100)
 float           Printer::maxJerk;                                       ///< Maximum allowed jerk in mm/s
 float           Printer::maxZJerk;                                      ///< Maximum allowed jerk in z direction in mm/s
-float           Printer::extruderOffset[2];                             ///< offset for different extruder positions.
+float           Printer::extruderOffset[3];                             ///< offset for different extruder positions.
 unsigned int    Printer::vMaxReached;                                   ///< Maximum reached speed
 unsigned long   Printer::msecondsPrinting;                              ///< Milliseconds of printing time (means time with heated extruder)
 unsigned long   Printer::msecondsMilling;                               ///< Milliseconds of milling time
@@ -123,7 +123,7 @@ volatile long   Printer::staticCompensationZ;
 
 volatile long   Printer::queuePositionCurrentSteps[3];
 volatile char   Printer::stepperDirection[3];
-char            Printer::blockAll;
+volatile char   Printer::blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
 volatile long   Printer::currentZSteps;
@@ -138,7 +138,7 @@ volatile char   Printer::endZCompensationStep;
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 volatile long   Printer::directPositionTargetSteps[4];
-long            Printer::directPositionCurrentSteps[4];
+volatile long   Printer::directPositionCurrentSteps[4];
 long            Printer::directPositionLastSteps[4];
 char            Printer::waitMove;
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -206,6 +206,10 @@ unsigned long   Printer::fanOffDelay = 0;
 unsigned char   Printer::wrongType;
 #endif // FEATURE_TYPE_EEPROM
 
+#if FEATURE_UNLOCK_MOVEMENT
+//When the printer resets, we should not do movement, because it would not be homed. At least some interaction with buttons or temperature-commands are needed to allow movement.
+unsigned char   Printer::g_unlock_movement = 0;
+#endif //FEATURE_UNLOCK_MOVEMENT
 
 void Printer::constrainQueueDestinationCoords()
 {
@@ -394,7 +398,7 @@ void Printer::moveTo(float x,float y,float z,float e,float f)
     if(y != IGNORE_COORDINATE)
         queuePositionTargetSteps[Y_AXIS] = (y + Printer::extruderOffset[Y_AXIS]) * axisStepsPerMM[Y_AXIS];
     if(z != IGNORE_COORDINATE)
-        queuePositionTargetSteps[Z_AXIS] = z * axisStepsPerMM[Z_AXIS];
+        queuePositionTargetSteps[Z_AXIS] = (z + Printer::extruderOffset[Z_AXIS]) * axisStepsPerMM[Z_AXIS];
     if(e != IGNORE_COORDINATE)
         queuePositionTargetSteps[E_AXIS] = e * axisStepsPerMM[E_AXIS];
     if(f != IGNORE_COORDINATE)
@@ -422,6 +426,7 @@ void Printer::moveToReal(float x,float y,float z,float e,float f)
 
     x += Printer::extruderOffset[X_AXIS];
     y += Printer::extruderOffset[Y_AXIS];
+    z += Printer::extruderOffset[Z_AXIS];
 
     if(x != IGNORE_COORDINATE)
         queuePositionTargetSteps[X_AXIS] = floor(x * axisStepsPerMM[X_AXIS] + 0.5);
@@ -476,6 +481,7 @@ void Printer::updateCurrentPosition(bool copyLastCmd)
     queuePositionLastMM[Z_AXIS] = (float)(queuePositionLastSteps[Z_AXIS])*invAxisStepsPerMM[Z_AXIS];
     queuePositionLastMM[X_AXIS] -= Printer::extruderOffset[X_AXIS];
     queuePositionLastMM[Y_AXIS] -= Printer::extruderOffset[Y_AXIS];
+    queuePositionLastMM[Z_AXIS] -= Printer::extruderOffset[Z_AXIS];
 
     if(copyLastCmd)
     {
@@ -500,7 +506,6 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
     register long   p;
     float           x, y, z;
 
-
     if(!relativeCoordinateMode)
     {
         if(com->hasX()) queuePositionCommandMM[X_AXIS] = queuePositionLastMM[X_AXIS] = convertToMM(com->X) - originOffsetMM[X_AXIS];
@@ -524,7 +529,7 @@ uint8_t Printer::setDestinationStepsFromGCode(GCode *com)
 
     x = queuePositionCommandMM[X_AXIS] + Printer::extruderOffset[X_AXIS];
     y = queuePositionCommandMM[Y_AXIS] + Printer::extruderOffset[Y_AXIS];
-    z = queuePositionCommandMM[Z_AXIS];
+    z = queuePositionCommandMM[Z_AXIS] + Printer::extruderOffset[Z_AXIS];
 
     long xSteps = static_cast<long>(floor(x * axisStepsPerMM[X_AXIS] + 0.5));
     long ySteps = static_cast<long>(floor(y * axisStepsPerMM[Y_AXIS] + 0.5));
@@ -630,7 +635,7 @@ uint8_t Printer::setDestinationStepsFromMenu( float relativeX, float relativeY, 
 
     x = queuePositionCommandMM[X_AXIS] + Printer::extruderOffset[X_AXIS];
     y = queuePositionCommandMM[Y_AXIS] + Printer::extruderOffset[Y_AXIS];
-    z = queuePositionCommandMM[Z_AXIS];
+    z = queuePositionCommandMM[Z_AXIS] + Printer::extruderOffset[Z_AXIS];
 
     long xSteps = static_cast<long>(floor(x * axisStepsPerMM[X_AXIS] + 0.5));
     long ySteps = static_cast<long>(floor(y * axisStepsPerMM[Y_AXIS] + 0.5));
@@ -1002,7 +1007,7 @@ void Printer::setup()
 
     maxJerk = MAX_JERK;
     maxZJerk = MAX_ZJERK;
-    extruderOffset[X_AXIS] = extruderOffset[Y_AXIS] = 0;
+    extruderOffset[X_AXIS] = extruderOffset[Y_AXIS] = extruderOffset[Z_AXIS] = 0;
 
     ZOffset = 0;
     interval = 5000;
@@ -1230,6 +1235,10 @@ void Printer::setup()
     }
 #endif // FEATURE_RGB_LIGHT_EFFECTS
 
+#if FEATURE_UNLOCK_MOVEMENT
+    g_unlock_movement = 0;
+#endif //FEATURE_UNLOCK_MOVEMENT
+
 #if FEATURE_WATCHDOG
     if( Printer::debugInfo() )
     {
@@ -1306,7 +1315,7 @@ void Printer::homeXAxis()
 
     if ((MIN_HARDWARE_ENDSTOP_X && X_MIN_PIN > -1 && X_HOME_DIR==-1) || (MAX_HARDWARE_ENDSTOP_X && X_MAX_PIN > -1 && X_HOME_DIR==1))
     {
-        long offX = 0;
+        int32_t offX = 0;
 
 #if NUM_EXTRUDER>1
         // Reposition extruder that way, that all extruders can be selected at home pos.
@@ -1371,7 +1380,7 @@ void Printer::homeYAxis()
 
     if ((MIN_HARDWARE_ENDSTOP_Y && Y_MIN_PIN > -1 && Y_HOME_DIR==-1) || (MAX_HARDWARE_ENDSTOP_Y && Y_MAX_PIN > -1 && Y_HOME_DIR==1))
     {
-        long offY = 0;
+        int32_t offY = 0;
 
 #if NUM_EXTRUDER>1
         // Reposition extruder that way, that all extruders can be selected at home pos.
@@ -1479,46 +1488,6 @@ void Printer::homeZAxis()
 
         setHomed( false );
 
-#if FEATURE_CONFIGURABLE_Z_ENDSTOPS
-        if( ZEndstopUnknown )
-        {
-            // in case we do not know which z-endstop is currently active, we always move downwards first
-            // in case z-min was active, z-min will not be active anymore
-            // in case z-max was active, it will remain active
-            UI_STATUS_UPD( UI_TEXT_DRIVING_FREE_Z );
-
-            if( Printer::debugInfo() )
-            {
-                Com::printFLN( PSTR( "driving free downwards" ) );
-            }
-            PrintLine::moveRelativeDistanceInSteps(0,0,UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS,0,homingFeedrate[Z_AXIS],true,false);
-
-            if( READ(Z_MAX_PIN) != ENDSTOP_Z_MAX_INVERTING )
-            {
-                // in case z-max is still active, we move upwards in order to drive it free
-                if( Printer::debugInfo() )
-                {
-                    Com::printFLN( PSTR( "driving free upwards" ) );
-                }
-                PrintLine::moveRelativeDistanceInSteps(0,0,-UNKNOWN_Z_ENDSTOP_DRIVE_FREE_STEPS,0,homingFeedrate[Z_AXIS],true,false);
-            }
-
-            if( READ(Z_MAX_PIN) == ENDSTOP_Z_MAX_INVERTING )
-            {
-                // there is no active z-endstop any more, we can continue with all movements normally
-                if( Printer::debugInfo() )
-                {
-                    Com::printFLN( PSTR( "driven free" ) );
-                }
-
-                lastZDirection        = 0;
-                endstopZMinHit        = ENDSTOP_NOT_HIT;
-                endstopZMaxHit        = ENDSTOP_NOT_HIT;
-                ZEndstopUnknown       = 0;
-            }
-        }
-#endif // FEATURE_CONFIGURABLE_Z_ENDSTOPS
-
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
         g_nZScanZPosition = 0;
         queueTask( TASK_DISABLE_Z_COMPENSATION );
@@ -1565,7 +1534,10 @@ void Printer::homeAxis(bool xaxis,bool yaxis,bool zaxis) // home non-delta print
     char    homingOrder;
     char    unlock = !uid.locked;
     
-
+    //Bei beliebiger user interaktion oder Homing soll G1 etc. erlaubt werden. Dann ist der Drucker nicht abgestürzt, sondern bedient worden.
+#if FEATURE_UNLOCK_MOVEMENT
+    g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
     lastCalculatedPosition(startX,startY,startZ);
 
 #if FEATURE_MILLING_MODE
@@ -1809,6 +1781,16 @@ void Printer::performZCompensation( void )
             return;
         }
     }
+
+/* 17_06_12 könnte das folgende hier fehlen? siehe bug mit dem verzählen. ... test irgendwann später mal.
+    if( PrintLine::direct )
+    {
+        if( PrintLine::direct->isZMove() )
+        {
+            // do not peform any compensation while there is a direct-move into z-direction
+            return;
+        }
+    }*/
 
     if( endZCompensationStep )
     {

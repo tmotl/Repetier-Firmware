@@ -57,6 +57,7 @@ FSTRINGVALUE(Com::tExternalReset,"External Reset")
 FSTRINGVALUE(Com::tBrownOut,"Brown out Reset")
 FSTRINGVALUE(Com::tWatchdog,"Watchdog Reset")
 FSTRINGVALUE(Com::tSoftwareReset,"Software Reset")
+FSTRINGVALUE(Com::tUnknownReset,"Unknown Reset")
 FSTRINGVALUE(Com::tUnknownCommand,"Unknown command:")
 FSTRINGVALUE(Com::tFreeRAM,"Free RAM:")
 FSTRINGVALUE(Com::tXColon,"X:")
@@ -434,7 +435,7 @@ void Com::print(const char *text)
 } // print
 
 
-void Com::print(long value)
+void Com::print(int32_t value)
 {
     if(value<0)
     {

@@ -438,7 +438,7 @@ void initializeLCD()
 #if UI_DISPLAY_TYPE<4
 void UIDisplay::printRow(uint8_t r,char *txt,char *txt2,uint8_t changeAtCol)
 {
-    changeAtCol = RMath::min(UI_COLS,changeAtCol);
+    changeAtCol = RMath::min((uint8_t)UI_COLS,changeAtCol);
     uint8_t col=0;
 
     // Set row
@@ -774,12 +774,15 @@ UI_STRING(ui_text_z_single,UI_TEXT_Z_SINGLE)
 UI_STRING(ui_text_z_circuit,UI_TEXT_Z_CIRCUIT)
 UI_STRING(ui_text_z_mode_min,UI_TEXT_Z_MODE_MIN)
 UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE)
+UI_STRING(ui_text_z_mode_gcode,UI_TEXT_Z_MODE_GCODE)
 UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN)
 UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1)
 UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
 UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
 UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
 UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
+UI_STRING(ui_text_extruder_offset_z_msg,UI_TEXT_EXTRUDER_OFFSET_Z_MSG)
+
 
 
 void UIDisplay::parse(char *txt,bool ram)
@@ -920,7 +923,7 @@ void UIDisplay::parse(char *txt,bool ram)
 #if FAN_PIN > -1
             case 'F': // FAN speed
             {
-                if(c2=='s') addInt(Printer::getFanSpeed()*100/255,3);                                   // %Fs : Fan speed
+                if(c2=='s') addInt(Printer::getFanSpeed(true),3);                                   // %Fs : Fan speed in Percent
                 break;
             }
 #endif // FAN_PIN > -1
@@ -965,6 +968,10 @@ void UIDisplay::parse(char *txt,bool ram)
                 if(c2=='F')                                                                             // %OF : Extruder offset Y [mm]
                 {
                     addFloat(extruder[1].yOffset/Printer::axisStepsPerMM[Y_AXIS],4,3);
+                }
+                if(c2=='S')                                                                             // %OS : Extruder spring displacement Z [mm]
+                {
+                    addFloat(extruder[1].zOffset/Printer::axisStepsPerMM[Z_AXIS],4,3);
                 }
 #endif // NUM_EXTRUDER>1
 
@@ -1298,7 +1305,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     else
 #endif // FEATURE_MILLING_MODE
                     {
-                        addStringP(Printer::ZMode==Z_VALUE_MODE_Z_MIN?ui_text_z_mode_min:ui_text_z_mode_surface);
+                        addStringP(Printer::ZMode==Z_VALUE_MODE_Z_MIN ? ui_text_z_mode_min : (Printer::ZMode==Z_VALUE_MODE_SURFACE ? ui_text_z_mode_surface : ui_text_z_mode_gcode) );
                     }
                 }
                 break;
@@ -1504,8 +1511,8 @@ void UIDisplay::parse(char *txt,bool ram)
 #if FEATURE_SENSIBLE_PRESSURE
                     if( Printer::doHeatBedZCompensation && g_nSensiblePressureDigits > 0 )
                     {
-						if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
-						else addStringP( PSTR( "@" ));
+                        if(g_nSensiblePressure1stMarke) addStringP( PSTR( "^" ));
+                        else addStringP( PSTR( "@" ));
                         addInt((int)g_nSensiblePressureDigits,5);
                     }else{
                         addStringP(ui_text_off);                
@@ -1515,7 +1522,7 @@ void UIDisplay::parse(char *txt,bool ram)
                 
                 if(c2=='1')                                                                             // %s1 : current value of the strain gauge
                 {
-                    addInt(readStrainGauge(I2C_ADDRESS_STRAIN_GAUGE),5);
+                    addInt(g_nLastDigits,5);
                 }
 
                 break;
@@ -1523,8 +1530,8 @@ void UIDisplay::parse(char *txt,bool ram)
             case 'S':
             {
                 if(c2=='e') addFloat(Extruder::current->stepsPerMM,3,1);                                // %Se : Steps per mm current extruder
-				if(c2=='z') addFloat(g_nManualSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,4,0); // %Sz : Mikrometer per Z-Single_Step (Z_Axis)
-                break;				
+                if(c2=='z') addFloat(g_nManualSteps[Z_AXIS] * Printer::invAxisStepsPerMM[Z_AXIS] * 1000,4,0); // %Sz : Mikrometer per Z-Single_Step (Z_Axis)
+                break;                
             }
             case 'p':
             {
@@ -2027,7 +2034,7 @@ void sdrefresh(uint8_t &r,char cache[UI_ROWS][MAX_COLS+1])
 
             if(DIR_IS_SUBDIR(p))
                 printCols[uid.col++] = 6; // Prepend folder symbol
-            length = RMath::min((int)strlen(tempLongFilename), MAX_COLS-uid.col);
+            length = RMath::min( (int)strlen(tempLongFilename), (int)(MAX_COLS-uid.col) );
             memcpy(printCols+uid.col, tempLongFilename, length);
             uid.col += length;
             printCols[uid.col] = 0;
@@ -2106,7 +2113,7 @@ void UIDisplay::refreshPage()
     if(menuLevel==0)
     {
         UIMenu *men = (UIMenu*)pgm_read_word(&(ui_pages[menuPos[0]]));
-        short nr = pgm_read_word_near(&(men->numEntries));
+        uint16_t nr = pgm_read_word_near(&(men->numEntries));
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
         for(r=0; r<nr && r<UI_ROWS; r++)
         {
@@ -2119,7 +2126,7 @@ void UIDisplay::refreshPage()
     else
     {
         UIMenu *men = (UIMenu*)menu[menuLevel];
-        short nr = pgm_read_word_near((void*)&(men->numEntries));
+        uint16_t nr = pgm_read_word_near(&(men->numEntries));
         mtype = pgm_read_byte((void*)&(men->menuType));
         uint8_t offset = menuTop[menuLevel];
         UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
@@ -2478,7 +2485,7 @@ void UIDisplay::okAction()
                 {
                     sd.startPrint();
                     BEEP_START_PRINTING
-                    menuLevel = 0;
+                    uid.executeAction(UI_ACTION_TOP_MENU);
                 }
                 break;
             }
@@ -2736,7 +2743,7 @@ void UIDisplay::nextPreviousAction(int8_t next)
     }
 
     UIMenu *men = (UIMenu*)menu[menuLevel];
-    short nr = pgm_read_word_near(&(men->numEntries));
+    uint8_t nr = (uint8_t)pgm_read_word_near(&(men->numEntries));
     uint8_t mtype = HAL::readFlashByte((const prog_char*)&(men->menuType));
     UIMenuEntry **entries = (UIMenuEntry**)pgm_read_word(&(men->entries));
     UIMenuEntry *ent =(UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
@@ -2749,51 +2756,51 @@ void UIDisplay::nextPreviousAction(int8_t next)
     {
         if((UI_INVERT_MENU_DIRECTION && next < 0) || (!UI_INVERT_MENU_DIRECTION && next > 0))
         {
-			    //up-to-bottom-Patch
-			    uint8_t vorher = menuPos[menuLevel];
-			    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
-			    else menuPos[menuLevel] = 0; 
-			    //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
-			    while(menuPos[menuLevel] != vorher)
-			    {				
-				    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-				    if(testEnt->showEntry()) break;
-				
-				    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
-				    else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
-			    }
-			    //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
-			    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			    if(!testEnt->showEntry())
-			    {
-				    // this new chosen menu item shall not be displayed - revert the so-far used menu item
-				    menuPos[menuLevel] = vorher;
-			    }
-			    //up-to-bottom-Patch
+                //up-to-bottom-Patch
+                uint8_t vorher = menuPos[menuLevel];
+                if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+                else menuPos[menuLevel] = 0; 
+                //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+                while(menuPos[menuLevel] != vorher)
+                {                
+                    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                    if(testEnt->showEntry()) break;
+                
+                    if(menuPos[menuLevel] < nr-1) menuPos[menuLevel]++;
+                    else menuPos[menuLevel] = 0; //0..nr-1; nr ist anzahl submenüpunkte
+                }
+                //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+                testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                if(!testEnt->showEntry())
+                {
+                    // this new chosen menu item shall not be displayed - revert the so-far used menu item
+                    menuPos[menuLevel] = vorher;
+                }
+                //up-to-bottom-Patch
          }
          else 
          {
-			    //down-to-top-Patch
-			    uint8_t vorher = menuPos[menuLevel];
-			    if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
-			    else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-			    //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
-			    while(menuPos[menuLevel] != vorher)
-			    {				
-			    	testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			    	if(testEnt->showEntry()) break;
-			    	
-		    		if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
-		    		else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
-		    	}
-			    //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
-			    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
-			    if(!testEnt->showEntry())
-			    {
-			    	// this new chosen menu item shall not be displayed - revert the so-far used menu item
-			    	menuPos[menuLevel] = vorher;
-			    }
-			    //down-to-top-Patch ende
+                //down-to-top-Patch
+                uint8_t vorher = menuPos[menuLevel];
+                if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+                else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+                //gehe maximal einmal im kreis, auch wenn keins der menüpunkte sauber konfiguriert ist ^^.
+                while(menuPos[menuLevel] != vorher)
+                {                
+                    testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                    if(testEnt->showEntry()) break;
+                    
+                    if(menuPos[menuLevel] > 0) menuPos[menuLevel]--;
+                    else menuPos[menuLevel] = nr-1; //0..nr-1; nr ist anzahl submenüpunkte
+                }
+                //alle untermenüpunkte sind entweder nicht vorhanden oder falsch oder unzulässig: also geh einfach zurück auf das was anfangs dastand.
+                testEnt = (UIMenuEntry *)pgm_read_word(&(entries[menuPos[menuLevel]]));
+                if(!testEnt->showEntry())
+                {
+                    // this new chosen menu item shall not be displayed - revert the so-far used menu item
+                    menuPos[menuLevel] = vorher;
+                }
+                //down-to-top-Patch ende
         }
         adjustMenuPos();
         return;
@@ -2842,34 +2849,34 @@ void UIDisplay::nextPreviousAction(int8_t next)
         }
         case UI_ACTION_XPOSITION:
         {
-			/*
-			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
-			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
-			see configuration.h
-			*/
+            /*
+            XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+            XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+            see configuration.h
+            */
             nextPreviousXAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }
         case UI_ACTION_YPOSITION:
         {
-			/*
-			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
-			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
-			see configuration.h
-			*/
+            /*
+            XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+            XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+            see configuration.h
+            */
             nextPreviousYAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
         }
         case UI_ACTION_ZPOSITION:
         {
-			/*
-			XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
-			XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
-			see configuration.h
-			*/
+            /*
+            XYZ_POSITION_BUTTON_DIRECTION = -1 : This fits to you if you want more intuitivity when choosing the Up-Down-Buttons.
+            XYZ_POSITION_BUTTON_DIRECTION = 1 : This fits more if you stick to coordinates direction.
+            see configuration.h
+            */
             nextPreviousZAction( XYZ_POSITION_BUTTON_DIRECTION*increment );
             break;
-        }			
+        }            
         case UI_ACTION_ZOFFSET:
         {           
             //INCREMENT_MIN_MAX(Printer::ZOffset,Z_OFFSET_STEP,-5000,5000);
@@ -3016,6 +3023,13 @@ void UIDisplay::nextPreviousAction(int8_t next)
             EEPROM::updateChecksum();
 #endif // FEATURE_AUTOMATIC_EEPROM_UPDATE
 
+            break;
+        }
+        case UI_ACTION_EXTRUDER_OFFSET_Z:
+        {
+            //Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
+            
+                    showInformation( (void*)ui_text_extruder_offset_z_msg );
             break;
         }
 #endif // NUM_EXTRUDER>1
@@ -3586,12 +3600,9 @@ void UIDisplay::executeAction(int action)
     {
         action -= UI_ACTION_TOPMENU;
         menuLevel = 0;
+        if(uid.menuPos[0] == 1) uid.menuPos[0] = 0;
     }
-/*  if(action>=2000 && action<3000)
-    {
-        setStatusP(ui_action);
-    }
-*/  else if((action>=UI_ACTION_RF_MIN_REPEATABLE && action<=UI_ACTION_RF_MAX_REPEATABLE) ||
+    else if((action>=UI_ACTION_RF_MIN_REPEATABLE && action<=UI_ACTION_RF_MAX_REPEATABLE) ||
             (action>=UI_ACTION_RF_MIN_SINGLE && action<=UI_ACTION_RF_MAX_SINGLE))
     {
         processButton( action );
@@ -3674,6 +3685,7 @@ void UIDisplay::executeAction(int action)
             case UI_ACTION_TOP_MENU:
             {
                 menuLevel = 0;
+                if(uid.menuPos[0] == 1) uid.menuPos[0] = 0;
                 break;
             }
             case UI_ACTION_EMERGENCY_STOP:
@@ -3903,11 +3915,12 @@ void UIDisplay::executeAction(int action)
 
 
 #if FEATURE_EXTENDED_BUTTONS
-	case UI_ACTION_CONFIG_SINGLE_STEPS:
-	{   
-		configureMANUAL_STEPS_Z( 1 );
+            case UI_ACTION_CONFIG_SINGLE_STEPS:
+            {   
+                configureMANUAL_STEPS_Z( 1 );
                 break;
-	}
+            }
+
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_MILLING_MODE
@@ -4016,8 +4029,9 @@ void UIDisplay::executeAction(int action)
 
             case UI_ACTION_ZMODE:
             {
-                if( Printer::ZMode == 1 )   Printer::ZMode = 2;
-                else                        Printer::ZMode = 1;
+                if( Printer::ZMode == 1 )        Printer::ZMode = 2;
+                else if( Printer::ZMode == 2 )   Printer::ZMode = 3;
+                else                             Printer::ZMode = 1;
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
                 HAL::eprSetByte( EPR_RF_Z_MODE, Printer::ZMode );
                 EEPROM::updateChecksum();
@@ -4667,32 +4681,33 @@ void UIDisplay::executeAction(int action)
 #endif // DEBUG_PRINT
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
-			case UI_ACTION_RF_DO_MHIER_BED_SCAN:
-			{           
-				//macht an, wenn an, macht aus:         
-				startZOScan();
-				//gehe zurück und zeige dem User was passiert.
-				uid.menuLevel = 0; 
-				uid.menuPos[0] = 0;
-				//wartet nur wenn an:
-				//Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
-				break;
-			}
-			case UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX:
-			{
-				// save the determined values to the EEPROM		
-				if(g_ZMatrixChangedInRam){
-					uid.executeAction(UI_ACTION_TOP_MENU);
-					saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );     
-					if( Printer::debugInfo() )
-					{
-						Com::printFLN( PSTR( "Manual Input: the heat bed compensation matrix has been saved" ) );
-					}                     
+            case UI_ACTION_RF_DO_MHIER_BED_SCAN:
+            {           
+                //macht an, wenn an, macht aus:         
+                startZOScan();
+                //gehe zurück und zeige dem User was passiert.
+                uid.menuLevel = 0; 
+                uid.menuPos[0] = 0;
+                //wartet nur wenn an:
+                //Commands::waitUntilEndOfZOS(); -> Nein, weil der Nutzer das aktiv steuern und abbrechen können soll. Ist ja hier kein M-code in Reihe.
+                break;
+            }
+            case UI_ACTION_RF_DO_SAVE_ACTIVE_ZMATRIX:
+            {
+                // save the determined values to the EEPROM        
+                if(g_ZMatrixChangedInRam){
+                    uid.executeAction(UI_ACTION_TOP_MENU);
+                    saveCompensationMatrix( (unsigned int)(EEPROM_SECTOR_SIZE * g_nActiveHeatBed) );     
+                    if( Printer::debugInfo() )
+                    {
+                        Com::printFLN( PSTR( "Manual Input: the heat bed compensation matrix has been saved" ) );
+                    }                     
                     showInformation( (void*)ui_text_manual, (void*)ui_text_saving_success );
-				}else{
+                }else{
                     showInformation( (void*)ui_text_manual, (void*)ui_text_saving_needless );
-				}
-			}
+                }
+                break;
+            }
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
         }
     }
@@ -4741,11 +4756,11 @@ void UIDisplay::slowAction()
 
 #if UI_HAS_KEYS==1
     // Update key buffer
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     if((flags & 9)==0)
     {
         flags|=UI_FLAG_KEY_TEST_RUNNING;
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
 
         int nextAction = 0;
         ui_check_slow_keys(nextAction);  //Nibbels: Das macht garnix.
@@ -4753,23 +4768,25 @@ void UIDisplay::slowAction()
         {
             lastButtonStart = time;
             lastButtonAction = nextAction;
-            HAL::forbidInterrupts();
+            noInts.protect(); //HAL::forbidInterrupts();
             flags|=UI_FLAG_SLOW_KEY_ACTION;
+        }else{
+            noInts.protect(); //HAL::forbidInterrupts();
         }
-        HAL::forbidInterrupts();
         flags-=UI_FLAG_KEY_TEST_RUNNING;
+    }else{
+      noInts.protect(); //HAL::forbidInterrupts();
     }
-    HAL::forbidInterrupts();
 
     if((flags & UI_FLAG_SLOW_ACTION_RUNNING)==0)
     {
         flags |= UI_FLAG_SLOW_ACTION_RUNNING;
         
         // Reset click encoder
-        HAL::forbidInterrupts();
+        //HAL::forbidInterrupts(); //_-> Ist schon protected!! in jedem aller fälle. entweder ist das mist oder vorher n bug.
         int8_t epos = encoderPos;
         encoderPos=0;
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
         if(epos)
         {
             nextPreviousAction(epos); //Nibbels: Funktion, die rechts links auswertet oder Errors wegklicken lässt. abhängig von this->encoderPos .. sonst verwendet mit -1 oder 1
@@ -4778,15 +4795,14 @@ void UIDisplay::slowAction()
         }
         if(lastAction!=lastButtonAction)
         {
+#if FEATURE_UNLOCK_MOVEMENT
+            //Bei beliebiger user interaktion oder Homing soll G1 etc. erlaubt werden. Dann ist der Drucker nicht abgestürzt, sondern bedient worden.
+            Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
             if(lastButtonAction==0)
             {
-/*              if(lastAction>=2000 && lastAction<3000)
-                {
-                    statusMsg[0] = 0;
-                }
-*/              
                 lastAction = 0;
-                HAL::forbidInterrupts();
+                noInts.protect(); //HAL::forbidInterrupts();
                 flags &= ~3;
             }
             else if(time-lastButtonStart>UI_KEY_BOUNCETIME)     // New key pressed
@@ -4807,10 +4823,10 @@ void UIDisplay::slowAction()
                 nextRepeat = time+repeatDuration;
             }
         }
-        HAL::forbidInterrupts();
+        noInts.protect(); //HAL::forbidInterrupts();
         flags -= UI_FLAG_SLOW_ACTION_RUNNING;
     }
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 #endif // UI_HAS_KEYS==1
 
 #if UI_PRINT_AUTORETURN_TO_MENU_AFTER || UI_MILL_AUTORETURN_TO_MENU_AFTER
@@ -4873,12 +4889,12 @@ void UIDisplay::fastAction()
 {
 #if UI_HAS_KEYS==1
     // Check keys
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
 
     if((flags & 10)==0)
     {
         flags |= UI_FLAG_KEY_TEST_RUNNING;
-        HAL::allowInterrupts();
+        noInts.unprotect(); //HAL::allowInterrupts();
         int nextAction = 0;
         ui_check_keys(nextAction);
 
@@ -4886,7 +4902,7 @@ void UIDisplay::fastAction()
         {
             lastButtonStart = HAL::timeInMilliseconds();
             lastButtonAction = nextAction;
-            HAL::forbidInterrupts();
+            noInts.protect(); //HAL::forbidInterrupts();
             flags|=UI_FLAG_FAST_KEY_ACTION;
             if( nextAction == UI_ACTION_RF_CONTINUE )
             {
@@ -4904,10 +4920,10 @@ void UIDisplay::fastAction()
             }
         }
   
-        HAL::forbidInterrupts();
+        noInts.protect(); //HAL::forbidInterrupts();
         flags-=UI_FLAG_KEY_TEST_RUNNING;
     }
-    HAL::allowInterrupts();
+    noInts.unprotect(); //HAL::allowInterrupts();
 #endif //  UI_HAS_KEYS==1
 
 } // fastAction

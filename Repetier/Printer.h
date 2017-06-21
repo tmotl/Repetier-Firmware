@@ -89,7 +89,7 @@ public:
     static int              extrudeMultiply;                    // Flow multiplier in percdent (factor 1 = 100)
     static float            maxJerk;                            // Maximum allowed jerk in mm/s
     static float            maxZJerk;                           // Maximum allowed jerk in z direction in mm/s
-    static float            extruderOffset[2];                  // offset for different extruder positions.
+    static float            extruderOffset[3];                  // offset for different extruder positions.
     static speed_t          vMaxReached;                        // Maximumu reached speed
     static unsigned long    msecondsPrinting;                   // Milliseconds of printing time (means time with heated extruder)
     static unsigned long    msecondsMilling;                    // Milliseconds of milling time
@@ -122,7 +122,7 @@ public:
 
     static volatile long    queuePositionCurrentSteps[3];
     static volatile char    stepperDirection[3];                // this is the current x/y/z-direction from the processing of G-Codes
-    static char             blockAll;
+    static volatile char    blockAll;
 
 #if FEATURE_Z_MIN_OVERRIDE_VIA_GCODE
     static volatile long    currentZSteps;
@@ -136,7 +136,7 @@ public:
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
     static volatile long    directPositionTargetSteps[4];
-    static long             directPositionCurrentSteps[4];
+    static volatile long    directPositionCurrentSteps[4];
     static long             directPositionLastSteps[4];
     static char             waitMove;
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -204,6 +204,9 @@ public:
     static unsigned char    wrongType;
 #endif // FEATURE_TYPE_EEPROM
 
+#if FEATURE_UNLOCK_MOVEMENT
+    static unsigned char    g_unlock_movement;
+#endif //FEATURE_UNLOCK_MOVEMENT
 
     static inline void setMenuMode(uint8_t mode,bool on)
     {
@@ -1051,12 +1054,12 @@ public:
     static inline long currentZPositionSteps()
     {
         // return all values in [steps]
-        long    value = queuePositionCurrentSteps[Z_AXIS];
+        long    value = queuePositionCurrentSteps[Z_AXIS] + Extruder::current->zOffset; //offset negativ, das ist hier uninteressant. also rausrechnen.
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
         // add the current z-compensation
-        value += Printer::compensatedPositionCurrentStepsZ;
+        value += Printer::compensatedPositionCurrentStepsZ; //da drin: zoffset + senseoffset + digitcompensation
         value += g_nZScanZPosition;
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
@@ -1075,6 +1078,12 @@ public:
 
     static inline float currentZPosition()
     {
+        if (Printer::ZMode == Z_VALUE_MODE_LAYER)
+        {
+            // show the G-Code Commanded Z //offset negativ, das ist hier uninteressant.
+            return (queuePositionCurrentSteps[Z_AXIS] + Extruder::current->zOffset) * Printer::invAxisStepsPerMM[Z_AXIS];
+        }
+
         // return all values in [mm]
         float   fvalue = (float)currentZPositionSteps();
 
@@ -1134,9 +1143,12 @@ public:
     static uint8_t setOrigin(float xOff,float yOff,float zOff);
     static bool isPositionAllowed(float x,float y,float z);
 
-    static inline int getFanSpeed()
+    static inline int getFanSpeed(bool percent = false)
     {
-        return (int)pwm_pos[NUM_EXTRUDER+2];
+        if(!percent) return (int)pwm_pos[NUM_EXTRUDER+2]; //int
+        if(!pwm_pos[NUM_EXTRUDER+2]) return (int)0; //%
+        if(pwm_pos[NUM_EXTRUDER+2] <= 3) return (int)1; //%
+        return (int)(pwm_pos[NUM_EXTRUDER+2]*100/255); //%
     } // getFanSpeed
 
 #if FEATURE_MEMORY_POSITION

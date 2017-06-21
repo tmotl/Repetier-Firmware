@@ -100,6 +100,7 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     uint8_t     id;
     int32_t     xOffset;
     int32_t     yOffset;
+    int32_t     zOffset;
     float       stepsPerMM;                 ///< Steps per mm.
     int8_t      enablePin;                  ///< Pin to enable extruder stepper motor.
     uint8_t     enableOn;
@@ -400,12 +401,6 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
 #endif // STEPPER_ON_DELAY
 
     } // enable
-#if  FEATURE_BEDTEMP_DECREASE
-  static uint8_t decreaseHeatedBedInterval;  ///< Current Decrease Interval (0..255s)
-  static uint32_t decreaseHeatedBedTimeStamp;   ///< Current Decrease last Timestamp
-  static float decreaseHeatedBedMinimum;   ///< Minimal Temp
-#endif // FEATURE_BEDTEMP_DECREASE
-
     static void manageTemperatures();
     static void disableCurrentExtruderMotor();
     static void disableAllExtruders();
@@ -414,9 +409,6 @@ class Extruder   // Size: 12*1 Byte+12*4 Byte+4*2Byte = 68 Byte
     static void initExtruder();
     static void initHeatedBed();
     static void setHeatedBedTemperature(float temp_celsius,bool beep = false);
-#if FEATURE_BEDTEMP_DECREASE
-    static void decreaseHeatedBedTemperature(float min_temperatureInCelsius);
-#endif // FEATURE_BEDTEMP_DECREASE
     static float getHeatedBedTemperature();
     static void setTemperatureForExtruder(float temp_celsius,uint8_t extr,bool beep = false);
 
@@ -433,7 +425,6 @@ extern TemperatureController heatedBedController;
 #if RESERVE_ANALOG_INPUTS
 extern TemperatureController optTempController;
 #endif // RESERVE_ANALOG_INPUTS
-
 
 
 #define TEMP_INT_TO_FLOAT(temp)     ((float)(temp)/(float)(1<<CELSIUS_EXTRA_BITS))

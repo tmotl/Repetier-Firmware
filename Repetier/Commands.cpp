@@ -68,91 +68,32 @@ void Commands::commandLoop()
 
 void Commands::checkForPeriodicalActions()
 {
-    doZCompensation();
+    bool didchecktemps = false;
 
-    if(!executePeriodical) return;
-    executePeriodical=0;
+    if(execute10msPeriodical){ //set by PWM-Timer
+      execute10msPeriodical=0;
 
-    g_uLastCommandLoop = HAL::timeInMilliseconds();
+      HAL::tellWatchdogOk();  //dieses freigabesignal sollte aus dem PWM-Timer kommen, denn dann ist klar, dass auch der noch läuft. Dann laufen für den Watchdogreset der Timer und checkForPeriodicalActions().
+      doZCompensation();  //100x pro sekunde -> 100mm/s : jede 1mm Weg
 
-    Extruder::manageTemperatures();
-    if(--counter250ms==0)
-    {
-        if(manageMonitor<=1+NUM_EXTRUDER)
-            writeMonitor();
-        counter250ms=5;
     }
-    UI_SLOW;
-    loopRF();
 
-#if FEATURE_PAUSE_PRINTING
-    switch( g_pauseStatus )
-    {
-        case PAUSE_STATUS_PREPARE_PAUSE_1:
-        {
-            if( (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
-            {
-                // we have reached the pause position - nothing except the extruder can have been moved
-                g_pauseStatus = PAUSE_STATUS_PAUSED;
+    if(execute16msPeriodical){ //set by internal Watchdog-Timer
+      execute16msPeriodical = 0;
 
-                Printer::stepperDirection[X_AXIS]   = 0;
-                Printer::stepperDirection[Y_AXIS]   = 0;
-                Printer::stepperDirection[Z_AXIS]   = 0;
-                Extruder::current->stepperDirection = 0;
-            }
-            break;
-        }
-        case PAUSE_STATUS_PREPARE_PAUSE_2:
-        {
-            if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
-                (Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
-                (Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
-                (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
-            {
-                // we have reached the pause position 1
-#if FEATURE_MILLING_MODE
-                if( Printer::operatingMode == OPERATING_MODE_MILL )
-                {
-                    // in operating mode mill, we have 2 pause positions because we have to leave the work part before we shall move into x/y direction
-                    g_pauseStatus = PAUSE_STATUS_PREPARE_PAUSE_3;
+      Extruder::manageTemperatures(); didchecktemps = true;
 
-                    determinePausePosition();
-                    PrintLine::prepareDirectMove();
-                }
-                else
-#endif // FEATURE_MILLING_MODE
-                {
-                    // in operating mode print, there is no need for a second pause position
-                    g_pauseStatus = PAUSE_STATUS_PAUSED;
-
-                    Printer::stepperDirection[X_AXIS]   = 0;
-                    Printer::stepperDirection[Y_AXIS]   = 0;
-                    Printer::stepperDirection[Z_AXIS]   = 0;
-                    Extruder::current->stepperDirection = 0;
-                }
-            }
-            break;
-        }
-        case PAUSE_STATUS_PREPARE_PAUSE_3:
-        {
-            if( (Printer::directPositionTargetSteps[X_AXIS] == Printer::directPositionCurrentSteps[X_AXIS]) &&
-                (Printer::directPositionTargetSteps[Y_AXIS] == Printer::directPositionCurrentSteps[Y_AXIS]) &&
-                (Printer::directPositionTargetSteps[Z_AXIS] == Printer::directPositionCurrentSteps[Z_AXIS]) &&
-                (Printer::directPositionTargetSteps[E_AXIS] == Printer::directPositionCurrentSteps[E_AXIS]) )
-            {
-                // we have reached the pause position 2
-                g_pauseStatus = PAUSE_STATUS_PAUSED;
-
-                Printer::stepperDirection[X_AXIS]   = 0;
-                Printer::stepperDirection[Y_AXIS]   = 0;
-                Printer::stepperDirection[Z_AXIS]   = 0;
-                Extruder::current->stepperDirection = 0;
-            }
-            break;
-        }
     }
-#endif // FEATURE_PAUSE_PRINTING
 
+    if(execute100msPeriodical){ //set by PWM-Timer
+      execute100msPeriodical=0;
+
+      if(!didchecktemps) Extruder::manageTemperatures(); //fallback? bin übervorsichtig..
+      Commands::printTemperatures(); //selfcontrolling timediff
+      UI_SLOW;
+      loopRF();
+
+    }
 } // checkForPeriodicalActions
 
 
@@ -280,6 +221,7 @@ void Commands::printCurrentPosition()
         Com::printFLN(Com::tSpaceEColon,Printer::queuePositionLastSteps[E_AXIS]*Printer::invAxisStepsPerMM[E_AXIS]*(Printer::unitIsInches?0.03937:1),2);
         //Com::printF(PSTR("OffX:"),Printer::extruderOffset[X_AXIS]); // to debug offset handling
         //Com::printFLN(PSTR(" OffY:"),Printer::extruderOffset[Y_AXIS]);
+        //Com::printFLN(PSTR(" OffZ:"),Printer::extruderOffset[Z_AXIS]); //to support Nozzle-Tip-Down-Hotends
 
 /*      Com::printF(Com::tXColon,Printer::directPositionTargetSteps[X_AXIS]);
         Com::printF(Com::tSpaceYColon,Printer::directPositionTargetSteps[Y_AXIS]);
@@ -311,66 +253,72 @@ void Commands::printCurrentPosition()
 
 void Commands::printTemperatures(bool showRaw)
 {
-    float temp = Extruder::current->tempControl.currentTemperatureC;
+    static millis_t lastTemperatureSignal = 0;
+    millis_t now = HAL::timeInMilliseconds();
+    if( (now - lastTemperatureSignal) > 1000 ){
+        lastTemperatureSignal = now;
+        float temp = Extruder::current->tempControl.currentTemperatureC;
 
-#if HEATED_BED_SENSOR_TYPE==0
-    Com::printF(Com::tTColon,temp);
-    Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
-#else
-    Com::printF(Com::tTColon,temp);
-    Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
+    #if HEATED_BED_SENSOR_TYPE==0
+        Com::printF(Com::tTColon,temp);
+        Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
+    #else
+        Com::printF(Com::tTColon,temp);
+        Com::printF(Com::tSpaceSlash,Extruder::current->tempControl.targetTemperatureC,0);
 
-#if HAVE_HEATED_BED
-    Com::printF(Com::tSpaceBColon,Extruder::getHeatedBedTemperature());
-    Com::printF(Com::tSpaceSlash,heatedBedController.targetTemperatureC,0);
-
-    if(showRaw)
-    {
-        Com::printF(Com::tSpaceRaw,(int)NUM_EXTRUDER);
-        Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-heatedBedController.currentTemperature);
-    }
-    Com::printF(Com::tSpaceBAtColon,(pwm_pos[heatedBedController.pwmIndex])); // Show output of autotune when tuning!
-#endif // HAVE_HEATED_BED
-#endif // HEATED_BED_SENSOR_TYPE==0
-
-#ifdef TEMP_PID
-    Com::printF(Com::tSpaceAtColon,(autotuneIndex==255?pwm_pos[Extruder::current->id]:pwm_pos[autotuneIndex])); // Show output of autotune when tuning!
-#endif // TEMP_PID
-
-#if NUM_EXTRUDER>1
-    for(uint8_t i=0; i<NUM_EXTRUDER; i++)
-    {
-        Com::printF(Com::tSpaceT,(int)i);
-        Com::printF(Com::tColon,extruder[i].tempControl.currentTemperatureC);
-        Com::printF(Com::tSpaceSlash,extruder[i].tempControl.targetTemperatureC,0);
-
-#ifdef TEMP_PID
-        Com::printF(Com::tSpaceAt,(int)i);
-        Com::printF(Com::tColon,(pwm_pos[extruder[i].tempControl.pwmIndex])); // Show output of autotune when tuning!
-#endif // TEMP_PID
+    #if HAVE_HEATED_BED
+        Com::printF(Com::tSpaceBColon,Extruder::getHeatedBedTemperature());
+        Com::printF(Com::tSpaceSlash,heatedBedController.targetTemperatureC,0);
 
         if(showRaw)
         {
-            Com::printF(Com::tSpaceRaw,(int)i);
-            Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-extruder[i].tempControl.currentTemperature);
+            Com::printF(Com::tSpaceRaw,(int)NUM_EXTRUDER);
+            Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-heatedBedController.currentTemperature);
         }
+        Com::printF(Com::tSpaceBAtColon,(pwm_pos[heatedBedController.pwmIndex])); // Show output of autotune when tuning!
+    #endif // HAVE_HEATED_BED
+    #endif // HEATED_BED_SENSOR_TYPE==0
+
+    #ifdef TEMP_PID
+        Com::printF(Com::tSpaceAtColon,(autotuneIndex==255?pwm_pos[Extruder::current->id]:pwm_pos[autotuneIndex])); // Show output of autotune when tuning!
+    #endif // TEMP_PID
+
+    #if NUM_EXTRUDER>1
+        for(uint8_t i=0; i<NUM_EXTRUDER; i++)
+        {
+            Com::printF(Com::tSpaceT,(int)i);
+            Com::printF(Com::tColon,extruder[i].tempControl.currentTemperatureC);
+            Com::printF(Com::tSpaceSlash,extruder[i].tempControl.targetTemperatureC,0);
+
+    #ifdef TEMP_PID
+            Com::printF(Com::tSpaceAt,(int)i);
+            Com::printF(Com::tColon,(pwm_pos[extruder[i].tempControl.pwmIndex])); // Show output of autotune when tuning!
+    #endif // TEMP_PID
+
+            if(showRaw)
+            {
+                Com::printF(Com::tSpaceRaw,(int)i);
+                Com::printF(Com::tColon,(1023<<(2-ANALOG_REDUCE_BITS))-extruder[i].tempControl.currentTemperature);
+            }
+        }
+    #endif // NUM_EXTRUDER
+
+    #if RESERVE_ANALOG_INPUTS
+        TemperatureController* act = &optTempController;            
+        act->updateCurrentTemperature();
+        Com::printF(Com::tSpaceT, RESERVE_SENSOR_INDEX);            
+        Com::printF(Com::tColon,act->currentTemperatureC);  
+    #endif // RESERVE_ANALOG_INPUTS
+
+    #if FEATURE_PRINT_PRESSURE
+        Com::printF(Com::tF);
+        Com::printF(Com::tColon,(int)g_nLastDigits);
+    #endif //FEATURE_PRINT_PRESSURE
+
+        Com::printF(Com::tSpaceAtColon,maCoLo);
+
+        Com::println();
     }
-#endif // NUM_EXTRUDER
-
-#if RESERVE_ANALOG_INPUTS
-    TemperatureController* act = &optTempController;            
-    act->updateCurrentTemperature();
-    Com::printF(Com::tSpaceT, RESERVE_SENSOR_INDEX);            
-    Com::printF(Com::tColon,act->currentTemperatureC);  
-#endif // RESERVE_ANALOG_INPUTS
-
-#if FEATURE_PRINT_PRESSURE
-    Com::printF(Com::tF);
-    Com::printF(Com::tColon,(int)readStrainGauge( ACTIVE_STRAIN_GAUGE ));
-#endif //FEATURE_PRINT_PRESSURE
-
-    Com::println();
-
 } // printTemperatures
 
 
@@ -415,7 +363,7 @@ void Commands::setFanSpeed(int speed,bool wait)
     if( Printer::debugInfo() )
     {
         if(speed!=pwm_pos[NUM_EXTRUDER+2])
-            Com::printFLN(Com::tFanspeed,speed);
+            Com::printFLN(Com::tFanspeed,(speed == 1) ? 2 : speed ); //bei 1 zeigt repetierserver / repetierhost 0% an, was nicht stimmt. Das ist etwas Pfusch, aber nun funktionierts.
     }
 
     pwm_pos[NUM_EXTRUDER+2] = speed;
@@ -769,7 +717,7 @@ void Commands::executeGCode(GCode *com)
             {
                 GCode::readFromSerial();
                 Commands::checkForPeriodicalActions();
-        GCode::keepAlive( Processing );
+                GCode::keepAlive( Processing );
             }
             break;
         }
@@ -917,11 +865,13 @@ void Commands::executeGCode(GCode *com)
 
         case 90: // G90
         {
+            Commands::waitUntilEndOfAllMoves();
             Printer::relativeCoordinateMode = false;
             break;
         }
         case 91: // G91
         {
+            Commands::waitUntilEndOfAllMoves();
             Printer::relativeCoordinateMode = true;
             break;
         }
@@ -933,7 +883,6 @@ void Commands::executeGCode(GCode *com)
                 float xOff = Printer::originOffsetMM[X_AXIS];
                 float yOff = Printer::originOffsetMM[Y_AXIS];
                 float zOff = Printer::originOffsetMM[Z_AXIS];
-
 
                 if(com->hasX()) xOff = Printer::convertToMM(com->X)-Printer::queuePositionLastMM[X_AXIS];
                 if(com->hasY()) yOff = Printer::convertToMM(com->Y)-Printer::queuePositionLastMM[Y_AXIS];
@@ -1066,13 +1015,16 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                         Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
 #if NUM_EXTRUDER>0
                     if(reportTempsensorError()) break;
                     previousMillisCmd = HAL::timeInMilliseconds();
                     if(Printer::debugDryrun()) break;
 
 #ifdef EXACT_TEMPERATURE_TIMING
-                     Commands::waitUntilEndOfAllMoves();
+                    Commands::waitUntilEndOfAllMoves();
 #else
                     if(com->hasP() || (com->hasS() && com->S == 0))
                     Commands::waitUntilEndOfAllMoves();
@@ -1106,6 +1058,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                         Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
                     if(reportTempsensorError()) break;
                     previousMillisCmd = HAL::timeInMilliseconds();
                     if(Printer::debugDryrun()) break;
@@ -1125,6 +1080,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                    Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
 #if NUM_EXTRUDER>0
                     if(reportTempsensorError()) break;
                     previousMillisCmd = HAL::timeInMilliseconds();
@@ -1149,8 +1107,7 @@ void Commands::executeGCode(GCode *com)
                     if(com->hasT() && com->T<NUM_EXTRUDER) actExtruder = &extruder[com->T];
                     if (com->hasS()) Extruder::setTemperatureForExtruder(com->S,actExtruder->id,com->hasF() && com->F>0);
 
-#if defined (SKIP_M109_IF_WITHIN) && SKIP_M109_IF_WITHIN>0
-                    if(abs(actExtruder->tempControl.currentTemperatureC - actExtruder->tempControl.targetTemperatureC)<(SKIP_M109_IF_WITHIN))
+                    if(fabs(actExtruder->tempControl.targetTemperatureC - actExtruder->tempControl.currentTemperatureC) < TEMP_TOLERANCE)
                     {
                         // we are already in range
 
@@ -1160,10 +1117,8 @@ void Commands::executeGCode(GCode *com)
 
                         break;
                     }
-#endif // (SKIP_M109_IF_WITHIN) && SKIP_M109_IF_WITHIN>0
 
                     bool        dirRising   = actExtruder->tempControl.targetTemperature > actExtruder->tempControl.currentTemperature;
-                    millis_t    printedTime = HAL::timeInMilliseconds();
                     millis_t    waituntil   = 0;
 
 #if RETRACT_DURING_HEATUP
@@ -1174,11 +1129,7 @@ void Commands::executeGCode(GCode *com)
                     do
                     {
                         currentTime = HAL::timeInMilliseconds();
-                        if( (currentTime - printedTime) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                        {
-                            printTemperatures();
-                            printedTime = currentTime;
-                        }
+                        Commands::printTemperatures();                       
                         Commands::checkForPeriodicalActions();
                         GCode::keepAlive( WaitHeater );
 #if RETRACT_DURING_HEATUP
@@ -1222,6 +1173,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if( isSupportedMCommand( com->M, OPERATING_MODE_PRINT ) )
                 {
+#if FEATURE_UNLOCK_MOVEMENT
+                    Printer::g_unlock_movement = 1;
+#endif //FEATURE_UNLOCK_MOVEMENT
 #if HAVE_HEATED_BED
                     if(Printer::debugDryrun()) break;
                     if (com->hasS())
@@ -1255,14 +1209,9 @@ void Commands::executeGCode(GCode *com)
                     }
 #endif // (SKIP_M190_IF_WITHIN) && SKIP_M190_IF_WITHIN>0
 
-                    codenum = HAL::timeInMilliseconds();
                     while(heatedBedController.currentTemperatureC+TEMP_TOLERANCE < heatedBedController.targetTemperatureC)
                     {
-                        if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                        {
-                            printTemperatures();
-                            codenum = HAL::timeInMilliseconds();
-                        }
+                        Commands::printTemperatures();
                         Commands::checkForPeriodicalActions();
                         GCode::keepAlive( WaitHeater );
                     }
@@ -1284,15 +1233,10 @@ void Commands::executeGCode(GCode *com)
                     if(Printer::debugDryrun()) break;
                     {
                         bool allReached = false;
-                        codenum = HAL::timeInMilliseconds();
                         while(!allReached)
                         {
                             allReached = true;
-                            if( (HAL::timeInMilliseconds()-codenum) > 1000 )   //Print Temp Reading every 1 second while heating up.
-                            {
-                                printTemperatures();
-                                codenum = HAL::timeInMilliseconds();
-                            }
+                            Commands::printTemperatures();
                             Commands::checkForPeriodicalActions();
                             GCode::keepAlive( WaitHeater );
 
@@ -1438,8 +1382,8 @@ void Commands::executeGCode(GCode *com)
 #endif // DEBUG_PRINT
 
                 while(wait-HAL::timeInMilliseconds() < 100000L)
-        {
-            Printer::defaultLoopActions();
+                {
+                    Printer::defaultLoopActions();
                 }
                 if(com->hasX())
                     Printer::enableXStepper();
@@ -1705,9 +1649,9 @@ void Commands::executeGCode(GCode *com)
             {
                 if(com->hasS())
                 {
-                    BEGIN_INTERRUPT_PROTECTED
+                    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
                     Printer::extruderStepsNeeded += com->S;
-                    END_INTERRUPT_PROTECTED
+                    noInts.unprotect(); //END_INTERRUPT_PROTECTED
                 }
                 break;
             }
@@ -1781,7 +1725,7 @@ void Commands::executeGCode(GCode *com)
 #endif // FEATURE_CASE_LIGHT
             case 400:   // M400 - Finish all moves
             {
-                        Commands::waitUntilEndOfAllMoves();
+                Commands::waitUntilEndOfAllMoves();
                 break;
             }
 
@@ -1963,7 +1907,7 @@ void Commands::emergencyStop()
 #if defined(KILL_METHOD) && KILL_METHOD==1
     HAL::resetHardware();
 #else
-    BEGIN_INTERRUPT_PROTECTED
+    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
     Printer::kill(false);
     Extruder::manageTemperatures();
 
@@ -2005,7 +1949,7 @@ void Commands::emergencyStop()
 #endif // HEATED_BED_HEATER_PIN>-1
 
     while(1) {}
-    END_INTERRUPT_PROTECTED
+    //noInts.unprotect(); //END_INTERRUPT_PROTECTED
 #endif // defined(KILL_METHOD) && KILL_METHOD==1
 
 } // emergencyStop
@@ -2027,7 +1971,7 @@ void Commands::writeLowestFreeRAM()
     {
         lowestRAMValueSend = lowestRAMValue;
 
-        if( Printer::debugInfo() )
+        if( true ) //Printer::debugInfo()
         {
             Com::printFLN(Com::tFreeRAM,lowestRAMValue);
         }

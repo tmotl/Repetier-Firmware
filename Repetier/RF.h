@@ -566,10 +566,6 @@ extern const char   ui_text_saving_success[]        PROGMEM;
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION && FEATURE_WORK_PART_Z_COMPENSATION
 
-extern  unsigned long   g_uLastCommandLoop;
-extern  unsigned long   g_uStartOfIdle;
-
-extern  unsigned long   g_uLastCommandLoop;
 extern  unsigned long   g_uStartOfIdle;
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION
@@ -638,7 +634,7 @@ extern  unsigned long   g_nManualSteps[4];
 
 
 #if FEATURE_PAUSE_PRINTING
-extern  volatile long	g_nPauseSteps[4];
+extern  volatile long    g_nPauseSteps[4];
 extern  volatile long   g_nContinueSteps[4];
 extern  volatile char   g_pauseStatus;
 extern  volatile char   g_pauseMode;
@@ -647,15 +643,19 @@ extern  volatile char   g_pauseBeepDone;
 #endif // FEATURE_PAUSE_PRINTING
 
 #if FEATURE_SENSIBLE_PRESSURE
-/* brief: This is for correcting too close Z at first layer, see SENSIBLE_PRESSURE_DIGIT_CHECKS // Idee Wessix, coded by Nibbels  */
-extern long             g_nSensiblePressureSum;
-extern char             g_nSensiblePressureChecks;
+/* brief: This is for correcting too close Z at first layer, see FEATURE_SENSIBLE_PRESSURE // Idee Wessix, coded by Nibbels  */
+extern long             nSensiblePressureSum;
+extern char             nSensiblePressureChecks;
 extern short            g_nSensiblePressureDigits;
 extern short            g_nSensiblePressureOffsetMax;
 extern short            g_nSensiblePressureOffset;
-extern short            g_nSensibleLastPressure;
 extern char             g_nSensiblePressure1stMarke; //sagt, ob regelung aktiv oder inaktiv, wegen Z-Limits
 #endif // FEATURE_SENSIBLE_PRESSURE
+
+extern short              g_nLastDigits;
+#if FEATURE_DIGIT_Z_COMPENSATION
+extern float            g_nDigitZCompensationDigits;
+#endif // FEATURE_DIGIT_Z_COMPENSATION
 
 #if FEATURE_FIND_Z_ORIGIN
 extern  volatile char   g_nFindZOriginStatus;
@@ -799,12 +799,6 @@ extern short moveZDownFast( bool execRunStandardTasks=true );
 
 // moveZ()
 extern int moveZ( int nSteps );
-
-// freeZ()
-void freeZ( int nSteps );
-
-// moveExtruder()
-extern int moveExtruder( int nSteps );
 
 // restoreDefaultScanParameters()
 extern void restoreDefaultScanParameters( void );

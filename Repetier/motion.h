@@ -219,12 +219,12 @@ public:
                     return;
                 }
 
-				//Nibbels
-				if( Printer::currentZSteps <= -Z_OVERRIDE_MAX )
+                //Nibbels
+                if( Printer::currentZSteps <= -Z_OVERRIDE_MAX )
                 {
                     // --> setZMoveFinished(); //-> some lines down!
                 }
-				
+                
                 // during normal operation, we never should end up here ... typically, the Z-min hardware switch must be reconfigured when you end up here
                 // doEmergencyStop( STOP_BECAUSE_OF_Z_MIN );
             }
@@ -508,9 +508,9 @@ public:
         if(linesWritePos>=MOVE_CACHE_SIZE) linesWritePos = 0;
         Printer::setMenuMode(MENU_MODE_PRINTING,true);
         
-        BEGIN_INTERRUPT_PROTECTED
+        InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
         linesCount++;
-        END_INTERRUPT_PROTECTED
+        //END_INTERRUPT_PROTECTED
 
         g_uStartOfIdle = 0;
     } // pushLine
@@ -568,9 +568,9 @@ public:
         p->task = task;
   
         nextPlannerIndex( linesWritePos );
-        BEGIN_INTERRUPT_PROTECTED
+        InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
         linesCount++;
-        END_INTERRUPT_PROTECTED
+        //END_INTERRUPT_PROTECTED
         return;
     } // queueTask
 

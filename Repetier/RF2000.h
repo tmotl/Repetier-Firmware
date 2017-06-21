@@ -24,13 +24,6 @@
 #define UI_PRINTER_NAME                     "RF2000"
 
 // ##########################################################################################
-// ##   Nibbels Kram Config
-// ##########################################################################################
-
-#define FEATURE_BEDTEMP_DECREASE                1                                                   // 1 = on, 0 = off
-#define FEATURE_SILENT_MODE                     1                                                   // 1 = on, 0 = off activate with GCode -> Switch Stepper Current to Silent Profile
-
-// ##########################################################################################
 // ##   main hardware configuration
 // ##########################################################################################
 
@@ -214,6 +207,7 @@ Overridden if EEPROM activated.*/
 
 #define EXT0_X_OFFSET                       0
 #define EXT0_Y_OFFSET                       0
+#define EXT0_Z_OFFSET                       0 //to support Nozzle-Tip-Down-Hotends
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
 #define EXT0_STEPS_PER_MM                   (8.75 * RF_MICRO_STEPS)
@@ -360,6 +354,7 @@ The codes are only executed for multiple extruder when changing the extruder. */
 
 #define EXT1_X_OFFSET                       (int32_t)(33.9 * XAXIS_STEPS_PER_MM)        // [steps]
 #define EXT1_Y_OFFSET                       (int32_t)( 0.1 * YAXIS_STEPS_PER_MM)        // [steps]
+#define EXT1_Z_OFFSET                       (int32_t)( 0.0 * YAXIS_STEPS_PER_MM)        // [steps] //to support Nozzle-Tip-Down-Hotends
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
 #define EXT1_STEPS_PER_MM                   (8.75 * RF_MICRO_STEPS)
@@ -743,9 +738,6 @@ can set it on for safety. */
 #define XYZ_DIRECTION_CHANGE_DELAY          250                                                 // [us]
 #define XYZ_STEPPER_HIGH_DELAY              250                                                 // [us]
 #define XYZ_STEPPER_LOW_DELAY               250                                                 // [us]
-#define EXTRUDER_DIRECTION_CHANGE_DELAY     250                                                 // [us]
-#define EXTRUDER_STEPPER_HIGH_DELAY         40000                                               // [us]
-#define EXTRUDER_STEPPER_LOW_DELAY          250                                                 // [us]
 #define LOOP_INTERVAL                       2000                                                // [ms]
 
 /** \brief Automatic filament change, unmounting of the filament - ensure that G1 does not attempt to extrude more than EXTRUDE_MAXLENGTH */
@@ -970,7 +962,8 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_Y_CALIBRATION_POINT_MM    100                                                                     // [mm] from the front border of the heat bed
 #define HEAT_BED_SCAN_Y_CALIBRATION_POINT_STEPS long(YAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Y_CALIBRATION_POINT_MM)         // [steps]
 
-#define HEAT_BED_SCAN_Z_START_uM                500                                                                     // [um]
+//Nibbels: increased from 500 to 5000 in order to avoid problems with Dip-Down-Hotends
+#define HEAT_BED_SCAN_Z_START_uM                5000                                                                    // [um]
 
 #define HEAT_BED_SCAN_CONTACT_PRESSURE_DELTA    10                                                                      // [digits]
 #define HEAT_BED_SCAN_RETRY_PRESSURE_DELTA      5                                                                       // [digits]
@@ -988,7 +981,8 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MM            20                                                                      // [mm]
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MIN_MM        10                                                                      // [mm]
 
-#define HEAT_BED_SCAN_Z_START_uM                500                                                                     // [um]
+//Nibbels: increased from 500 to 5000 in order to avoid problems with Dip-Down-Hotends
+#define HEAT_BED_SCAN_Z_START_uM                5000                                                                    // [um]
 
 #define HEAT_BED_SCAN_CONTACT_PRESSURE_DELTA    10                                                                      // [digits]
 #define HEAT_BED_SCAN_RETRY_PRESSURE_DELTA      5                                                                       // [digits]
@@ -1012,7 +1006,7 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_Z_START_STEPS             long(ZAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Z_START_uM / 1000)              // [steps]
 
 #define HEAT_BED_SCAN_UP_FAST_STEPS             long(-ZAXIS_STEPS_PER_MM / 40)                                          // [steps]
-#define HEAT_BED_SCAN_UP_SLOW_STEPS             long(-ZAXIS_STEPS_PER_MM / 200)                                         // [steps]
+#define HEAT_BED_SCAN_UP_SLOW_STEPS             long(-ZAXIS_STEPS_PER_MM / 500)                                         // [steps]
 #define HEAT_BED_SCAN_DOWN_SLOW_STEPS           long(ZAXIS_STEPS_PER_MM / 80)                                           // [steps]
 #define HEAT_BED_SCAN_DOWN_FAST_STEPS           long(ZAXIS_STEPS_PER_MM / 2)                                            // [steps]
 #define HEAT_BED_SCAN_FAST_STEP_DELAY_MS        5                                                                       // [ms]
@@ -1027,8 +1021,8 @@ Above this value the z compensation will distribute the roughness of the surface
 
 #if FEATURE_PRECISE_HEAT_BED_SCAN
 
-#define PRECISE_HEAT_BED_SCAN_WARMUP_DELAY          (unsigned long)600                                                  // [s]
-#define PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY     (unsigned long)600                                                  // [s]
+#define PRECISE_HEAT_BED_SCAN_WARMUP_DELAY          (uint32_t)600                                                  // [s]
+#define PRECISE_HEAT_BED_SCAN_CALIBRATION_DELAY     (uint32_t)600                                                  // [s]
 #define PRECISE_HEAT_BED_SCAN_BED_TEMP_PLA          60                                                                  // [°C]
 #define PRECISE_HEAT_BED_SCAN_BED_TEMP_ABS          120                                                                 // [°C]
 #define PRECISE_HEAT_BED_SCAN_EXTRUDER_TEMP_SCAN    100                                                                 // [°C]
@@ -1127,7 +1121,7 @@ Above this value the z compensation will distribute the roughness of the surface
 #define DEFAULT_PAUSE_STEPS_X               (XAXIS_STEPS_PER_MM *50)
 #define DEFAULT_PAUSE_STEPS_Y               (YAXIS_STEPS_PER_MM *50)
 #define DEFAULT_PAUSE_STEPS_Z               (ZAXIS_STEPS_PER_MM *2)
-#define DEFAULT_PAUSE_STEPS_EXTRUDER        (EXT0_STEPS_PER_MM *10)
+#define DEFAULT_PAUSE_STEPS_EXTRUDER        (EXT0_STEPS_PER_MM * Z_PAUSE_RETRACT_MM)
 
 #define PAUSE_X_MIN                         (XAXIS_STEPS_PER_MM *5)
 #define PAUSE_Y_MIN                         (YAXIS_STEPS_PER_MM *5)

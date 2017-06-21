@@ -21,7 +21,12 @@
 
 
 #if FEATURE_WATCHDOG
-unsigned char   g_bPingWatchdog     = 0;
+unsigned long g_uLastCommandLoop = 0;
+unsigned char g_bPingWatchdog    = 0;
+unsigned long maT = 0;
+unsigned long miT = 2147483864;
+unsigned long laT = 0;
+unsigned long maCoLo = 0;
 #endif // FEATURE_WATCHDOG
 
 
@@ -35,7 +40,7 @@ HAL::~HAL()
 } // ~HAL
 
 
-uint16_t HAL::integerSqrt(long a)
+uint16_t HAL::integerSqrt(int32_t a)
 {
     // http://www.mikrocontroller.net/articles/AVR_Arithmetik#32_Bit_.2F_32_Bit
     //-----------------------------------------------------------
@@ -340,13 +345,15 @@ void HAL::showStartReason()
     // Check startup - does nothing if bootloader sets MCUSR to 0
     uint8_t mcu = MCUSR;
 
-    if( Printer::debugInfo() )
+    if( MCUSR != 0 ) //Printer::debugInfo()
     {
         if(mcu & 1) Com::printInfoFLN(Com::tPowerUp);
         if(mcu & 2) Com::printInfoFLN(Com::tExternalReset);
         if(mcu & 4) Com::printInfoFLN(Com::tBrownOut);
         if(mcu & 8) Com::printInfoFLN(Com::tWatchdog);
         if(mcu & 32) Com::printInfoFLN(Com::tSoftwareReset);
+    }else{
+        Com::printInfoFLN(Com::tUnknownReset);
     }
     MCUSR=0;
 
@@ -356,15 +363,13 @@ void HAL::showStartReason()
 int HAL::getFreeRam()
 {
     int freeram = 0;
-
-
-    BEGIN_INTERRUPT_PROTECTED
+    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED
     uint8_t * heapptr, * stackptr;
     heapptr = (uint8_t *)malloc(4);         // get heap pointer
     free(heapptr);                          // free up the memory again (sets heapptr to 0)
     stackptr =  (uint8_t *)(SP);            // save value of stack pointer
     freeram = (int)stackptr-(int)heapptr;
-    END_INTERRUPT_PROTECTED
+    //END_INTERRUPT_PROTECTED
     return freeram;
 
 } // getFreeRam
@@ -700,6 +705,48 @@ SIGNAL (TIMER3_COMPA_vect)
 #endif // defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__) || defined(__AVR_ATmega128__) ||defined(__AVR_ATmega1281__)||defined(__AVR_ATmega2561__)
 #endif // #if FEATURE_SERVO && MOTHERBOARD == DEVICE_TYPE_RF1000
 
+//initialize watchdog
+void HAL::WDT_Init(void)
+{
+    // Just to be safe since we can not clear WDE if WDRF is set
+    MCUSR &= ~(1<<WDRF);
+    //disable interrupts
+    cli();
+    //reset watchdog
+    wdt_reset();
+    //set up WDT interrupt
+    WDTCSR = (1<<WDCE)|(1<<WDE);
+    // timeout in XXX millisecond, disable reset mode. Must be done in one operation --> S66  http://www.atmel.com/Images/Atmel-2549-8-bit-AVR-Microcontroller-ATmega640-1280-1281-2560-2561_datasheet.pdf
+    //WDTCSR = 1<<WDP0; //32ms
+    WDTCSR = 0; //16ms
+    //Enable global interrupts
+    sei();
+
+    // enable watchdog interrupt only mode 
+    WDTCSR |= _BV(WDIE);
+}
+
+//Watchdog timeout ISR
+ISR(WDT_vect)
+{
+    #if FEATURE_WATCHDOG
+    HAL::pingWatchdog();
+    #endif // FEATURE_WATCHDOG
+
+    WDTCSR |= (1<<WDIE); //Nibbels: nächstes mal kein Reset durch internen Watchdog, sondern wieder dieser interrupt.
+    
+    execute16msPeriodical = 1; //Tell commandloop that 16ms have passed 
+
+	unsigned long T = HAL::timeInMilliseconds();
+	if(laT > 0) {
+		unsigned long diff = T - laT;
+		if(diff < miT) miT = diff;
+		if(diff > maT) maT = diff;
+		diff = T - g_uLastCommandLoop;
+		if(diff > maCoLo) maCoLo = diff;
+	}
+	laT = T;
+}
 
 // ================== Interrupt handling ======================
 /** \brief Sets the timer 1 compare value to delay ticks.
@@ -710,7 +757,7 @@ inline void setTimer(uint32_t delay)
     __asm__ __volatile__ (
         "cli \n\t"
         "tst %C[delay] \n\t" //if(delay<65536) {
-        "brne else%= \n\t"
+        "brne else%= \n\t" // Still > 65535
         "cpi %B[delay],255 \n\t"
         "breq else%= \n\t" // delay <65280
         "sts stepperWait,r1 \n\t" // stepperWait = 0;
@@ -760,20 +807,12 @@ inline void setTimer(uint32_t delay)
 
 
 volatile uint8_t    insideTimer1 = 0;
-long __attribute__((used)) stepperWait  = 0;
+volatile long __attribute__((used)) stepperWait  = 0;
 
 /** \brief Timer interrupt routine to drive the stepper motors.
 */
 ISR(TIMER1_COMPA_vect)
 {
-#if FEATURE_WATCHDOG
-    if( (HAL::timeInMilliseconds() - g_uLastCommandLoop) < WATCHDOG_MAIN_LOOP_TIMEOUT )
-    {
-        // ping the watchdog only in case the mainloop is still being called
-        HAL::pingWatchdog();
-    }
-#endif // FEATURE_WATCHDOG
-
     if(insideTimer1) return;
     uint8_t doExit;
     __asm__ __volatile__ (
@@ -807,20 +846,19 @@ ISR(TIMER1_COMPA_vect)
 
 
 #if FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
-    Printer::performZCompensation();
+    Printer::performZCompensation(); //no interrupttempering
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION || FEATURE_WORK_PART_Z_COMPENSATION
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
     if( Printer::allowDirectSteps() )
     {
-        PrintLine::performDirectSteps();
+        PrintLine::performDirectSteps(); //no interrupttempering
     }
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
     if(Printer::allowQueueMove())
     {
         setTimer(PrintLine::performQueueMove()); //hier drin volatile markieren??
-
         DEBUG_MEMORY;
         insideTimer1 = 0;
         return;
@@ -830,7 +868,6 @@ ISR(TIMER1_COMPA_vect)
     if(Printer::allowDirectMove())
     {
         setTimer(PrintLine::performDirectMove());
-        
         DEBUG_MEMORY;
         insideTimer1 = 0;
         return;
@@ -860,7 +897,7 @@ ISR(TIMER1_COMPA_vect)
     }
 
     stepperWait = 0;        // Important because of optimization in asm at begin
-    OCR1A = 1000;           // Wait for next move
+    OCR1A = 1000;        //65500   // Wait for next move
 
     DEBUG_MEMORY;
     insideTimer1 = 0;
@@ -1043,20 +1080,25 @@ ISR(PWM_TIMER_VECTOR)
     if(pwm_heater_pos_set[NUM_EXTRUDER] == pwm_count_heater && pwm_heater_pos_set[NUM_EXTRUDER]!=HEATER_PWM_MASK) WRITE(HEATED_BED_HEATER_PIN,HEATER_PINS_INVERTED);
 #endif // HEATED_BED_HEATER_PIN>-1 && HAVE_HEATED_BED
 
-    HAL::allowInterrupts();
-    
-    counterPeriodical++; // Approximate a 100ms timer
-    if(counterPeriodical>=(int)(F_CPU/40960))
+    static int counter100Periodical = 0; // Approximate a 100ms timer :: blocks pingwatchdog s commandloop if not working
+    if(++counter100Periodical >= 391) //(int)(F_CPU/40960))
     {
-        counterPeriodical=0;
-        executePeriodical=1;
+        counter100Periodical = 0;
+        execute100msPeriodical = 1;
     }
+    static char counter10Periodical = 0; // Approximate a 10ms timer :: blocks pingwatchdog s commandloop if not working
+    if(++counter10Periodical >= 39) //(int)(F_CPU/40960))
+    {
+        counter10Periodical = 0;
+        execute10msPeriodical = 1;
+    }
+
+    HAL::allowInterrupts();
 
 #if FEATURE_RGB_LIGHT_EFFECTS
     if( (HAL::timeInMilliseconds() - Printer::RGBLightLastChange) > RGB_LIGHT_COLOR_CHANGE_SPEED )
     {
         char    change = 0;
-
 
         Printer::RGBLightLastChange = HAL::timeInMilliseconds();
             

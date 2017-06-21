@@ -85,7 +85,6 @@ PrintLine *PrintLine::cur = 0;                          // Current printing line
 
 #if FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 PrintLine           PrintLine::direct;                          // direct movement
-unsigned long       g_uLastDirectStepTime = 0;
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
 
 uint8_t             PrintLine::linesWritePos    = 0;    // Position where we write the next cached line move.
@@ -317,7 +316,7 @@ void PrintLine::prepareDirectMove(void)
 
 void PrintLine::stopDirectMove( void )
 {
-    HAL::forbidInterrupts();
+    InterruptProtectedBlock noInts; //HAL::forbidInterrupts();
     if( PrintLine::direct.isXYZMove() )
     {
         // decelerate and stop
@@ -326,7 +325,7 @@ void PrintLine::stopDirectMove( void )
             PrintLine::direct.stepsRemaining = RF_MICRO_STEPS;
         }
     }
-    HAL::allowInterrupts();
+    //HAL::allowInterrupts();
     return;
 } // stopDirectMove
 #endif // FEATURE_EXTENDED_BUTTONS || FEATURE_PAUSE_PRINTING
@@ -763,9 +762,8 @@ void PrintLine::updateTrapezoids()
     uint8_t     first = linesWritePos;
     PrintLine*  firstLine;
     PrintLine*  act = &lines[linesWritePos];
-
-
-    BEGIN_INTERRUPT_PROTECTED;
+    InterruptProtectedBlock noInts; //BEGIN_INTERRUPT_PROTECTED;
+    
     uint8_t maxfirst = linesPos;            // first non fixed segment
 
     if(maxfirst != linesWritePos)
@@ -794,7 +792,7 @@ void PrintLine::updateTrapezoids()
     if(first == linesWritePos)              // Nothing to plan
     {
         act->block();
-        ESCAPE_INTERRUPT_PROTECTED
+        noInts.unprotect(); //ESCAPE_INTERRUPT_PROTECTED
         act->setStartSpeedFixed(true);
         act->updateStepsParameter();
         act->unblock();
@@ -807,7 +805,7 @@ void PrintLine::updateTrapezoids()
     anyhow, the start speed of first is fixed  */
     firstLine = &lines[first];
     firstLine->block();                     // don't let printer touch this or following segments during update
-    END_INTERRUPT_PROTECTED;
+    noInts.unprotect(); //END_INTERRUPT_PROTECTED;
 
     uint8_t previousIndex = linesWritePos;
     previousPlannerIndex(previousIndex);
@@ -843,11 +841,11 @@ void PrintLine::updateTrapezoids()
     {
         lines[first].updateStepsParameter();
 
-        BEGIN_INTERRUPT_PROTECTED;
+        //noInts.protect(); //BEGIN_INTERRUPT_PROTECTED;
         lines[first].unblock();             // Flying block to release next used segment as early as possible
         nextPlannerIndex(first);
         lines[first].block();
-        END_INTERRUPT_PROTECTED;
+        //noInts.unprotect(); //END_INTERRUPT_PROTECTED;
 
     }while(first!=linesWritePos);
 
@@ -1110,7 +1108,7 @@ void PrintLine::waitForXFreeLines(uint8_t b)
 {
     while(linesCount+b>MOVE_CACHE_SIZE)     // wait for a free entry in movement cache
     {
-    GCode::readFromSerial();
+        GCode::readFromSerial();
         Commands::checkForPeriodicalActions();
     }
 
@@ -1666,7 +1664,7 @@ long PrintLine::performDirectMove()
         direct.enableSteppers();
         direct.fixStartAndEndSpeed();
 
-        HAL::allowInterrupts();
+        HAL::allowInterrupts(); //Nibbels todo: prüfen ob das unsinnig ist. unterfunktionen checken. vgl oben 3 zeilen
         directError = (direct.isFullstepping() ? direct.delta[direct.primaryAxis] : direct.delta[direct.primaryAxis]<<1);
         if(!direct.areParameterUpToDate())  // should never happen, but with bad timings???
         {
@@ -1707,6 +1705,7 @@ long PrintLine::performDirectMove()
 
 void PrintLine::performDirectSteps( void )
 {
+    static unsigned long g_uLastDirectStepTime = 0;
     if( (HAL::timeInMilliseconds() - g_uLastDirectStepTime) >= MANUAL_MOVE_INTERVAL )
     {
         bool    bDone = 0;
@@ -1957,7 +1956,7 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
     HAL::forbidInterrupts();
 
     if(doEven) move->checkEndstops();
-    uint8_t max_loops = RMath::min((long)Printer::stepsPerTimerCall,move->stepsRemaining);
+    uint8_t max_loops = (uint8_t)RMath::min((int32_t)Printer::stepsPerTimerCall,move->stepsRemaining);
 
     if(move->stepsRemaining>0)
     {
@@ -2029,8 +2028,8 @@ long PrintLine::performMove(PrintLine* move, char forQueue)
             if(move->isZMove())
             {
                 if( Printer::blockAll 
-				|| ( Printer::stepperDirection[Z_AXIS] < 0 && move->task == TASK_MOVE_FROM_BUTTON && Printer::isZMinEndstopHit() ) 
-				|| ( Printer::stepperDirection[Z_AXIS] > 0 && move->task == TASK_MOVE_FROM_BUTTON && Printer::isZMaxEndstopHit() ) )
+                || ( Printer::stepperDirection[Z_AXIS] < 0 && move->task == TASK_MOVE_FROM_BUTTON && Printer::isZMinEndstopHit() ) 
+                || ( Printer::stepperDirection[Z_AXIS] > 0 && move->task == TASK_MOVE_FROM_BUTTON && Printer::isZMaxEndstopHit() ) )
                 {
                     // as soon as the z-axis is blocked, we must finish all z-axis moves
                     // Nibbels: Sobald während des Directmoves der Schalter erreicht wird, abbrechen. Anschließend kommen nur noch Single-Steps!!

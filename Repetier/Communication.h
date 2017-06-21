@@ -60,6 +60,7 @@ public:
     FSTRINGVAR(tBrownOut)
     FSTRINGVAR(tWatchdog)
     FSTRINGVAR(tSoftwareReset)
+    FSTRINGVAR(tUnknownReset)
     FSTRINGVAR(tUnknownCommand)
     FSTRINGVAR(tFreeRAM)
     FSTRINGVAR(tXColon)
@@ -301,7 +302,7 @@ public:
     static void printInfoFLN(FSTRINGPARAM(text));
     static void printErrorFLN(FSTRINGPARAM(text));
     static void printFLN(FSTRINGPARAM(text));
-    static void printF(FSTRINGPARAM(text));
+    static void printF(FSTRINGPARAM(ptr));
     static void printF(FSTRINGPARAM(text),int value);
     static void printF(FSTRINGPARAM(text),const char *msg);
     static void printF(FSTRINGPARAM(text),int32_t value);
@@ -313,7 +314,7 @@ public:
     static void printFLN(FSTRINGPARAM(text),const char *msg);
     static void printFLN(FSTRINGPARAM(text),float value,uint8_t digits=2,bool komma_as_dot=false);
     static void printArrayFLN(FSTRINGPARAM(text),float *arr,uint8_t n=4,uint8_t digits=2);
-    static void printArrayFLN(FSTRINGPARAM(text),long *arr,uint8_t n=4);
+    static void printArrayFLN(FSTRINGPARAM(text),int32_t *arr,uint8_t n=4);
     static void print(long value);
     static inline void print(uint32_t value) {printNumber(value);}
     static inline void print(int value) {print((int32_t)value);}
