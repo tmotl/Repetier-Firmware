@@ -67,7 +67,6 @@ _von Nibbels_:
 **M3902 Z0** - Verschiebe das aktuell eingestellte Z-Offset in die zMatrix im RAM. Danach ist das Z-Offset=0.00 (Siehe M3006 / Z-Offset im Menü des Druckers), das tatsächliche Druck-Offset hat sich nicht geändert (+-0).
 **M3902 Z0 S1** - Kombinationsbefehl: Verschiebe das aktuell eingestellte Z-Offset in die zMatrix im RAM und speichere diese zMatrix an der Position 1 im EEPROM - Dies ist ein Beispiel um zu zeigen, dass die Optionen von M3902 kombiniert werden können.  
 **M3902 Sn** - Speichere die aktuell im RAM liegende zMatrix unter der Postion n = {1..9}  
-**M3903 Pt Smin** - um einen sehr langsamen und schrittweisen Abfall der Betttemperatur einzustellen. Ein Schritt dauert t Sekunden. Die Endtemperatur wird in °C angegeben und sollte niedriger liegen wie die Starttemperatur. Nach Erreichen der Endtemperatur deaktiviert sich der Effekt dieses Befehls automatisiert.
 **M3939 Fn St1 Pt2 Ex Iy Rm** - um ein Diagramm über die Filamentextrusionsgeschwindigkeit und die korrelierende Digit Zahl aufzuzeichnen -> ermöglicht Rückschlüsse zur Viskosität des Filaments. Siehe unten.
 **M3920 Sb** - Flüstermodus ein oder ausschalten. (Diese Funktion vermindert den Strom der Steppermotoren auf ein in der Firmware definiertes alternatives Strom-Profil MOTOR\_CURRENT\_SILENT = [110/110/90/90/90] ).  
 Es wurden **alle Compilerwarnungen und Compilerfehler eliminiert**.  
@@ -75,7 +74,9 @@ Weitere (passende) **Verbesserungen/Bugfixes/Commits der Entwickler der original
 Mit dem Stand vom 20.01.2017 wurde die Firmware auf den neuesten Firmwarestand der Original **RF.01.37** angehoben.  
 Der zusätzliche X35 Temperature-Sensor wurde für den RF2000 aktiviert.  
 In der pins.h wurden alle optionalen Pins für RF1000 und RF2000 aufgelistet.  
-Korrektur des RF2000 Statuszeilenlimits auf 20 Zeichen.  
+Korrektur des RF2000 Statuszeilenlimits auf 20 Zeichen.
+Korrektur des M3117
+Dritter Z-Scale Modus: G-Code unter Configuration->Z-Configuration->Z-Scale.
 
 _von Nibbels und Wessix entwickelt_:  
 **M3909 Pn Sm** - siehe unten "SenseOffset" (Kompensation der thermischen Nachdehnung)  
@@ -166,6 +167,13 @@ Diese Funktion kann nützlich sein wenn man eine, zu den von Conrad vorgegebenen
 Eine Verringerung der Motorströme, senkt die Steppermotorentemperatur und die Lautstärke der Motoren. Auch die gefühlte Tonhöhe kann sich ändern und der Drucker insgesamt oder teilweise angenehmer klingen.
 Solange die Z-Kompensation aktiv ist, sollte der Flüstermodus nicht aktiviert werden, da M3920 die Stepper kurz abschaltet und der Drucker seine Nullpunktjustierung verliert.
 Anschließend müssen alle Achsenursprünge/Homing neu gesucht werden, dann Z-Kompensation danach wieder angeschaltet werden. Wir empfehlen diesen MCODE, wenn nötig, ganz am Anfang des Startcodes einzubauen, vor G28 / M3001.
+
+## Dual-Hotend TipDown Support (beta)
+* M3919 [S]mikrometer - Testfunktion für ein Herunterlass-Hotend beim rechten Hotend T1: Das rechte Hotend kann gefedert eingebaut werden. Wird das Hotend ausgewählt, wird das bett automatisch heruntergefahren, sodass es niedriger hängt wie das linke hotend, aber nicht mit dem Bett kollidiert. Der Ultimaker 3 macht das so beim rechten Hotend.
+Beispiel: M3919 T1 Z-0.6 sagt dem Drucker, dass das Rechte Hotend 0,6mm weiter herunterreichen kann, wie das linke.
+
+## Feature Digit-Z-Kompensation (beta)
+Wenn auf die DMS gedrückt wird, wird das Bett in seiner Höhe korrigiert, wenn die Z-Kompensation arbeitet. Damit wird die Durchbiegung der DMS-Sensoren unter Last korrigiert. Die Änderungen bewegen sich in etwa im Bereich von +0,01mm wenn +1000 Digits Kraft auf die Sensoren aufgebracht werden.
 
 ## RF2000: Zusätzlicher Temperatursensor
 

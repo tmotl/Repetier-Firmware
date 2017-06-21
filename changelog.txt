@@ -1,3 +1,98 @@
+V RF.01.37o.TDMod (2017-06-20
+- Third Z-Scale: G-Code.
+- Some small tweaks and comment updates to Tipdown-Support
+- Tweaks on Function-Timers in Commands::checkForPeriodicalActions()
+- Removed Feature FEATURE_BEDTEMP_DECREASE (My first thing, didnt ever use it again.)
+
+V RF.01.37n2.TDMod (2017-06-20)
+- Fanspeed of INT(1) is now 1% in Display (instead of 0%)
+- Fanspeed of INT(1) is now sent to Repetier-Server as INT(2) to produce 1% instead of 0%
+- printTemperature is now selfcontrolling the outputfrequency (<1Hz), this made some code smaller and easier.
+
+V RF.01.37n.TDMod (2017-06-18)
+- Faster Temperature Management for cleaner PID.
+- Autosend Temperature-Info 
+- major cleanup
+- still investigating for "the bug" -> I guess it is gone but I am still testing.
+
+V RF.01.37m5.TDMod (2017-06-18)
+- tempered a whole lot with interruptstuff and watchdog
+
+V RF.01.37m4.TDMod (2017-06-10)
+- removed some interrupt-blocking in order to accidently unblock them afterwards. there is some bug in this firmware somewhere after 01.37k4 I am now investigating closely.
+
+V RF.01.37m3.TDMod (2017-06-10)
+- did some cleanup
+- tested some stuff
+- changed autotunePID a bit, according to https://github.com/repetier/Repetier-Firmware/commit/241c550ac004023842d6886c6e0db15a1f6b56d7 . Temperatures not unmonitored/unprinted while testing anymore.
+
+V RF.01.37m2.TDMod (2017-05-19)
+- Tested and fixed some stuff: monitor temp possible overflow
+- changed UI_ACTION_TOPMENU to avoid mod menü when jumping back. commented UI_ACTION_TOPMENU at definition.
+- activated free ram debugging
+- removed Z_PAUSE_RETRACT_MM from Output-Object until I find out how to concat preprocessor strings, this doesnt really work as supposed since 1.37l2.
+- Killed SKIP_M109_IF_WITHIN and put TEMP_TOLERANCE in that place to standarize that. 
+
+V RF.01.37m.TDMod (2017-05-19)
+- Fix for MoveZ
+- Changed z-Compensation to respect positive matrix values
+- Changed ZOS and M3902 to accept positive matrix values
+- Changed limits for Z-Offset-Scan s Move-Z-Up/Down/Fast/Slow according to allowed positive matrix values.
+
+V RF.01.37l4.TDMod (2017-05-19)
+- cleanup
+- made the function for digits compensation faster and more accurate. The digits are now measured with a higher frequency.
+
+V RF.01.37l3.TDMod (2017-05-19)
+- fixed some details
+- cleanup
+- New FEATURE_UNLOCK_MOVEMENT : No G1/G0 Movement allowed until one Temperature is set, one homing or some printers button is pressed. This Feature makes the change of "V RF.01.37k3.TDMod (2017-05-16)" to a real feature and prevents some bug with the menu->Load Filament function. This function used internal G-Codes and therefore the load filament extrusion was not possible until this fix.
+
+
+V RF.01.37l2.TDMod (2017-05-18)
+- Pause continues without E if Extrude/Retract-Buttons are used manually. This should prevent those Emergency-Blocks @Coniniue()
+- Added a configuration #define Z_PAUSE_RETRACT_MM to have one place to specify the retraction mm of the firmwares functions
+- linked Pause and outputObject to the Z_PAUSE_RETRACT_MMs value
+
+V RF.01.37l.TDMod (2017-05-17)
+- Testversion for automatic digit-compensation. The more force on the extruder, the more it will decrease in Z. This ist approx. 0.01mm / 1000 digits.
+As we know the force on the extruder and the rate of decrease we compensate it within z-compensation. 
+See http://www.rf1000.de/viewtopic.php?f=72&t=1853 :D
+Maybe this is bogus -> if not it will increase the quality of thin layer prints or small nozzle prints. It might even increase the digits-stability
+
+V RF.01.37k4.TDMod (2017-05-16)
+- fixed missing translations
+- removed drive-free - i really dont want and need that!
+- replaced tabs with spaces
+
+V RF.01.37k3.TDMod (2017-05-16)
+- Prevent Move by GCODE (G0, G1, ...) if not homed in printer mode. This should prevent crashes when the printer resets with repetierhost still sending commands
+- Fixed M3117 by changing gcode.cpp to prevent parsing text based commands alike in parseASCII(*com)
+- changed standard thermistor setting back to type 3 (V2)
+- removed change function of the Tip-Down-Spring-Setting within menu CONFIGURATION - Z-Configuration to prevent some missunderstanding. Now the user gets an info message how to change.
+- implemented https://github.com/repetier/Repetier-Firmware/commit/371c1b709f0f3d7664e345813e84e27b591c58f4 
+- rewrote some GCODE parsing functions details according to original repetier/Repetier
+- changed Gcode buffer to 22 instead of 16 to test possible effects
+
+V RF.01.37k2.TDMod (2017-05-07)
+- Added better Thermistor-Comments in Extruder.cpp
+- Added Generic Thermistor-Table-Function from original repetier/Repetier (in testing)
+
+V RF.01.37k.TDMod (2017-05-07)
+- This is a Test-Mod to implement Ultimakers "Bed down" for a right nozzle which can move up and down.
+I made this mod to test some Tip-Down-Nozzle on T1.
+M3919 T1 Z-0.6 ;das rechte Hotend reicht wenn gedrückt 0.5mm weiter nach unten.
+Whenever T1 is selected the printer adds some special Z-Offset so the bed drives down a bit. This new T1-Z-Offset is respected by SenseOffset and the Z-Compensation and the Limits of the Z-Compensation as well.
+- When you use M3919 the new offset is activated whenever the next switch to T1 happens.
+- You can change the M3919 Z-Offset for T1 within Menu, but new values are not respected until the next Toolchange to T1 happens.
+
+CAUTION!
+This Mod is my personal Mod with my personal Settings!
+#############################################################
+Both Hotends are on Thermistor Type 8 = E3D Thermistor.
+There is only 1mm Retract predefined within OUTPUT_OBJECT_SCRIPT_PRINT, instead of 5mm
+#############################################################
+
 V RF.01.37j.mod (2017-04-24)
 - The SenseOffset will now show when it is ready to controll the nozzles height over bed. You see one character within line 3 of the Mod-Menu. Formerly there was a "@" in front of the digits limit. Now the @ will change to ^ when SenseOffset ist actively controlling within the low layers.
 - The Debugging Menu is now invisible but can be activated within conriguration.h

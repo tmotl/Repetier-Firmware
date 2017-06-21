@@ -69,9 +69,6 @@ M3902 Zn.n          - to add an Offset to the Matrix. n.n = {-0.2 .. 0.2} [mm]
 M3902 Z0            - to shift your active zOffset to the zMatrix. The M3006 zOffset will be zero afterwards. The zMatrix is altered within Ram and might be saved to EEPROM[n] with M3902 S[n] afterwards.  
 M3902 Sn            - to save the active Matrix to position n = {1..9}  
 M3902 Z0 S1         - to shift the zOffset to your zMatrix and save the Matrix at position 1. This is an example to show that the options of M3902 can be combined.  
-
-M3903 Pt Smin       - to configure a very slow and stepwise heat bed temperature decrease. One step lasts t seconds. The end temperature will be `min` °C  
-
 M3939 Fn St1 Pt2 Ex Iy Rm   - to messure a curve of your Filaments velocity over digits -> viscosity.  
 
 M3920 Sb - to go into or switch back from SilentMode (This will lower your steppers current to an alternative profile)  
@@ -81,6 +78,8 @@ Upgraded the Firmware to the latest RF.01.37 (2017-01-20)
 Activated the X35 Temperature-Sensor for RF2000.  
 Listed all spare pins for RF1000 or RF2000.  
 Fixed the RF2000's Status Message length to 20chars.  
+Fix for M3117
+Third Z-Scale Mode: G-Code @ Configuration->Z-Configuration->Z-Scale.
 
 _by Nibbels/Wessix_:  
 M3909 Pn Sm         - See "Nibbels/Wessix SenseOffset"  
@@ -163,6 +162,13 @@ If you make your current too low you might risk "lost steps". The Motor cannot s
 
 If you can lower your current, you will have a huge improvement on stepper temperature and noise production as well. The tone of your steppers might sound deeper and will not be such a pain as the original (milling like-) configuration.
 You should not include M3920 when your z-Compensation is active. This MCode will shut down z-Compensation and unhome your Printer. You would have to re-home your axes and activate z-Compensation again. I put this code to the beginning of my startcodes.
+
+## Dualhead Tip-Down Support (beta)
+* M3919 [S]mikrometer - Testfunction for Dip-Down-Hotend @ T1: T1 can now be springloaded and the bed will be adjusted "down" whenever T1 is selected. This is alike Ultimaker 3 does it with the right hotend.   
+Example: M3919 T1 Z-0.6 tells the Printer that the right hotend will reach 0.6mm more down than the left hotend. Test it :)
+
+## Feature Digit-Z-Kompensation (beta)
+If you apply force to the DMS sensors the bed is adjusted (if Z-Compensation is active). This corrects the error which bending of the sensors apply to your layers. The physical change of the beds level is approximately +0,01mm for +1000 applied force (digits).
 
 ## RF2000: Additional Temperature Sensor
 This optional 3rd temperature T3 is automatically sent out with the other Temperatures and Digits.  
