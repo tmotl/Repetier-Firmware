@@ -2,6 +2,7 @@ V RF.01.37o.TDMod (2017-06-20
 - Third Z-Scale: G-Code.
 - Some small tweaks and comment updates to Tipdown-Support
 - Tweaks on Function-Timers in Commands::checkForPeriodicalActions()
+- Removed Feature FEATURE_BEDTEMP_DECREASE (My first thing, didnt ever use it again.)
 
 V RF.01.37n2.TDMod (2017-06-20)
 - Fanspeed of INT(1) is now 1% in Display (instead of 0%)
