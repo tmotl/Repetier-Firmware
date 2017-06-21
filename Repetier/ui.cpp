@@ -3920,6 +3920,7 @@ void UIDisplay::executeAction(int action)
                 configureMANUAL_STEPS_Z( 1 );
                 break;
             }
+
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_MILLING_MODE

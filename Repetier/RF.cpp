@@ -10353,6 +10353,7 @@ void processCommand( GCode* pCommand )
             {
                 if( isSupportedMCommand( pCommand->M, OPERATING_MODE_PRINT ) )
                 {
+                    Commands::waitUntilEndOfAllMoves();
                     //Statusänderung per M3909 P10000 (for 10000 [digits])
                     Commands::waitUntilEndOfAllMoves();
                     if (pCommand->hasP() ){                     
