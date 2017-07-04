@@ -1015,10 +1015,10 @@ Above this value the z compensation will distribute the roughness of the surface
 
 #define HEAT_BED_SCAN_Z_START_STEPS             long(ZAXIS_STEPS_PER_MM * HEAT_BED_SCAN_Z_START_uM / 1000)              // [steps]
 
-#define HEAT_BED_SCAN_UP_FAST_STEPS             long(-ZAXIS_STEPS_PER_MM / 40)                                          // [steps]
-#define HEAT_BED_SCAN_UP_SLOW_STEPS             long(-ZAXIS_STEPS_PER_MM / 500)                                         // [steps]
-#define HEAT_BED_SCAN_DOWN_SLOW_STEPS           long(ZAXIS_STEPS_PER_MM / 80)                                           // [steps]
-#define HEAT_BED_SCAN_DOWN_FAST_STEPS           long(ZAXIS_STEPS_PER_MM / 2)                                            // [steps]
+#define HEAT_BED_SCAN_UP_FAST_STEPS             long(-ZAXIS_STEPS_PER_MM / 40)                                          // [steps] das sind 64
+#define HEAT_BED_SCAN_UP_SLOW_STEPS             long(-RF_MICRO_STEPS*10)                                                // [steps] das sind ca. 4um aber eine gerade Zahl. statt 12,8 oder 10,24 steps
+#define HEAT_BED_SCAN_DOWN_SLOW_STEPS           long(ZAXIS_STEPS_PER_MM / 80)                                           // [steps] das sind 32
+#define HEAT_BED_SCAN_DOWN_FAST_STEPS           long(ZAXIS_STEPS_PER_MM / 2)                                            // [steps] das sind 1280
 #define HEAT_BED_SCAN_FAST_STEP_DELAY_MS        5                                                                       // [ms]
 #define HEAT_BED_SCAN_SLOW_STEP_DELAY_MS        100                                                                     // [ms]
 #define HEAT_BED_SCAN_IDLE_DELAY_MS             250                                                                     // [ms]
@@ -1042,13 +1042,14 @@ Above this value the z compensation will distribute the roughness of the surface
 #endif // FEATURE_PRECISE_HEAT_BED_SCAN
 
 // configuration for the head bet offset search (M3900 command)
-#define SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA   40                                                                      // [digits]
-#define SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA 30                                                                      // [digits]
-#define SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA  0                                                                       // [digits]
-#define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X    5       // scan position defined by the index of the heat bed matrix, counting from 1
+#define SEARCH_HEAT_BED_OFFSET_CONTACT_PRESSURE_DELTA   40                                                                  // [digits]
+#define SEARCH_HEAT_BED_OFFSET_RETRY_PRESSURE_DELTA     30                                                                  // [digits]
+#define SEARCH_HEAT_BED_OFFSET_IDLE_PRESSURE_DELTA      0                                                                   // [digits]
+// scan position defined by the index of the heat bed matrix, counting from 1
+#define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_X    5
 #define SEARCH_HEAT_BED_OFFSET_SCAN_POSITION_INDEX_Y    5
-#define SEARCH_HEAT_BED_OFFSET_RETRACT_BEFORE_SCAN      EXT0_STEPS_PER_MM/5      // [steps] amount of retract before each slow scanning iteration
-#define SEARCH_HEAT_BED_OFFSET_SCAN_ITERATIONS          5       // number of scanning iterations
+// number of scanning iterations
+#define SEARCH_HEAT_BED_OFFSET_SCAN_ITERATIONS          5
 
 #endif // FEATURE_HEAT_BED_Z_COMPENSATION
 

@@ -632,6 +632,7 @@ void UIDisplay::printRowP(uint8_t r,PGM_P txt)
 
 void UIDisplay::addInt(int value,uint8_t digits,char fillChar)
 {
+    if(col>=MAX_COLS) return;
     uint8_t dig=0,neg=0;
     if(value<0)
     {
@@ -670,6 +671,7 @@ void UIDisplay::addInt(int value,uint8_t digits,char fillChar)
 
 void UIDisplay::addLong(long value,char digits)
 {
+    if(col>=MAX_COLS) return;
     uint8_t dig = 0,neg=0;
     if(value<0)
     {
@@ -709,6 +711,7 @@ void UIDisplay::addLong(long value,char digits)
 const float roundingTable[] PROGMEM = {0.5,0.05,0.005,0.0005};
 void UIDisplay::addFloat(float number, char fixdigits,uint8_t digits)
 {
+    if(col>=MAX_COLS) return;
     // Handle negative numbers
     if (number < 0.0)
     {
@@ -766,6 +769,11 @@ UI_STRING(ui_text_unknown,UI_TEXT_UNKNOWN)
 UI_STRING(ui_text_na,UI_TEXT_NA)
 UI_STRING(ui_yes,UI_TEXT_YES)
 UI_STRING(ui_no,UI_TEXT_NO)
+UI_STRING(ui_ok,UI_TEXT_OK)
+UI_STRING(ui_fail,UI_TEXT_FAIL)
+UI_STRING(ui_neetfix,UI_TEXT_NEEDFIX)
+UI_STRING(ui_up,UI_TEXT_UP)
+UI_STRING(ui_down,UI_TEXT_DOWN)
 UI_STRING(ui_selected,UI_TEXT_SEL)
 UI_STRING(ui_unselected,UI_TEXT_NOSEL)
 UI_STRING(ui_text_print_mode,UI_TEXT_PRINT_MODE)
@@ -781,9 +789,6 @@ UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
 UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
 UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
 UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
-UI_STRING(ui_text_extruder_offset_z_msg,UI_TEXT_EXTRUDER_OFFSET_Z_MSG)
-
-
 
 void UIDisplay::parse(char *txt,bool ram)
 {
@@ -1006,6 +1011,22 @@ void UIDisplay::parse(char *txt,bool ram)
                     }               
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
                 }
+                else if(c2=='x' && col<MAX_COLS)                                                                             // %hx : x homed      
+                {
+                    if(Printer::flag2 & PRINTER_FLAG2_HOMED_X) printCols[col++]='*';
+                }
+                else if(c2=='y' && col<MAX_COLS)                                                                             // %hy : y homed      
+                {
+                    if(Printer::flag2 & PRINTER_FLAG2_HOMED_Y) printCols[col++]='*';
+                }
+                else if(c2=='z' && col<MAX_COLS)                                                                             // %hz : z homed      
+                {
+                    if(Printer::flag2 & PRINTER_FLAG2_HOMED_Z) printCols[col++]='*';
+                }
+                else if(c2=='a' && col<MAX_COLS)                                                                             // %ha : all homed      
+                {
+                    if(Printer::flag2 & PRINTER_FLAG2_HOMED_X && Printer::flag2 & PRINTER_FLAG2_HOMED_Y && Printer::flag2 & PRINTER_FLAG2_HOMED_Z && Printer::flag1 & PRINTER_FLAG1_HOMED) printCols[col++]='*';
+                }
                 break;
             }
             case 'l':
@@ -1041,12 +1062,12 @@ void UIDisplay::parse(char *txt,bool ram)
 
             case 'm':
             {
-                if(c2=='Y')                                                                             // %mY : menu yes
+                if(c2=='Y' && col<MAX_COLS)                                                                             // %mY : menu yes
                 {
                     if(g_nYesNo)    printCols[col++]=CHAR_SELECTED;
                     else            printCols[col++]=' ';
                 }
-                else if(c2=='N')                                                                        // %mN : menu no
+                else if(c2=='N' && col<MAX_COLS)                                                                        // %mN : menu no
                 {
                     if(g_nYesNo)    printCols[col++]=' ';
                     else            printCols[col++]=CHAR_SELECTED;
@@ -1059,22 +1080,34 @@ void UIDisplay::parse(char *txt,bool ram)
                 }
                 else if(c2=='1')                                                                        // %m1 : message line 1
                 {
-                    if(messageLine1!=0) addStringP((char PROGMEM *)messageLine1);
+                    if(messageLine1!=0){
+                        col = 0; //Nibbels: kill first space because this is menutab
+                        parse((char PROGMEM *)messageLine1,false); //addStringP((char PROGMEM *)messageLine1);
+                    }   
                     break;
                 }
                 else if(c2=='2')                                                                        // %m2 : message line 2
                 {
-                    if(messageLine2!=0) addStringP((char PROGMEM *)messageLine2);
+                    if(messageLine2!=0){
+                        col = 0; //Nibbels: kill first space because this is menutab
+                        parse((char PROGMEM *)messageLine2,false); //addStringP((char PROGMEM *)messageLine2);
+                    }
                     break;
                 }
                 else if(c2=='3')                                                                        // %m3 : message line 3
                 {
-                    if(messageLine3!=0) addStringP((char PROGMEM *)messageLine3);
+                    if(messageLine3!=0){
+                        col = 0; //Nibbels: kill first space because this is menutab
+                        parse((char PROGMEM *)messageLine3,false); //addStringP((char PROGMEM *)messageLine3);
+                    }   
                     break;
                 }
                 else if(c2=='4')                                                                        // %m4 : message line 4
                 {
-                    if(messageLine4!=0) addStringP((char PROGMEM *)messageLine4);
+                    if(messageLine4!=0){
+                        col = 0; //Nibbels: kill first space because this is menutab
+                        parse((char PROGMEM *)messageLine4,false); //addStringP((char PROGMEM *)messageLine4);
+                    } 
                     break;
                 }
                 break;
@@ -1307,6 +1340,25 @@ void UIDisplay::parse(char *txt,bool ram)
                     {
                         addStringP(Printer::ZMode==Z_VALUE_MODE_Z_MIN ? ui_text_z_mode_min : (Printer::ZMode==Z_VALUE_MODE_SURFACE ? ui_text_z_mode_surface : ui_text_z_mode_gcode) );
                     }
+                }
+                else if(c2=='s')                                                                        // %zs : Z-Schraube korrektur mm
+                {
+                    addFloat(g_ZSchraubenSollKorrekturWarm_mm,1,3);                    
+                }
+                else if(c2=='S')                                                                        // %zS : Z-Schraube korrektur Umdrehungen
+                {
+                    addFloat(g_ZSchraubenSollDrehungenWarm_U,1,1);
+                }
+                else if(c2=='F')                                                                        // %zF : Z-Schraube falsch
+                {
+                    if(g_ZSchraubeOk < 0) addStringP( ui_ok ); //ok
+                    else if(g_ZSchraubeOk > 0) addStringP( ui_neetfix ); //zu hohes bett
+                    else addStringP( ui_fail ); //fail
+                }
+                else if(c2=='D')                                                                        // %zD : Z-Schraube richtung
+                {
+                    if(g_ZSchraubenSollKorrekturWarm_mm > 0) addStringP( ui_up );
+                    else addStringP( ui_down );
                 }
                 break;
             }
@@ -1653,7 +1705,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
                     else if ( mode == OPERATING_MODE_MILL )
                     {
-                        addStringP( PSTR( "                  " ));
+                        addStringP( PSTR( "                  " )); //18 leerzeichen?? 
                         break;
                     }
                 }
@@ -1731,7 +1783,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
                     else if ( mode == OPERATING_MODE_MILL )
                     {
-                        addStringP( PSTR( "" ));
+                        addStringP( PSTR( "" )); //TODO: Nibbels: Ist leerer string nötig?? Glaube nicht.
                     }
 #endif // FEATURE_SERVICE_INTERVAL
                 }
@@ -1755,7 +1807,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
                     else if ( mode == OPERATING_MODE_MILL )
                     {
-                        addStringP( PSTR( "" ));
+                        addStringP( PSTR( "" )); //TODO: Nibbels: Ist leerer string nötig?? Glaube nicht.
                     }
 #endif // FEATURE_SERVICE_INTERVAL
                 }
@@ -1838,7 +1890,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
                     else if ( mode == OPERATING_MODE_MILL )
                     {
-                        addStringP( PSTR( "" ));
+                        addStringP( PSTR( "" )); //TODO: Nibbels: Ist leerer string nötig?? Glaube nicht.
                     }
                 }
                 else if(c2=='8')                                                                        // Shows printed filament
@@ -1860,7 +1912,7 @@ void UIDisplay::parse(char *txt,bool ram)
                     }
                     else if ( mode == OPERATING_MODE_MILL )
                     {
-                        addStringP( PSTR( "" ));
+                        addStringP( PSTR( "" )); //TODO: Nibbels: Ist leerer string nötig?? Glaube nicht.
                     }
                 }
                 break;
@@ -3028,9 +3080,15 @@ void UIDisplay::nextPreviousAction(int8_t next)
         case UI_ACTION_EXTRUDER_OFFSET_Z:
         {
             //Das hier ist nur dazu gedacht, um eine Tip-Down-Nozzle auf per ToolChange auf die Korrekte Höhe zu justieren.
-            
-                    showInformation( (void*)ui_text_extruder_offset_z_msg );
+            float   fTemp = extruder[1].zOffset * Printer::invAxisStepsPerMM[Z_AXIS];
+            INCREMENT_MIN_MAX(fTemp,0.025,-2,0);
+            extruder[1].zOffset = int32_t(fTemp * Printer::axisStepsPerMM[Z_AXIS]);
+            if(extruder[1].id == Extruder::current->id){
+                Printer::extruderOffset[Z_AXIS] = -Extruder::current->zOffset*Printer::invAxisStepsPerMM[Z_AXIS];
+                if(Printer::areAxisHomed()) Printer::moveToReal(IGNORE_COORDINATE,IGNORE_COORDINATE,IGNORE_COORDINATE,IGNORE_COORDINATE,IGNORE_COORDINATE);
+            }
             break;
+            //break;
         }
 #endif // NUM_EXTRUDER>1
 
@@ -3784,7 +3842,7 @@ void UIDisplay::executeAction(int action)
 
                     showError( (void*)ui_text_home, (void*)ui_text_operation_denied );
                     break;
-                }
+                }                
                 if( !isHomingAllowed( NULL, 1 ) )
                 {
                     break;
@@ -3920,7 +3978,6 @@ void UIDisplay::executeAction(int action)
                 configureMANUAL_STEPS_Z( 1 );
                 break;
             }
-
 #endif // FEATURE_EXTENDED_BUTTONS
 
 #if FEATURE_MILLING_MODE
