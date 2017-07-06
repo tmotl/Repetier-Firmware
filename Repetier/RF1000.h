@@ -89,7 +89,7 @@ WARNING: Do not enable the case fan feature in case you have a second extruder a
 #define EXT0_HOTEND_TYPE                    HOTEND_TYPE_V2_SINGLE
 #define EXT1_HOTEND_TYPE                    HOTEND_TYPE_V2_SINGLE
 #else
-#define EXT0_HOTEND_TYPE                    HOTEND_TYPE_V2_SINGLE
+#define EXT0_HOTEND_TYPE                    HOTEND_TYPE_E3D
 #endif // NUM_EXTRUDER == 2
 
 #define FEATURE_CONFIGURABLE_Z_ENDSTOPS     1                                                   // 1 = the z-endstop type can be switched between z-min (= single) and z-min + z-max in one circuit (= circuit), 0 = only the z-min endstop is installed
@@ -213,6 +213,27 @@ Overridden if EEPROM activated.*/
 
 
 // ##########################################################################################
+// ##   E3D
+// ##########################################################################################
+
+/** \brief The maximum value, I-gain can contribute to the output. */
+#define E3D_PID_INTEGRAL_DRIVE_MAX          255
+
+/** \brief lower value for integral part. */
+#define E3D_PID_INTEGRAL_DRIVE_MIN          0
+
+/** \brief P-gain. */
+#define E3D_PID_P                           95
+
+/** \brief I-gain. */
+#define E3D_PID_I                           120
+
+/** \brief Dgain. */
+#define E3D_PID_D                           130
+
+
+
+// ##########################################################################################
 // ##   Miller type 1 (= one track)
 // ##########################################################################################
 
@@ -240,7 +261,7 @@ Overridden if EEPROM activated.*/
 
 /** \brief What type of sensor is used?
 3 is mendel-parts thermistor (EPCOS G550) */
-#define EXT0_TEMPSENSOR_TYPE                3
+#define EXT0_TEMPSENSOR_TYPE                8
 
 /** \brief Analog input pin for reading temperatures or pin enabling SS for MAX6675 */
 #define EXT0_TEMPSENSOR_PIN                 TEMP_0_PIN
@@ -276,7 +297,7 @@ Overridden if EEPROM activated. */
 - 1 = PID Temperature control. Is better but needs good PID values. Defaults are a good start for most extruder.
 - 3 = Dead-time control. PID_P becomes dead-time in seconds.
  Overridden if EEPROM activated. */
-#define EXT0_HEAT_MANAGER                   1
+#define EXT0_HEAT_MANAGER                   3
 
 /** \brief Wait x seconds, after reaching target temperature. Only used for M109.  Overridden if EEPROM activated. */
 #define EXT0_WATCHPERIOD                    20
@@ -300,6 +321,26 @@ Overridden if EEPROM activated. */
 #define EXT0_PID_D                          HT2_PID_D
 
 #endif // EXT0_HOTEND_TYPE == HOTEND_TYPE_V1
+
+
+#if EXT0_HOTEND_TYPE == HOTEND_TYPE_E3D
+
+/** \brief The maximum value, I-gain can contribute to the output. Overridden if EEPROM activated. */
+#define EXT0_PID_INTEGRAL_DRIVE_MAX         E3D_PID_INTEGRAL_DRIVE_MAX
+
+/** \brief lower value for integral part. Overridden if EEPROM activated. */
+#define EXT0_PID_INTEGRAL_DRIVE_MIN         E3D_PID_INTEGRAL_DRIVE_MIN
+
+/** \brief P-gain. Overridden if EEPROM activated. */
+#define EXT0_PID_P                          E3D_PID_P
+
+/** \brief I-gain. Overridden if EEPROM activated. */
+#define EXT0_PID_I                          E3D_PID_I
+
+/** \brief Dgain. Overridden if EEPROM activated.*/
+#define EXT0_PID_D                          E3D_PID_D
+
+#endif // EXT0_HOTEND_TYPE == HOTEND_TYPE_E3D
 
 
 #if EXT0_HOTEND_TYPE == HOTEND_TYPE_V2_SINGLE
