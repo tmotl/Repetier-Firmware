@@ -131,13 +131,13 @@ If EEPROM is enabled these values will be overidden with the values in the EEPRO
 #endif // NUM_EXTRUDER == 2
 
 #define X_MAX_LENGTH_MILL                   (long)200
-#define Y_MAX_LENGTH                        (long)220
+#define Y_MAX_LENGTH                        (long)255
 #define Z_MAX_LENGTH                        (long)200
 
 /** \brief Coordinates for the minimum axis. Can also be negative if you want to have the bed start at 0 and the printer can go to the left side
 of the bed. Maximum coordinate is given by adding the above MAX_LENGTH values. */
 #define X_MIN_POS                           0
-#define Y_MIN_POS                           -40
+#define Y_MIN_POS                           0
 #define Z_MIN_POS                           0
 
 /** \brief Drive settings for printers with cartesian drive systems */
@@ -257,7 +257,7 @@ Overridden if EEPROM activated.*/
 #define EXT0_Y_OFFSET                       0
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
-#define EXT0_STEPS_PER_MM                   (8.75 * RF_MICRO_STEPS)
+#define EXT0_STEPS_PER_MM                   52.32491279733546 * RF_MICRO_STEPS
 
 /** \brief What type of sensor is used?
 3 is mendel-parts thermistor (EPCOS G550) */
@@ -297,7 +297,7 @@ Overridden if EEPROM activated. */
 - 1 = PID Temperature control. Is better but needs good PID values. Defaults are a good start for most extruder.
 - 3 = Dead-time control. PID_P becomes dead-time in seconds.
  Overridden if EEPROM activated. */
-#define EXT0_HEAT_MANAGER                   3
+#define EXT0_HEAT_MANAGER                   1
 
 /** \brief Wait x seconds, after reaching target temperature. Only used for M109.  Overridden if EEPROM activated. */
 #define EXT0_WATCHPERIOD                    20
