@@ -127,17 +127,17 @@ If EEPROM is enabled these values will be overidden with the values in the EEPRO
 #if NUM_EXTRUDER == 2
 #define X_MAX_LENGTH_PRINT                  (long)180
 #else
-#define X_MAX_LENGTH_PRINT                  (long)245
+#define X_MAX_LENGTH_PRINT                  (long)200
 #endif // NUM_EXTRUDER == 2
 
-#define X_MAX_LENGTH_MILL                   (long)230
-#define Y_MAX_LENGTH                        (long)245
+#define X_MAX_LENGTH_MILL                   (long)200
+#define Y_MAX_LENGTH                        (long)220
 #define Z_MAX_LENGTH                        (long)200
 
 /** \brief Coordinates for the minimum axis. Can also be negative if you want to have the bed start at 0 and the printer can go to the left side
 of the bed. Maximum coordinate is given by adding the above MAX_LENGTH values. */
 #define X_MIN_POS                           0
-#define Y_MIN_POS                           0
+#define Y_MIN_POS                           -40
 #define Z_MIN_POS                           0
 
 /** \brief Drive settings for printers with cartesian drive systems */
@@ -223,13 +223,13 @@ Overridden if EEPROM activated.*/
 #define E3D_PID_INTEGRAL_DRIVE_MIN          0
 
 /** \brief P-gain. */
-#define E3D_PID_P                           95
+#define E3D_PID_P                           8
 
 /** \brief I-gain. */
-#define E3D_PID_I                           120
+#define E3D_PID_I                           0.5
 
 /** \brief Dgain. */
-#define E3D_PID_D                           130
+#define E3D_PID_D                           100
 
 
 
@@ -1027,14 +1027,14 @@ Above this value the z compensation will distribute the roughness of the surface
 #define HEAT_BED_SCAN_IDLE_PRESSURE_MAX         7500                                                                    // [digits]
 #else /* NUM_EXTRUDER != 2 -> */
 
-#define HEAT_BED_SCAN_X_START_MM                15                                                                      // [mm] from the left border of the heat bed
+#define HEAT_BED_SCAN_X_START_MM                0                                                                       // [mm] from the left border of the heat bed
 #define HEAT_BED_SCAN_X_END_MM                  5                                                                       // [mm] from the right border of the heat bed
 #define HEAT_BED_SCAN_X_STEP_SIZE_MM            20                                                                      // [mm]
 #define HEAT_BED_SCAN_X_STEP_SIZE_MIN_MM        10                                                                      // [mm]
 #define HEAT_BED_SCAN_X_CALIBRATION_POINT_MM    100                                                                     // [mm] from the left border of the heat bed
 #define HEAT_BED_SCAN_X_CALIBRATION_POINT_STEPS long(XAXIS_STEPS_PER_MM * HEAT_BED_SCAN_X_CALIBRATION_POINT_MM)         // [steps]
 
-#define HEAT_BED_SCAN_Y_START_MM                30                                                                      // [mm] from the front border of the heat bed
+#define HEAT_BED_SCAN_Y_START_MM                35                                                                      // [mm] from the front border of the heat bed
 #define HEAT_BED_SCAN_Y_END_MM                  5                                                                       // [mm] from the back border of the heat bed
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MM            20                                                                      // [mm]
 #define HEAT_BED_SCAN_Y_STEP_SIZE_MIN_MM        10                                                                      // [mm]

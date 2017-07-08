@@ -39,6 +39,7 @@
 #define HOTEND_TYPE_V1                      2   // hotend V1
 #define HOTEND_TYPE_V2_SINGLE               3   // hotend V2 for single extruder
 #define HOTEND_TYPE_V2_DUAL                 4   // hotend V2 for dual extruder
+#define HOTEND_TYPE_E3D                     5   // hotend V2 for dual extruder
 
 #define MILLER_TYPE_ONE_TRACK               1   // one track in x- and y-direction
 #define MILLER_TYPE_TWO_TRACKS              2   // two tracks in x- and y-direction

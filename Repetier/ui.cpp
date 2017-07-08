@@ -777,6 +777,7 @@ UI_STRING(ui_text_z_mode_surface,UI_TEXT_Z_MODE_SURFACE)
 UI_STRING(ui_text_z_mode_z_origin,UI_TEXT_Z_MODE_Z_ORIGIN)
 UI_STRING(ui_text_hotend_v1,UI_TEXT_HOTEND_V1)
 UI_STRING(ui_text_hotend_v2,UI_TEXT_HOTEND_V2)
+UI_STRING(ui_text_hotend_e3d,UI_TEXT_HOTEND_E3D)
 UI_STRING(ui_text_miller_one_track,UI_TEXT_MILLER_ONE_TRACK)
 UI_STRING(ui_text_miller_two_tracks,UI_TEXT_MILLER_TWO_TRACKS)
 UI_STRING(ui_text_z_compensation_active,UI_TEXT_Z_COMPENSATION_ACTIVE)
@@ -996,6 +997,7 @@ void UIDisplay::parse(char *txt,bool ram)
                         case HOTEND_TYPE_V1:        addStringP(ui_text_hotend_v1);  break;
                         case HOTEND_TYPE_V2_SINGLE: addStringP(ui_text_hotend_v2);  break;
                         case HOTEND_TYPE_V2_DUAL:   addStringP(ui_text_hotend_v2);  break;
+                        case HOTEND_TYPE_E3D:       addStringP(ui_text_hotend_e3d);  break;
                     }               
 #endif // FEATURE_CONFIGURABLE_HOTEND_TYPE
                 }
@@ -4077,6 +4079,34 @@ void UIDisplay::executeAction(int action)
 #endif // #if NUM_EXTRUDER>1
 #endif // TEMP_PID
                 }
+                else if(Printer::HotendType == HOTEND_TYPE_V2_SINGLE || Printer::HotendType == HOTEND_TYPE_V2_DUAL)
+                {
+                    Printer::HotendType = HOTEND_TYPE_E3D;
+
+#ifdef TEMP_PID
+#if NUM_EXTRUDER>0
+                    e = &extruder[0];
+
+                    e->tempControl.pidDriveMax = E3D_PID_INTEGRAL_DRIVE_MAX;
+                    e->tempControl.pidDriveMin = E3D_PID_INTEGRAL_DRIVE_MIN;
+                    e->tempControl.pidPGain    = E3D_PID_P;
+                    e->tempControl.pidIGain    = E3D_PID_I;
+                    e->tempControl.pidDGain    = E3D_PID_D;
+                    e->tempControl.pidMax      = EXT0_PID_MAX;
+#endif // NUM_EXTRUDER>0
+
+#if NUM_EXTRUDER>1
+                    e = &extruder[1];
+
+                    e->tempControl.pidDriveMax = E3D_PID_INTEGRAL_DRIVE_MAX;
+                    e->tempControl.pidDriveMin = E3D_PID_INTEGRAL_DRIVE_MIN;
+                    e->tempControl.pidPGain    = E3D_PID_P;
+                    e->tempControl.pidIGain    = E3D_PID_I;
+                    e->tempControl.pidDGain    = E3D_PID_D;
+                    e->tempControl.pidMax      = EXT0_PID_MAX;
+#endif // NUM_EXTRUDER>1
+#endif // TEMP_PID
+                }
                 else
                 {
                     Printer::HotendType = HOTEND_TYPE_V1;
@@ -4105,7 +4135,6 @@ void UIDisplay::executeAction(int action)
 #endif // NUM_EXTRUDER>1
 #endif // TEMP_PID
                 }
-
 #if FEATURE_AUTOMATIC_EEPROM_UPDATE
                 HAL::eprSetByte( EPR_RF_HOTEND_TYPE, Printer::HotendType );
 
