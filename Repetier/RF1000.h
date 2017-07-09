@@ -839,8 +839,8 @@ can set it on for safety. */
 #define MAX_FEEDRATE_Z                      50
 
 /** \brief Home position speed in mm/s. Overridden if EEPROM activated. */
-#define HOMING_FEEDRATE_X_PRINT             165
-#define HOMING_FEEDRATE_Y_PRINT             165
+#define HOMING_FEEDRATE_X_PRINT             80
+#define HOMING_FEEDRATE_Y_PRINT             80
 #define HOMING_FEEDRATE_Z_PRINT             10
 
 #define HOMING_FEEDRATE_X_MILL              70

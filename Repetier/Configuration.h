@@ -911,7 +911,7 @@ Uncomment define to force the temperature into the range for given watchperiod. 
 
 /** \brief Communication speed.
 Overridden if EEPROM activated. */
-#define BAUDRATE                            115200
+#define BAUDRATE                            250000
 
 /** \brief Some boards like Gen7 have a power on pin, to enable the atx power supply. If this is defined,
 the power will be turned on without the need to call M80 if initially started. */
