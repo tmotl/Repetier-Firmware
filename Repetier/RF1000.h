@@ -257,7 +257,7 @@ Overridden if EEPROM activated.*/
 #define EXT0_Y_OFFSET                       0
 
 /** \brief for skeinforge 40 and later, steps to pull the plasic 1 mm inside the extruder, not out.  Overridden if EEPROM activated. */
-#define EXT0_STEPS_PER_MM                   52.32491279733546 * RF_MICRO_STEPS
+#define EXT0_STEPS_PER_MM                   52.32491279733546 * RF_MICRO_STEPS * 0.98
 
 /** \brief What type of sensor is used?
 3 is mendel-parts thermistor (EPCOS G550) */
