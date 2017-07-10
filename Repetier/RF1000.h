@@ -223,13 +223,13 @@ Overridden if EEPROM activated.*/
 #define E3D_PID_INTEGRAL_DRIVE_MIN          0
 
 /** \brief P-gain. */
-#define E3D_PID_P                           8
+#define E3D_PID_P                           30
 
 /** \brief I-gain. */
-#define E3D_PID_I                           0.5
+#define E3D_PID_I                           0.75
 
 /** \brief Dgain. */
-#define E3D_PID_D                           100
+#define E3D_PID_D                           60
 
 
 
